@@ -121,7 +121,6 @@
     <div class="w-full md:w-[30%] control-panel p-4 z-10 border-t md:border-t-0 md:border-l border-slate-800 md:h-screen md:sticky md:top-0 md:overflow-y-auto flex flex-col">
         <div class="space-y-4 flex-grow w-full">
             <div class="control-card space-y-3">
-                <h3 class="text-sm font-bold text-sky-400 mb-2">Control de Simulación</h3>
                 <div class="flex items-center justify-center gap-3">
                     <button id="play-pause-btn" class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs rounded-md transition w-24">Arrancar</button>
                     <button id="reset-btn" class="px-4 py-1.5 bg-green-600 hover:bg-green-700 text-white font-semibold text-xs rounded-md transition">Reiniciar</button>
@@ -130,20 +129,16 @@
 
             <div class="control-card space-y-3">
                 <h3 class="text-sm font-bold text-sky-400">Parámetros del Sistema</h3>
-                <div><label for="mass-slider" class="text-xs text-gray-400">Masa ($m$): <span id="mass-label" class="font-bold text-white">2.0</span> kg</label><input type="range" id="mass-slider" min="0.1" max="10" step="0.1" value="2.0"></div>
-            </div>
-            
-            <div class="control-card space-y-3">
-                <h3 class="text-sm font-bold text-sky-400">Dimensiones del Plano</h3>
-                <div class="pt-2">
-                    <label class="checkbox-label text-sm">
-                        <input type="checkbox" id="dimension-mode-checkbox">
-                        <span class="checkmark"></span>
-                        Medidas
-                    </label>
-                </div>
-                <div class="pt-2 border-t border-slate-700">
-                    <div id="angle-controls" class="space-y-3">
+                <div class="space-y-3 pt-2 border-t border-slate-700">
+                    <div><label for="mass-slider" class="text-xs text-gray-400">Masa ($m$): <span id="mass-label" class="font-bold text-white">2.0</span> kg</label><input type="range" id="mass-slider" min="0.1" max="10" step="0.1" value="2.0"></div>
+                     <div class="pt-2">
+                        <label class="checkbox-label text-sm">
+                            <input type="checkbox" id="dimension-mode-checkbox">
+                            <span class="checkmark"></span>
+                            Medidas
+                        </label>
+                    </div>
+                     <div id="angle-controls" class="space-y-3">
                         <div><label for="angle-slider" class="text-xs text-gray-400">Ángulo ($\theta$): <span id="angle-label" class="font-bold text-white">30</span>°</label><input type="range" id="angle-slider" min="0" max="90" step="1" value="30"></div>
                     </div>
                     <div id="dimension-controls" class="hidden space-y-3">
@@ -316,7 +311,6 @@
                 const planePhysicalLength = Math.hypot(state.planeBaseMeters, state.planeHeightMeters);
 
                 if (state.isPlaying && !state.isDragging) {
-                    const previousX = state.x;
                     calculateForces();
                     state.v += state.a * state.dt;
                     state.x += state.v * state.dt;
@@ -332,7 +326,10 @@
                         if (state.v < 0) state.v = 0;
                         state.isPlaying = false;
                         dom.playPauseBtn.textContent = 'Arrancar';
-                        return; // Exit loop immediately to prevent last frame issues
+                        // One last graph update to show the final state
+                        updateGraphData();
+                        gameLoop(); // Call one last time to redraw
+                        return; 
                     } else if (state.x >= upperBound) {
                         state.x = upperBound;
                         if (state.v > 0) state.v = 0;
@@ -453,8 +450,11 @@
                 // --- DIBUJO DEL BLOQUE ---
                 const planePixelLength = Math.hypot(planePixelWidth, planePixelHeight);
                 const pixelsPerMeter = planePixelLength / (planePhysicalLength || 1);
-                const blockWidth = 40;
-                const blockHeight = 25;
+
+                const blockScale = 0.8 + Math.log10(state.m + 1) * 0.5;
+                const blockWidth = 40 * blockScale;
+                const blockHeight = 25 * blockScale;
+                
                 const blockPosOnPlane = (planePixelLength / 2) + state.x * pixelsPerMeter;
                 
                 const surfacePointX = originX + blockPosOnPlane * Math.cos(thetaRad);
@@ -477,7 +477,7 @@
                 ctx.strokeRect(-blockWidth / 2, -blockHeight, blockWidth, blockHeight);
                 
                 if (state.showVectors) {
-                    drawVectors(ctx, thetaRad);
+                    drawVectors(ctx, thetaRad, blockHeight);
                 }
                 ctx.restore();
 
@@ -503,8 +503,7 @@
                 ctx.restore();
             }
 
-            function drawVectors(ctx, thetaRad) {
-                const blockH = 25;
+            function drawVectors(ctx, thetaRad, blockH) {
                 const center = { x: 0, y: -blockH/2 };
                 const scale = 3;
                 const P = state.m * state.g;
@@ -583,7 +582,7 @@
                 if(state.graphs.energy.show) graphContexts.energy = setupGraph('energy', 'Energía (J) vs Tiempo (s)');
             }
             
-            function drawSingleGraph(ctx, data, color) {
+            function drawSingleGraph(ctx, data, color, includeZero = false) {
                 if (!ctx) return;
                 const w = ctx.canvas.width;
                 const h = ctx.canvas.height;
@@ -604,6 +603,11 @@
                 const yData = data.map(p => p.y);
                 let yMin = Math.min(...yData);
                 let yMax = Math.max(...yData);
+
+                if (includeZero) {
+                    yMin = Math.min(0, yMin);
+                    yMax = Math.max(0, yMax);
+                }
 
                 const yRange = yMax - yMin;
                 if (Math.abs(yRange) < 1e-6) {
@@ -729,7 +733,7 @@
 
             function drawGraphs() {
                 if (state.graphs.pos.show) drawSingleGraph(graphContexts.pos, state.graphs.pos.data, '#818cf8');
-                if (state.graphs.vel.show) drawSingleGraph(graphContexts.vel, state.graphs.vel.data, '#60a5fa');
+                if (state.graphs.vel.show) drawSingleGraph(graphContexts.vel, state.graphs.vel.data, '#60a5fa', true);
                 if (state.graphs.acc.show) drawSingleGraph(graphContexts.acc, state.graphs.acc.data, '#f87171');
                 if (state.graphs.energy.show) {
                     drawMultiLineGraph(graphContexts.energy, 
@@ -1006,5 +1010,4 @@
     </script>
 </body>
 </html>
-
 

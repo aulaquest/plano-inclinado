@@ -66,7 +66,7 @@
              display: flex;
              align-items: center;
              justify-content: center;
-             transition: background-color 0.2s;
+             transition: background-color: 0.2s;
         }
         #zoom-controls button:hover {
             background-color: #334155;
@@ -75,7 +75,7 @@
         #info-hud {
             padding: 0.5rem 1rem;
             gap: 0.5rem;
-            background-color: rgba(15, 23, 42, 0.6);
+            background-color: rgba(15, 23, 42, 0.8);
             backdrop-filter: blur(4px);
         }
         #info-hud > div {
@@ -99,15 +99,15 @@
     <!-- Columna de Simulación (70%) -->
     <div class="w-full md:w-[70%] flex flex-col p-4">
         
+        <div id="info-hud" class="w-full max-w-5xl mx-auto grid grid-cols-3 sm:grid-cols-6 gap-2 text-center bg-slate-900/70 backdrop-blur-sm p-3 rounded-lg z-20 border border-slate-700 shadow-lg mb-4">
+            <div class="flex flex-col"><span class="text-xs text-sky-400">Aceleración</span><span id="a-hud" class="font-mono text-white">0.00 m/s²</span></div>
+            <div class="flex flex-col"><span class="text-xs text-sky-400">Velocidad</span><span id="v-hud" class="font-mono text-white">0.00 m/s</span></div>
+            <div class="flex flex-col"><span class="text-xs text-sky-400">Altura</span><span id="h-hud" class="font-mono text-white">0.00 m</span></div>
+            <div class="flex flex-col"><span class="text-xs text-sky-400">F. Normal</span><span id="n-hud" class="font-mono text-white">0.00 N</span></div>
+            <div class="flex flex-col"><span class="text-xs text-sky-400">F. Roce</span><span id="f-hud" class="font-mono text-white">0.00 N</span></div>
+            <div class="flex flex-col"><span class="text-xs text-sky-400">Tiempo</span><span id="t-hud" class="font-mono text-white">0.00 s</span></div>
+        </div>
         <div id="simulation-wrapper" class="relative flex-grow flex flex-col items-center justify-center w-full max-w-5xl mx-auto bg-slate-800 rounded-lg border border-slate-700 overflow-hidden">
-             <div id="info-hud" class="absolute top-0 left-0 right-0 w-full mx-auto grid grid-cols-3 sm:grid-cols-6 gap-2 text-center rounded-b-lg z-30 border-b border-l border-r border-slate-700 shadow-lg">
-                <div class="flex flex-col"><span class="text-xs text-sky-400">Aceleración</span><span id="a-hud" class="font-mono text-white">0.00 m/s²</span></div>
-                <div class="flex flex-col"><span class="text-xs text-sky-400">Velocidad</span><span id="v-hud" class="font-mono text-white">0.00 m/s</span></div>
-                <div class="flex flex-col"><span class="text-xs text-sky-400">Altura</span><span id="h-hud" class="font-mono text-white">0.00 m</span></div>
-                <div class="flex flex-col"><span class="text-xs text-sky-400">F. Normal</span><span id="n-hud" class="font-mono text-white">0.00 N</span></div>
-                <div class="flex flex-col"><span class="text-xs text-sky-400">F. Roce</span><span id="f-hud" class="font-mono text-white">0.00 N</span></div>
-                <div class="flex flex-col"><span class="text-xs text-sky-400">Tiempo</span><span id="t-hud" class="font-mono text-white">0.00 s</span></div>
-            </div>
             <canvas id="simulation-canvas"></canvas>
             <div id="zoom-controls" class="absolute bottom-4 right-4 flex flex-col space-y-2 z-30">
                 <button id="zoom-in-btn">+</button>
@@ -167,16 +167,6 @@
                 </div>
             </div>
             
-            <div class="control-card space-y-3">
-                <h3 class="text-sm font-bold text-sky-400">Visualización</h3>
-                <div class="flex flex-col space-y-2">
-                    <label class="checkbox-label text-xs"><input type="checkbox" id="show-vectors-checkbox" checked><span class="checkmark"></span>Mostrar Vectores de Fuerza</label>
-                    <label class="checkbox-label text-xs"><input type="checkbox" id="show-pos-graph-checkbox"><span class="checkmark"></span>Gráfica Posición-Tiempo</label>
-                    <label class="checkbox-label text-xs"><input type="checkbox" id="show-vel-graph-checkbox"><span class="checkmark"></span>Gráfica Velocidad-Tiempo</label>
-                    <label class="checkbox-label text-xs"><input type="checkbox" id="show-acc-graph-checkbox"><span class="checkmark"></span>Gráfica Aceleración-Tiempo</label>
-                    <label class="checkbox-label text-xs"><input type="checkbox" id="show-energy-graph-checkbox"><span class="checkmark"></span>Gráfica Energía-Tiempo</label>
-                </div>
-            </div>
         </div>
         <footer class="p-2 text-center text-xs text-gray-500 z-20 mt-auto pt-4">Simulación creada por <a href="https://aulaquest.com" target="_blank" rel="noopener noreferrer" class="underline hover:text-indigo-400">Aulaquest</a></footer>
     </div>
@@ -218,14 +208,12 @@
                 muSLabel: document.getElementById('mu-s-label'),
                 muKSlider: document.getElementById('mu-k-slider'),
                 muKLabel: document.getElementById('mu-k-label'),
-                showVectorsCheckbox: document.getElementById('show-vectors-checkbox'),
                 graphPanel: document.getElementById('graph-panel'),
             };
 
             const ctx = dom.canvas.getContext('2d');
             let animationFrameId;
             let lastDragInfo = {}; 
-            let grassPattern;
 
             // State
             const defaultState = {
@@ -253,10 +241,10 @@
                 dt: 1 / 60,
                 clouds: [],
                 graphs: {
-                    pos: { show: false, data: [] },
-                    vel: { show: false, data: [] },
-                    acc: { show: false, data: [] },
-                    energy: { show: false, data: { K: [], P: [], E: [] } }
+                    pos: { show: true, data: [] },
+                    vel: { show: true, data: [] },
+                    acc: { show: true, data: [] },
+                    energy: { show: true, data: { K: [], P: [], E: [] } }
                 }
             };
             
@@ -323,22 +311,19 @@
                     
                     updateGraphData(); // Update graphs before collision check
 
-                    if (state.x <= lowerBound) {
-                        state.x = lowerBound;
-                        if (state.v < 0) state.v = 0;
+                    if (state.x <= lowerBound || state.x >= upperBound) {
+                        state.x = Math.max(lowerBound, Math.min(upperBound, state.x)); // Clamp position
+                        state.v = 0;
                         state.isPlaying = false;
                         dom.playPauseBtn.textContent = 'Arrancar';
-                        updateGraphData();
+                        updateGraphData(); // Final update
                         cancelAnimationFrame(animationFrameId);
-                        draw(planePhysicalLength); // Final draw call
+                        draw(planePhysicalLength); // Final draw
                         drawGraphs();
                         return; 
-                    } else if (state.x >= upperBound) {
-                        state.x = upperBound;
-                        if (state.v > 0) state.v = 0;
                     }
                    
-                } else if (!state.isPlaying){
+                } else {
                     calculateForces();
                 }
                 
@@ -371,10 +356,9 @@
             }
             
             function drawGround(w, h, groundY) {
-                // Ground
-                ctx.fillStyle = grassPattern;
-                 // Draw a very wide rectangle to ensure it covers the screen when zoomed out
-                ctx.fillRect(-w * 5, groundY, w * 10, h * 5);
+                // Ground line
+                ctx.fillStyle = '#228B22';
+                ctx.fillRect(-w * 5, groundY, w * 10, 10);
             }
 
             function draw(planePhysicalLength) {
@@ -578,11 +562,12 @@
             let graphContexts = {};
             function setupAllGraphs() {
                 dom.graphPanel.innerHTML = ''; 
-                graphContexts = {};
-                if(state.graphs.pos.show) graphContexts.pos = setupGraph('pos', 'Posición (m) vs Tiempo (s)');
-                if(state.graphs.vel.show) graphContexts.vel = setupGraph('vel', 'Velocidad (m/s) vs Tiempo (s)');
-                if(state.graphs.acc.show) graphContexts.acc = setupGraph('acc', 'Aceleración (m/s²) vs Tiempo (s)');
-                if(state.graphs.energy.show) graphContexts.energy = setupGraph('energy', 'Energía (J) vs Tiempo (s)');
+                graphContexts = {
+                    pos: setupGraph('pos', 'Posición (m) vs Tiempo (s)'),
+                    vel: setupGraph('vel', 'Velocidad (m/s) vs Tiempo (s)'),
+                    acc: setupGraph('acc', 'Aceleración (m/s²) vs Tiempo (s)'),
+                    energy: setupGraph('energy', 'Energía (J) vs Tiempo (s)')
+                };
             }
             
             function drawSingleGraph(ctx, data, color, includeZero = false) {
@@ -735,50 +720,44 @@
             }
 
             function drawGraphs() {
-                if (state.graphs.pos.show) drawSingleGraph(graphContexts.pos, state.graphs.pos.data, '#818cf8');
-                if (state.graphs.vel.show) drawSingleGraph(graphContexts.vel, state.graphs.vel.data, '#60a5fa', true);
-                if (state.graphs.acc.show) drawSingleGraph(graphContexts.acc, state.graphs.acc.data, '#f87171');
-                if (state.graphs.energy.show) {
-                    drawMultiLineGraph(graphContexts.energy, 
-                        state.graphs.energy.data,
-                        { K: '#60a5fa', P: '#f59e0b', E: '#4ade80'},
-                        { K: 'K', P: 'P', E: 'E_total'}
-                    );
-                }
+                drawSingleGraph(graphContexts.pos, state.graphs.pos.data, '#818cf8');
+                drawSingleGraph(graphContexts.vel, state.graphs.vel.data, '#60a5fa', true);
+                drawSingleGraph(graphContexts.acc, state.graphs.acc.data, '#f87171');
+                drawMultiLineGraph(graphContexts.energy, 
+                    state.graphs.energy.data,
+                    { K: '#60a5fa', P: '#f59e0b', E: '#4ade80'},
+                    { K: 'K', P: 'P', E: 'E_total'}
+                );
             }
 
             function updateGraphData() {
                 if(state.t > 300) return;
                 const dataPointLimit = 500;
-                if (state.graphs.pos.show) {
-                    state.graphs.pos.data.push({t: state.t, y: state.x});
-                    if (state.graphs.pos.data.length > dataPointLimit) state.graphs.pos.data.shift();
-                }
-                if (state.graphs.vel.show) {
-                    state.graphs.vel.data.push({t: state.t, y: state.v});
-                    if (state.graphs.vel.data.length > dataPointLimit) state.graphs.vel.data.shift();
-                }
-                if (state.graphs.acc.show) {
-                    state.graphs.acc.data.push({t: state.t, y: state.a});
-                    if (state.graphs.acc.data.length > dataPointLimit) state.graphs.acc.data.shift();
-                }
-                if (state.graphs.energy.show) {
-                    const thetaRad = state.theta * Math.PI / 180;
-                    const planePhysicalLength = Math.hypot(state.planeBaseMeters, state.planeHeightMeters);
-                    const distanceFromBottom = planePhysicalLength / 2 + state.x;
-                    const verticalHeight = distanceFromBottom * Math.sin(thetaRad);
-                    const K = 0.5 * state.m * state.v * state.v;
-                    const P = state.m * state.g * verticalHeight;
-                    const E = K + P;
+                
+                state.graphs.pos.data.push({t: state.t, y: state.x});
+                if (state.graphs.pos.data.length > dataPointLimit) state.graphs.pos.data.shift();
+                
+                state.graphs.vel.data.push({t: state.t, y: state.v});
+                if (state.graphs.vel.data.length > dataPointLimit) state.graphs.vel.data.shift();
+                
+                state.graphs.acc.data.push({t: state.t, y: state.a});
+                if (state.graphs.acc.data.length > dataPointLimit) state.graphs.acc.data.shift();
+                
+                const thetaRad = state.theta * Math.PI / 180;
+                const planePhysicalLength = Math.hypot(state.planeBaseMeters, state.planeHeightMeters);
+                const distanceFromBottom = planePhysicalLength / 2 + state.x;
+                const verticalHeight = distanceFromBottom * Math.sin(thetaRad);
+                const K = 0.5 * state.m * state.v * state.v;
+                const P = state.m * state.g * verticalHeight;
+                const E = K + P;
 
-                    state.graphs.energy.data.K.push({t: state.t, y: K});
-                    state.graphs.energy.data.P.push({t: state.t, y: P});
-                    state.graphs.energy.data.E.push({t: state.t, y: E});
-                    
-                    if (state.graphs.energy.data.K.length > dataPointLimit) state.graphs.energy.data.K.shift();
-                    if (state.graphs.energy.data.P.length > dataPointLimit) state.graphs.energy.data.P.shift();
-                    if (state.graphs.energy.data.E.length > dataPointLimit) state.graphs.energy.data.E.shift();
-                }
+                state.graphs.energy.data.K.push({t: state.t, y: K});
+                state.graphs.energy.data.P.push({t: state.t, y: P});
+                state.graphs.energy.data.E.push({t: state.t, y: E});
+                
+                if (state.graphs.energy.data.K.length > dataPointLimit) state.graphs.energy.data.K.shift();
+                if (state.graphs.energy.data.P.length > dataPointLimit) state.graphs.energy.data.P.shift();
+                if (state.graphs.energy.data.E.length > dataPointLimit) state.graphs.energy.data.E.shift();
             }
             
             function updateControlsFromState() {
@@ -795,7 +774,6 @@
                 dom.frictionControls.classList.toggle('hidden', !state.hasFriction);
                 dom.muSSlider.value = state.mu_s; dom.muSLabel.textContent = state.mu_s.toFixed(2);
                 dom.muKSlider.value = state.mu_k; dom.muKLabel.textContent = state.mu_k.toFixed(2);
-                dom.showVectorsCheckbox.checked = state.showVectors;
             }
 
             function resetToDefaults() {
@@ -803,13 +781,10 @@
                      dom.playPauseBtn.click();
                  }
                  cancelAnimationFrame(animationFrameId);
-                 state = {...JSON.parse(JSON.stringify(defaultState)), ...{g: 9.81, x: 0, v: 0, a: 0, t: 0, N: 0, f: 0, isPlaying: false, isDragging: false, dt: 1/60, clouds: state.clouds, graphs: { pos: { show: false, data: [] }, vel: { show: false, data: [] }, acc: { show: false, data: [] }, energy: { show: false, data: { K:[],P:[],E:[] } } } } };
+                 state = {...JSON.parse(JSON.stringify(defaultState)), ...{g: 9.81, x: 0, v: 0, a: 0, t: 0, N: 0, f: 0, isPlaying: false, isDragging: false, dt: 1/60, clouds: state.clouds, graphs: { pos: { show: true, data: [] }, vel: { show: true, data: [] }, acc: { show: true, data: [] }, energy: { show: true, data: { K:[],P:[],E:[] } } } } };
                  updateControlsFromState();
-                 ['pos', 'vel', 'acc', 'energy'].forEach(key => {
-                    document.getElementById(`show-${key}-graph-checkbox`).checked = false;
-                    state.graphs[key].show = false;
-                 });
                  setupAllGraphs();
+                 updateGraphData(); // Add initial point to graphs
                  gameLoop(); // Restart the loop
             }
             let lastResizeWidth = 0;
@@ -833,30 +808,6 @@
                         speed: Math.random() * 5 + 2
                     });
                 }
-                // Grass Pattern
-                const patternCanvas = document.createElement('canvas');
-                const patternCtx = patternCanvas.getContext('2d');
-                patternCanvas.width = 80;
-                patternCanvas.height = 20;
-                const groundGradient = patternCtx.createLinearGradient(0, 0, 0, 20);
-                groundGradient.addColorStop(0, '#6AAB5C');
-                groundGradient.addColorStop(1, '#5B944E');
-                patternCtx.fillStyle = groundGradient;
-                patternCtx.fillRect(0,0,80,20);
-
-                for(let i=0; i < 70; i++) {
-                    const x = Math.random() * 80;
-                    patternCtx.fillStyle = i % 2 === 0 ? 'rgba(46,139,87,0.5)' : 'rgba(60,179,113,0.5)';
-                    patternCtx.beginPath();
-                    const bladeHeight = Math.random() * 10 + 5;
-                    const bladeWidth = Math.random() * 2 + 1;
-                    patternCtx.moveTo(x, 20);
-                    patternCtx.lineTo(x + bladeWidth, 20);
-                    patternCtx.lineTo(x + bladeWidth/2, 20 - bladeHeight);
-                    patternCtx.closePath();
-                    patternCtx.fill();
-                }
-                grassPattern = ctx.createPattern(patternCanvas, 'repeat');
             }
 
              // --- DRAGGING LOGIC ---
@@ -935,6 +886,7 @@
                 initBackground();
                 setupAllGraphs();
                 updateControlsFromState();
+                updateGraphData();
                 
                 dom.playPauseBtn.addEventListener('click', () => {
                     state.isPlaying = !state.isPlaying;
@@ -997,22 +949,6 @@
                 });
                  dom.muSSlider.addEventListener('input', e => { state.mu_s = parseFloat(e.target.value); dom.muSLabel.textContent = state.mu_s.toFixed(2); });
                 dom.muKSlider.addEventListener('input', e => { state.mu_k = parseFloat(e.target.value); dom.muKLabel.textContent = state.mu_k.toFixed(2); });
-
-                dom.showVectorsCheckbox.addEventListener('change', (e) => state.showVectors = e.target.checked);
-                
-                ['pos', 'vel', 'acc', 'energy'].forEach(key => {
-                    document.getElementById(`show-${key}-graph-checkbox`).addEventListener('change', (e) => {
-                        state.graphs[key].show = e.target.checked;
-                        if (state.graphs[key].show) {
-                            // Clear data when enabling a graph
-                             if (key === 'energy') state.graphs.energy.data = {K:[],P:[],E:[]};
-                             else state.graphs[key].data = [];
-                             // Add initial point
-                             updateGraphData();
-                        }
-                        setupAllGraphs();
-                    });
-                });
                 
                  window.addEventListener('resize', resizeCanvas);
                  gameLoop();

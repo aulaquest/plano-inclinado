@@ -92,12 +92,25 @@
             padding: 1rem;
             border-radius: 0.5rem;
         }
+        #graph-tooltip {
+            position: fixed;
+            display: none;
+            background-color: rgba(15, 23, 42, 0.8);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 0.75rem;
+            pointer-events: none; /* So it doesn't interfere with mouse events on the canvas */
+            white-space: pre;
+            backdrop-filter: blur(4px);
+            border: 1px solid #334155;
+        }
     </style>
 </head>
-<body class="text-gray-300 flex flex-col md:flex-row bg-slate-900 min-h-screen">
+<body class="text-gray-300 flex flex-col lg:flex-row bg-slate-900 min-h-screen">
 
     <!-- Columna de Simulación (70%) -->
-    <div class="w-full md:w-[70%] flex flex-col p-4">
+    <div class="w-full lg:w-[70%] flex flex-col p-4">
         
         <div id="info-hud" class="w-full max-w-5xl mx-auto grid grid-cols-3 sm:grid-cols-6 gap-2 text-center bg-slate-900/70 backdrop-blur-sm p-3 rounded-lg z-20 border border-slate-700 shadow-lg mb-4">
             <div class="flex flex-col"><span class="text-xs text-sky-400">Aceleración</span><span id="a-hud" class="font-mono text-white">0.00 m/s²</span></div>
@@ -114,15 +127,23 @@
                 <button id="zoom-out-btn">-</button>
             </div>
         </div>
-        <div id="graph-panel" class="w-full max-w-5xl mx-auto mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div id="mobile-controls" class="w-full max-w-5xl mx-auto lg:hidden my-4">
+             <div class="control-card space-y-3">
+                <div class="flex items-center justify-center gap-3">
+                    <button id="play-pause-btn-mobile" class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs rounded-md transition w-24">Arrancar</button>
+                    <button id="reset-btn-mobile" class="px-4 py-1.5 bg-green-600 hover:bg-green-700 text-white font-semibold text-xs rounded-md transition">Reiniciar</button>
+                </div>
+            </div>
+        </div>
+        <div id="graph-panel" class="w-full max-w-5xl mx-auto mt-4 grid grid-cols-2 gap-4">
             <!-- Gráficas se añadirán aquí dinámicamente -->
         </div>
     </div>
     
     <!-- Panel de Controles (30%) -->
-    <div class="w-full md:w-[30%] control-panel p-4 z-10 border-t md:border-t-0 md:border-l border-slate-800 md:h-screen md:sticky md:top-0 md:overflow-y-auto flex flex-col">
+    <div class="w-full lg:w-[30%] control-panel p-4 z-10 border-t lg:border-t-0 lg:border-l border-slate-800 lg:h-screen lg:sticky lg:top-0 lg:overflow-y-auto flex flex-col">
         <div class="space-y-4 flex-grow w-full">
-            <div class="control-card space-y-3">
+            <div class="control-card space-y-3 hidden lg:block">
                 <div class="flex items-center justify-center gap-3">
                     <button id="play-pause-btn" class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs rounded-md transition w-24">Arrancar</button>
                     <button id="reset-btn" class="px-4 py-1.5 bg-green-600 hover:bg-green-700 text-white font-semibold text-xs rounded-md transition">Reiniciar</button>
@@ -170,6 +191,7 @@
         </div>
         <footer class="p-2 text-center text-xs text-gray-500 z-20 mt-auto pt-4">Simulación creada por <a href="https://aulaquest.com" target="_blank" rel="noopener noreferrer" class="underline hover:text-indigo-400">Aulaquest</a></footer>
     </div>
+    <div id="graph-tooltip"></div>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
@@ -179,6 +201,8 @@
                 simulationWrapper: document.getElementById('simulation-wrapper'),
                 playPauseBtn: document.getElementById('play-pause-btn'),
                 resetBtn: document.getElementById('reset-btn'),
+                playPauseBtnMobile: document.getElementById('play-pause-btn-mobile'),
+                resetBtnMobile: document.getElementById('reset-btn-mobile'),
                 zoomInBtn: document.getElementById('zoom-in-btn'),
                 zoomOutBtn: document.getElementById('zoom-out-btn'),
                 aHud: document.getElementById('a-hud'),
@@ -209,6 +233,7 @@
                 muKSlider: document.getElementById('mu-k-slider'),
                 muKLabel: document.getElementById('mu-k-label'),
                 graphPanel: document.getElementById('graph-panel'),
+                tooltip: document.getElementById('graph-tooltip'),
             };
 
             const ctx = dom.canvas.getContext('2d');
@@ -241,10 +266,10 @@
                 dt: 1 / 60,
                 clouds: [],
                 graphs: {
-                    pos: { show: true, data: [] },
-                    vel: { show: true, data: [] },
-                    acc: { show: true, data: [] },
-                    energy: { show: true, data: { K: [], P: [], E: [] } }
+                    pos: { show: true, data: [], yBounds: {min: -10, max: 10} },
+                    vel: { show: true, data: [], yBounds: {min: -10, max: 10} },
+                    acc: { show: true, data: [], yBounds: {min: -10, max: 10} },
+                    energy: { show: true, data: { K: [], P: [], E: [] }, yBounds: {min: 0, max: 100} }
                 }
             };
             
@@ -316,6 +341,7 @@
                         state.v = 0;
                         state.isPlaying = false;
                         dom.playPauseBtn.textContent = 'Arrancar';
+                        dom.playPauseBtnMobile.textContent = 'Arrancar';
                         updateGraphData(); // Final update
                         cancelAnimationFrame(animationFrameId);
                         draw(planePhysicalLength); // Final draw
@@ -358,7 +384,7 @@
             function drawGround(w, h, groundY) {
                 // Ground line
                 ctx.fillStyle = '#228B22';
-                ctx.fillRect(-w * 5, groundY, w * 10, 10);
+                ctx.fillRect(-w * 5, groundY, w * 10, 20);
             }
 
             function draw(planePhysicalLength) {
@@ -556,6 +582,8 @@
                 const canvas = document.getElementById(`${id}-graph-canvas`);
                 canvas.width = canvas.clientWidth;
                 canvas.height = canvas.clientHeight;
+                 canvas.addEventListener('mousemove', (e) => handleGraphMouseMove(e, id));
+                canvas.addEventListener('mouseout', () => dom.tooltip.style.display = 'none');
                 return canvas.getContext('2d');
             }
 
@@ -570,13 +598,13 @@
                 };
             }
             
-            function drawSingleGraph(ctx, data, color, includeZero = false) {
+            function drawSingleGraph(ctx, data, color, yBounds) {
                 if (!ctx) return;
                 const w = ctx.canvas.width;
                 const h = ctx.canvas.height;
                 ctx.clearRect(0, 0, w, h);
 
-                if (!data || data.length < 1) { // Changed to < 1 to draw single point
+                if (!data || data.length < 1) { 
                     ctx.fillStyle = 'rgba(156, 163, 175, 0.5)';
                     ctx.font = '12px Inter';
                     ctx.textAlign = 'center';
@@ -585,17 +613,11 @@
                     return;
                 }
 
-                const padding = 30; // Increased padding
+                const padding = 30;
                 const xMax = data.length > 1 ? data[data.length - 1].t : data[0].t + 1;
                 const xMin = data[0].t;
-                const yData = data.map(p => p.y);
-                let yMin = Math.min(...yData);
-                let yMax = Math.max(...yData);
-
-                if (includeZero) {
-                    yMin = Math.min(0, yMin);
-                    yMax = Math.max(0, yMax);
-                }
+                
+                let {min: yMin, max: yMax} = yBounds;
 
                 const yRange = yMax - yMin;
                 if (Math.abs(yRange) < 1e-6) {
@@ -606,11 +628,10 @@
                     yMin -= yRange * 0.1;
                 }
                 
-                if (Math.abs(yMax - yMin) < 1e-6) { yMax += 0.5; yMin -=0.5; }
-
-
                 const xScale = (w - padding * 2) / (xMax - xMin || 1);
                 const yScale = (h - padding * 2) / (yMax - yMin || 1);
+                
+                ctx.graphMetrics = {xScale, yScale, xMin, yMin, padding, w, h}; // Store for tooltip
 
                 const toCanvasX = (t) => padding + (t - xMin) * xScale;
                 const toCanvasY = (y) => h - padding - (y - yMin) * yScale;
@@ -644,14 +665,14 @@
                 ctx.fillText(xMax.toFixed(1) + 's', w - padding, h - padding + 5);
             }
 
-            function drawMultiLineGraph(ctx, datasets, colors, labels) {
+            function drawMultiLineGraph(ctx, datasets, colors, labels, yBounds) {
                 if (!ctx) return;
                 const w = ctx.canvas.width;
                 const h = ctx.canvas.height;
                 ctx.clearRect(0, 0, w, h);
 
                 const allDataPoints = Object.values(datasets).flatMap(d => d);
-                if (allDataPoints.length < 1) { // Changed to < 1
+                if (allDataPoints.length < 1) {
                     ctx.fillStyle = 'rgba(156, 163, 175, 0.5)';
                     ctx.font = '12px Inter';
                     ctx.textAlign = 'center';
@@ -663,16 +684,17 @@
                 const padding = 30;
                 const xMax = allDataPoints.length > 1 ? allDataPoints[allDataPoints.length - 1].t : allDataPoints[0].t + 1;
                 const xMin = allDataPoints[0].t;
-                const yData = allDataPoints.map(p => p.y);
-                let yMin = Math.min(...yData);
-                let yMax = Math.max(...yData);
-                
+                let {min: yMin, max: yMax} = yBounds;
+
                 const yRange = yMax - yMin;
                 if (Math.abs(yRange) < 1e-6) { yMax += 5; yMin -= 5; }
                 else { yMax += yRange * 0.1; yMin -= yRange * 0.1; }
 
                 const xScale = (w - padding * 2) / (xMax - xMin || 1);
                 const yScale = (h - padding * 2) / (yMax - yMin || 1);
+
+                ctx.graphMetrics = {xScale, yScale, xMin, yMin, padding, w, h};
+
                 const toCanvasX = (t) => padding + (t - xMin) * xScale;
                 const toCanvasY = (y) => h - padding - (y - yMin) * yScale;
 
@@ -684,7 +706,7 @@
                 ctx.stroke();
 
                 // Lines
-                Object.keys(datasets).forEach((key, index) => {
+                Object.keys(datasets).forEach((key) => {
                     const data = datasets[key];
                     if (data.length < 1) return;
                     ctx.strokeStyle = colors[key];
@@ -720,13 +742,14 @@
             }
 
             function drawGraphs() {
-                drawSingleGraph(graphContexts.pos, state.graphs.pos.data, '#818cf8');
-                drawSingleGraph(graphContexts.vel, state.graphs.vel.data, '#60a5fa', true);
-                drawSingleGraph(graphContexts.acc, state.graphs.acc.data, '#f87171');
+                drawSingleGraph(graphContexts.pos, state.graphs.pos.data, '#818cf8', state.graphs.pos.yBounds);
+                drawSingleGraph(graphContexts.vel, state.graphs.vel.data, '#60a5fa', state.graphs.vel.yBounds);
+                drawSingleGraph(graphContexts.acc, state.graphs.acc.data, '#f87171', state.graphs.acc.yBounds);
                 drawMultiLineGraph(graphContexts.energy, 
                     state.graphs.energy.data,
                     { K: '#60a5fa', P: '#f59e0b', E: '#4ade80'},
-                    { K: 'K', P: 'P', E: 'E_total'}
+                    { K: 'K', P: 'P', E: 'E_total'},
+                    state.graphs.energy.yBounds
                 );
             }
 
@@ -776,15 +799,35 @@
                 dom.muKSlider.value = state.mu_k; dom.muKLabel.textContent = state.mu_k.toFixed(2);
             }
 
+             function calculateGraphBounds() {
+                const planeLength = Math.hypot(state.planeBaseMeters, state.planeHeightMeters);
+                const maxHeight = state.planeHeightMeters;
+
+                // Position
+                state.graphs.pos.yBounds = { min: -planeLength / 2, max: planeLength / 2 };
+
+                // Velocity (based on energy conservation from max height)
+                const maxTheoreticalVel = Math.sqrt(2 * state.g * maxHeight);
+                state.graphs.vel.yBounds = { min: -maxTheoreticalVel, max: maxTheoreticalVel };
+
+                // Acceleration (based on g)
+                state.graphs.acc.yBounds = { min: -state.g, max: state.g };
+
+                // Energy (based on max potential energy)
+                const maxEnergy = state.m * state.g * maxHeight;
+                state.graphs.energy.yBounds = { min: 0, max: maxEnergy };
+            }
+
             function resetToDefaults() {
                  if (state.isPlaying) {
-                     dom.playPauseBtn.click();
+                     togglePlayPause();
                  }
                  cancelAnimationFrame(animationFrameId);
                  state = {...JSON.parse(JSON.stringify(defaultState)), ...{g: 9.81, x: 0, v: 0, a: 0, t: 0, N: 0, f: 0, isPlaying: false, isDragging: false, dt: 1/60, clouds: state.clouds, graphs: { pos: { show: true, data: [] }, vel: { show: true, data: [] }, acc: { show: true, data: [] }, energy: { show: true, data: { K:[],P:[],E:[] } } } } };
                  updateControlsFromState();
                  setupAllGraphs();
-                 updateGraphData(); // Add initial point to graphs
+                 calculateGraphBounds();
+                 updateGraphData(); 
                  gameLoop(); // Restart the loop
             }
             let lastResizeWidth = 0;
@@ -793,7 +836,7 @@
                 if(Math.abs(newWidth - lastResizeWidth) < 5) return;
                 lastResizeWidth = newWidth;
                 dom.canvas.width = newWidth;
-                dom.canvas.height = newWidth / 1.7; 
+                dom.canvas.height = newWidth / (window.innerWidth < 1024 ? 1.5 : 1.8); // Taller on mobile
                 setupAllGraphs();
             }
 
@@ -811,46 +854,32 @@
             }
 
              // --- DRAGGING LOGIC ---
-             function onMouseDown(e) {
-                if (state.isPlaying) return; // Can't drag while playing
+             function handleDragStart(e) {
+                if (state.isPlaying) return;
+                e.preventDefault();
+                const coords = e.touches ? e.touches[0] : e;
+                handleDrag(coords);
+                state.isDragging = true;
+                dom.canvas.style.cursor = 'grabbing';
+             }
+
+             function handleDragMove(e) {
+                 if (!state.isDragging) return;
+                 e.preventDefault();
+                 const coords = e.touches ? e.touches[0] : e;
+                 handleDrag(coords);
+             }
+
+             function handleDragEnd(e) {
+                 state.isDragging = false;
+                 dom.canvas.style.cursor = 'grab';
+             }
+
+             function handleDrag(coords) {
                 const rect = dom.canvas.getBoundingClientRect();
-                let mouseX = e.clientX - rect.left;
-                let mouseY = e.clientY - rect.top;
-
-                // Inverse transform mouse coordinates to account for zoom
-                const w = dom.canvas.width;
-                const h = dom.canvas.height;
-                const groundLevel = h * 0.9;
-                const zoomAnchorX = w / 2;
-                const zoomAnchorY = groundLevel;
-
-                const worldMouseX = (mouseX - zoomAnchorX) / state.zoom + zoomAnchorX;
-                const worldMouseY = (mouseY - zoomAnchorY) / state.zoom + zoomAnchorY;
-
-                const info = lastDragInfo;
-                if (!info.blockScreenX) return;
-
-                const dx = worldMouseX - info.blockScreenX;
-                const dy = worldMouseY - info.blockScreenY;
-
-                const rotatedMouseX = dx * Math.cos(info.thetaRad) + dy * Math.sin(info.thetaRad);
-                const rotatedMouseY = -dx * Math.sin(info.thetaRad) + dy * Math.cos(info.thetaRad);
-
-                if (Math.abs(rotatedMouseX) < info.blockWidth / 2 && rotatedMouseY > -info.blockHeight && rotatedMouseY < 0) {
-                    state.isDragging = true;
-                    dom.canvas.style.cursor = 'grabbing';
-                    window.addEventListener('mousemove', onMouseMove);
-                    window.addEventListener('mouseup', onMouseUp);
-                }
-            }
-
-            function onMouseMove(e) {
-                if (!state.isDragging) return;
-                const rect = dom.canvas.getBoundingClientRect();
-                let mouseX = e.clientX - rect.left;
-                let mouseY = e.clientY - rect.top;
+                let mouseX = coords.clientX - rect.left;
+                let mouseY = coords.clientY - rect.top;
                 
-                 // Inverse transform mouse coordinates to account for zoom
                 const w = dom.canvas.width;
                 const h = dom.canvas.height;
                 const groundLevel = h * 0.9;
@@ -861,6 +890,7 @@
                 mouseY = (mouseY - zoomAnchorY) / state.zoom + zoomAnchorY;
 
                 const info = lastDragInfo;
+                if(!info.planeOriginX) return;
                 const relMouseX = mouseX - info.planeOriginX;
                 const relMouseY = mouseY - info.planeOriginY;
 
@@ -871,42 +901,110 @@
                 const lowerBound = -info.planePhysicalLength / 2.0;
                 const upperBound = info.planePhysicalLength / 2.0;
                 state.x = Math.max(lowerBound, Math.min(upperBound, newX));
-            }
+             }
 
-            function onMouseUp(e) {
-                state.isDragging = false;
-                dom.canvas.style.cursor = 'grab';
-                window.removeEventListener('mousemove', onMouseMove);
-                window.removeEventListener('mouseup', onMouseUp);
-            }
 
+            // --- Tooltip Logic ---
+            function handleGraphMouseMove(e, key) {
+                const canvas = e.target;
+                const ctx = graphContexts[key];
+                if (!ctx || !ctx.graphMetrics) return;
+
+                const metrics = ctx.graphMetrics;
+                const rect = canvas.getBoundingClientRect();
+                const mouseX = e.clientX - rect.left;
+
+                if (mouseX < metrics.padding || mouseX > metrics.w - metrics.padding) {
+                    dom.tooltip.style.display = 'none';
+                    return;
+                }
+
+                const time = (mouseX - metrics.padding) / metrics.xScale + metrics.xMin;
+                
+                let datasets = {};
+                if (key === 'energy') {
+                    datasets = state.graphs[key].data;
+                } else {
+                    datasets[key] = state.graphs[key].data;
+                }
+
+                if (!Object.values(datasets).some(d => d.length > 0)) return;
+
+                const primaryData = datasets[Object.keys(datasets)[0]];
+                
+                let closestIndex = 0;
+                let minDiff = Infinity;
+                for(let i=0; i < primaryData.length; i++) {
+                    const diff = Math.abs(primaryData[i].t - time);
+                    if (diff < minDiff) {
+                        minDiff = diff;
+                        closestIndex = i;
+                    }
+                }
+
+                let tooltipText = `t: ${primaryData[closestIndex].t.toFixed(2)}s\n`;
+                if (key === 'energy') {
+                    tooltipText += `K: ${datasets.K[closestIndex].y.toFixed(2)}J\n`;
+                    tooltipText += `P: ${datasets.P[closestIndex].y.toFixed(2)}J\n`;
+                    tooltipText += `E: ${datasets.E[closestIndex].y.toFixed(2)}J`;
+                } else if (key === 'pos'){
+                    tooltipText += `x: ${datasets.pos[closestIndex].y.toFixed(2)} m`;
+                } else if (key === 'vel'){
+                    tooltipText += `v: ${datasets.vel[closestIndex].y.toFixed(2)} m/s`;
+                } else if (key === 'acc'){
+                    tooltipText += `a: ${datasets.acc[closestIndex].y.toFixed(2)} m/s²`;
+                }
+
+                dom.tooltip.style.display = 'block';
+                dom.tooltip.style.left = `${e.clientX + 15}px`;
+                dom.tooltip.style.top = `${e.clientY}px`;
+                dom.tooltip.innerText = tooltipText;
+            }
+            
+            function togglePlayPause() {
+                state.isPlaying = !state.isPlaying;
+                const text = state.isPlaying ? 'Detener' : 'Arrancar';
+                dom.playPauseBtn.textContent = text;
+                dom.playPauseBtnMobile.textContent = text;
+                if(state.isPlaying) {
+                    cancelAnimationFrame(animationFrameId);
+                    gameLoop();
+                }
+            }
+            
+            function onParamChange() {
+                calculateGraphBounds();
+                updateGraphData();
+                drawGraphs();
+            }
 
             function init() {
                 resizeCanvas();
                 initBackground();
                 setupAllGraphs();
                 updateControlsFromState();
-                updateGraphData();
+                onParamChange();
                 
-                dom.playPauseBtn.addEventListener('click', () => {
-                    state.isPlaying = !state.isPlaying;
-                    dom.playPauseBtn.textContent = state.isPlaying ? 'Detener' : 'Arrancar';
-                    if(state.isPlaying) {
-                        cancelAnimationFrame(animationFrameId); // Ensure no multiple loops
-                        gameLoop();
-                    }
-                });
-
+                dom.playPauseBtn.addEventListener('click', togglePlayPause);
+                dom.playPauseBtnMobile.addEventListener('click', togglePlayPause);
                 dom.resetBtn.addEventListener('click', resetToDefaults);
+                dom.resetBtnMobile.addEventListener('click', resetToDefaults);
                 dom.zoomInBtn.addEventListener('click', () => { state.zoom = Math.min(3, state.zoom + 0.2); });
                 dom.zoomOutBtn.addEventListener('click', () => { state.zoom = Math.max(0.5, state.zoom - 0.2); });
 
-                dom.canvas.addEventListener('mousedown', onMouseDown);
+                // Dragging for mouse and touch
+                dom.canvas.addEventListener('mousedown', handleDragStart);
+                window.addEventListener('mousemove', handleDragMove);
+                window.addEventListener('mouseup', handleDragEnd);
+                dom.canvas.addEventListener('touchstart', handleDragStart);
+                window.addEventListener('touchmove', handleDragMove);
+                window.addEventListener('touchend', handleDragEnd);
+
                 dom.canvas.addEventListener('mouseover', () => { if(!state.isPlaying) dom.canvas.style.cursor = 'grab'; });
                 dom.canvas.addEventListener('mouseout', () => { dom.canvas.style.cursor = 'default'; });
 
 
-                dom.massSlider.addEventListener('input', e => { state.m = parseFloat(e.target.value); dom.massLabel.textContent = state.m.toFixed(1); });
+                dom.massSlider.addEventListener('input', e => { state.m = parseFloat(e.target.value); dom.massLabel.textContent = state.m.toFixed(1); onParamChange(); });
                 
                 dom.dimensionModeCheckbox.addEventListener('change', e => {
                     state.useDimensionMode = e.target.checked;
@@ -914,12 +1012,14 @@
                         state.planeHeightMeters = state.planeBaseMeters * Math.tan(state.theta * Math.PI / 180);
                     }
                     updateControlsFromState();
+                    onParamChange();
                 });
                 
                 dom.angleSlider.addEventListener('input', e => {
                     state.theta = parseFloat(e.target.value);
                     state.planeHeightMeters = state.planeBaseMeters * Math.tan(state.theta * Math.PI / 180);
                     updateControlsFromState();
+                    onParamChange();
                 });
 
                 dom.baseSlider.addEventListener('input', e => {
@@ -929,6 +1029,7 @@
                         state.planeHeightMeters = state.planeBaseMeters * tanTheta;
                     }
                     updateControlsFromState();
+                    onParamChange();
                 });
 
                 dom.heightSlider.addEventListener('input', e => {
@@ -938,10 +1039,11 @@
                        state.planeBaseMeters = state.planeHeightMeters / tanTheta;
                     }
                     updateControlsFromState();
+                    onParamChange();
                 });
 
-                dom.fParSlider.addEventListener('input', e => { state.f_par = parseFloat(e.target.value); dom.fParLabel.textContent = state.f_par; });
-                dom.fPerpSlider.addEventListener('input', e => { state.f_perp = parseFloat(e.target.value); dom.fPerpLabel.textContent = state.f_perp; });
+                dom.fParSlider.addEventListener('input', e => { state.f_par = parseFloat(e.target.value); dom.fParLabel.textContent = state.f_par; onParamChange(); });
+                dom.fPerpSlider.addEventListener('input', e => { state.f_perp = parseFloat(e.target.value); dom.fPerpLabel.textContent = state.f_perp; onParamChange();});
                 
                 dom.frictionCheckbox.addEventListener('change', e => {
                     state.hasFriction = e.target.checked;

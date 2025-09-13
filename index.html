@@ -1,1 +1,1010 @@
-hgg
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador de Plano Inclinado con Rozamiento y Fuerzas</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+      window.MathJax = {
+        tex: {
+          inlineMath: [['$', '$'], ['\\(', '\\)']],
+          displayMath: [['$$', '$$'], ['\\[', '\\]']]
+        }
+      };
+    </script>
+    <script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #020617;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        .control-panel {
+            background-color: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(8px);
+        }
+        .control-panel::-webkit-scrollbar { width: 6px; }
+        .control-panel::-webkit-scrollbar-track { background: transparent; }
+        .control-panel::-webkit-scrollbar-thumb { background: #4f46e5; border-radius: 3px; }
+        
+        .checkbox-label { position: relative; cursor: pointer; user-select: none; padding-left: 30px; }
+        .checkbox-label input { position: absolute; opacity: 0; cursor: pointer; height: 0; width: 0; }
+        .checkmark { position: absolute; top: 2px; left: 0; height: 20px; width: 20px; background-color: #334155; border: 1px solid #475569; border-radius: 4px; transition: background-color: 0.2s; }
+        .checkbox-label:hover input ~ .checkmark { background-color: #475569; }
+        .checkbox-label input:checked ~ .checkmark { background-color: #4f46e5; }
+        .checkmark:after { content: ""; position: absolute; display: none; left: 6px; top: 2px; width: 5px; height: 10px; border: solid white; border-width: 0 3px 3px 0; transform: rotate(45deg); }
+        .checkbox-label input:checked ~ .checkmark:after { display: block; }
+
+        input[type="range"] {
+            -webkit-appearance: none; appearance: none;
+            width: 100%; height: 8px;
+            background: #334155; border-radius: 5px; outline: none;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none; appearance: none;
+            width: 20px; height: 20px;
+            background: #a5b4fc; cursor: pointer; border-radius: 50%;
+            border: 2px solid #4f46e5;
+        }
+        input[type="range"]:disabled::-webkit-slider-thumb {
+            background: #64748b;
+            border-color: #475569;
+            cursor: not-allowed;
+        }
+        #zoom-controls button {
+             width: 32px; height: 32px;
+             border-radius: 50%;
+             background-color: rgba(15, 23, 42, 0.8);
+             border: 1px solid #334155;
+             color: white;
+             font-weight: bold;
+             display: flex;
+             align-items: center;
+             justify-content: center;
+             transition: background-color 0.2s;
+        }
+        #zoom-controls button:hover {
+            background-color: #334155;
+        }
+        /* HUD adjustments */
+        #info-hud {
+            padding: 0.4rem;
+            gap: 0.4rem;
+            background-color: rgba(15, 23, 42, 0.6);
+        }
+        #info-hud > div {
+             font-size: 0.65rem; 
+        }
+        #info-hud > div > span:first-child {
+            font-size: 0.6rem; 
+        }
+        #info-hud > div > span:last-child {
+            font-size: 0.75rem; 
+        }
+        .control-card {
+            background-color: rgba(18, 28, 48, 0.6);
+            padding: 1rem;
+            border-radius: 0.5rem;
+        }
+    </style>
+</head>
+<body class="text-gray-300 flex flex-col md:flex-row bg-slate-900 min-h-screen">
+
+    <!-- Columna de Simulación (70%) -->
+    <div class="w-full md:w-[70%] flex flex-col p-4">
+        <div id="info-hud" class="w-full max-w-5xl mx-auto grid grid-cols-3 sm:grid-cols-6 gap-2 text-center bg-slate-900/70 backdrop-blur-sm p-3 rounded-lg z-20 border border-slate-700 shadow-lg mb-4">
+            <div class="flex flex-col"><span class="text-xs text-sky-400">Aceleración</span><span id="a-hud" class="font-mono text-white">0.00 m/s²</span></div>
+            <div class="flex flex-col"><span class="text-xs text-sky-400">Velocidad</span><span id="v-hud" class="font-mono text-white">0.00 m/s</span></div>
+            <div class="flex flex-col"><span class="text-xs text-sky-400">Altura</span><span id="h-hud" class="font-mono text-white">0.00 m</span></div>
+            <div class="flex flex-col"><span class="text-xs text-sky-400">F. Normal</span><span id="n-hud" class="font-mono text-white">0.00 N</span></div>
+            <div class="flex flex-col"><span class="text-xs text-sky-400">F. Roce</span><span id="f-hud" class="font-mono text-white">0.00 N</span></div>
+            <div class="flex flex-col"><span class="text-xs text-sky-400">Tiempo</span><span id="t-hud" class="font-mono text-white">0.00 s</span></div>
+        </div>
+        <div id="simulation-wrapper" class="relative flex-grow flex flex-col items-center justify-center w-full max-w-5xl mx-auto bg-slate-800 rounded-lg border border-slate-700 overflow-hidden">
+            <canvas id="simulation-canvas"></canvas>
+            <div id="zoom-controls" class="absolute bottom-4 right-4 flex flex-col space-y-2 z-30">
+                <button id="zoom-in-btn">+</button>
+                <button id="zoom-out-btn">-</button>
+            </div>
+        </div>
+        <div id="graph-panel" class="w-full max-w-5xl mx-auto mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <!-- Gráficas se añadirán aquí dinámicamente -->
+        </div>
+    </div>
+    
+    <!-- Panel de Controles (30%) -->
+    <div class="w-full md:w-[30%] control-panel p-4 z-10 border-t md:border-t-0 md:border-l border-slate-800 md:h-screen md:sticky md:top-0 md:overflow-y-auto flex flex-col">
+        <div class="space-y-4 flex-grow w-full">
+            <div class="control-card space-y-3">
+                <h3 class="text-sm font-bold text-sky-400 mb-2">Control de Simulación</h3>
+                <div class="flex items-center justify-center gap-3">
+                    <button id="play-pause-btn" class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs rounded-md transition w-24">Arrancar</button>
+                    <button id="reset-btn" class="px-4 py-1.5 bg-green-600 hover:bg-green-700 text-white font-semibold text-xs rounded-md transition">Reiniciar</button>
+                </div>
+            </div>
+
+            <div class="control-card space-y-3">
+                <h3 class="text-sm font-bold text-sky-400">Parámetros del Sistema</h3>
+                <div><label for="mass-slider" class="text-xs text-gray-400">Masa ($m$): <span id="mass-label" class="font-bold text-white">2.0</span> kg</label><input type="range" id="mass-slider" min="0.1" max="10" step="0.1" value="2.0"></div>
+            </div>
+            
+            <div class="control-card space-y-3">
+                <h3 class="text-sm font-bold text-sky-400">Dimensiones del Plano</h3>
+                <div class="pt-2">
+                    <label class="checkbox-label text-sm">
+                        <input type="checkbox" id="dimension-mode-checkbox">
+                        <span class="checkmark"></span>
+                        Medidas
+                    </label>
+                </div>
+                <div class="pt-2 border-t border-slate-700">
+                    <div id="angle-controls" class="space-y-3">
+                        <div><label for="angle-slider" class="text-xs text-gray-400">Ángulo ($\theta$): <span id="angle-label" class="font-bold text-white">30</span>°</label><input type="range" id="angle-slider" min="0" max="90" step="1" value="30"></div>
+                    </div>
+                    <div id="dimension-controls" class="hidden space-y-3">
+                        <div><label for="base-slider" class="text-xs text-gray-400">Base ($b$): <span id="base-label" class="font-bold text-white">4.33</span> m</label><input type="range" id="base-slider" min="1" max="500" step="0.1" value="4.33"></div>
+                        <div><label for="height-slider" class="text-xs text-gray-400">Altura ($h$): <span id="height-label" class="font-bold text-white">2.50</span> m</label><input type="range" id="height-slider" min="0" max="500" step="0.1" value="2.50"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="control-card space-y-3">
+                 <h3 class="text-sm font-bold text-sky-400">Fuerzas Externas</h3>
+                 <div><label for="f-par-slider" class="text-xs text-gray-400">Fuerza Paralela ($F_\parallel$): <span id="f-par-label" class="font-bold text-white">0</span> N</label><input type="range" id="f-par-slider" min="-50" max="50" step="1" value="0"><p class="text-xs text-gray-500 -mt-1">Positiva hacia arriba del plano.</p></div>
+                 <div><label for="f-perp-slider" class="text-xs text-gray-400">Fuerza Perpendicular ($F_\perp$): <span id="f-perp-label" class="font-bold text-white">0</span> N</label><input type="range" id="f-perp-slider" min="-50" max="50" step="1" value="0"><p class="text-xs text-gray-500 -mt-1">Positiva empujando hacia el plano.</p></div>
+            </div>
+            
+            <div class="control-card space-y-3">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-sm font-bold text-sky-400">Rozamiento</h3>
+                    <label class="checkbox-label text-sm"><input type="checkbox" id="friction-checkbox"><span class="checkmark"></span></input></label>
+                </div>
+                <div id="friction-controls" class="space-y-3 pt-2 border-t border-slate-700 hidden">
+                    <div><label for="mu-s-slider" class="text-xs text-gray-400">Coef. Estático ($\mu_s$): <span id="mu-s-label" class="font-bold text-white">0.12</span></label><input type="range" id="mu-s-slider" min="0" max="1" step="0.01" value="0.12"></div>
+                    <div><label for="mu-k-slider" class="text-xs text-gray-400">Coef. Cinético ($\mu_k$): <span id="mu-k-label" class="font-bold text-white">0.10</span></label><input type="range" id="mu-k-slider" min="0" max="1" step="0.01" value="0.10"></div>
+                </div>
+            </div>
+            
+            <div class="control-card space-y-3">
+                <h3 class="text-sm font-bold text-sky-400">Visualización</h3>
+                <div class="flex flex-col space-y-2">
+                    <label class="checkbox-label text-xs"><input type="checkbox" id="show-vectors-checkbox" checked><span class="checkmark"></span>Mostrar Vectores de Fuerza</label>
+                    <label class="checkbox-label text-xs"><input type="checkbox" id="show-pos-graph-checkbox"><span class="checkmark"></span>Gráfica Posición-Tiempo</label>
+                    <label class="checkbox-label text-xs"><input type="checkbox" id="show-vel-graph-checkbox"><span class="checkmark"></span>Gráfica Velocidad-Tiempo</label>
+                    <label class="checkbox-label text-xs"><input type="checkbox" id="show-acc-graph-checkbox"><span class="checkmark"></span>Gráfica Aceleración-Tiempo</label>
+                    <label class="checkbox-label text-xs"><input type="checkbox" id="show-energy-graph-checkbox"><span class="checkmark"></span>Gráfica Energía-Tiempo</label>
+                </div>
+            </div>
+        </div>
+        <footer class="p-2 text-center text-xs text-gray-500 z-20 mt-auto pt-4">Simulación creada por <a href="https://aulaquest.com" target="_blank" rel="noopener noreferrer" class="underline hover:text-indigo-400">Aulaquest</a></footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // DOM Elements
+            const dom = {
+                canvas: document.getElementById('simulation-canvas'),
+                simulationWrapper: document.getElementById('simulation-wrapper'),
+                playPauseBtn: document.getElementById('play-pause-btn'),
+                resetBtn: document.getElementById('reset-btn'),
+                zoomInBtn: document.getElementById('zoom-in-btn'),
+                zoomOutBtn: document.getElementById('zoom-out-btn'),
+                aHud: document.getElementById('a-hud'),
+                vHud: document.getElementById('v-hud'),
+                hHud: document.getElementById('h-hud'),
+                nHud: document.getElementById('n-hud'),
+                fHud: document.getElementById('f-hud'),
+                tHud: document.getElementById('t-hud'),
+                massSlider: document.getElementById('mass-slider'),
+                massLabel: document.getElementById('mass-label'),
+                angleSlider: document.getElementById('angle-slider'),
+                angleLabel: document.getElementById('angle-label'),
+                dimensionModeCheckbox: document.getElementById('dimension-mode-checkbox'),
+                angleControls: document.getElementById('angle-controls'),
+                dimensionControls: document.getElementById('dimension-controls'),
+                baseSlider: document.getElementById('base-slider'),
+                baseLabel: document.getElementById('base-label'),
+                heightSlider: document.getElementById('height-slider'),
+                heightLabel: document.getElementById('height-label'),
+                fParSlider: document.getElementById('f-par-slider'),
+                fParLabel: document.getElementById('f-par-label'),
+                fPerpSlider: document.getElementById('f-perp-slider'),
+                fPerpLabel: document.getElementById('f-perp-label'),
+                frictionCheckbox: document.getElementById('friction-checkbox'),
+                frictionControls: document.getElementById('friction-controls'),
+                muSSlider: document.getElementById('mu-s-slider'),
+                muSLabel: document.getElementById('mu-s-label'),
+                muKSlider: document.getElementById('mu-k-slider'),
+                muKLabel: document.getElementById('mu-k-label'),
+                showVectorsCheckbox: document.getElementById('show-vectors-checkbox'),
+                graphPanel: document.getElementById('graph-panel'),
+            };
+
+            const ctx = dom.canvas.getContext('2d');
+            let animationFrameId;
+            let lastDragInfo = {}; 
+            let grassPattern;
+
+            // State
+            const defaultState = {
+                m: 2.0,
+                theta: 30, // degrees
+                planeBaseMeters: 4.33,
+                planeHeightMeters: 2.5,
+                useDimensionMode: false,
+                f_par: 0,
+                f_perp: 0,
+                mu_s: 0.12,
+                mu_k: 0.10,
+                hasFriction: false, // Default friction is OFF now
+                showVectors: true,
+                zoom: 1.0,
+            };
+
+            let state = {
+                ...JSON.parse(JSON.stringify(defaultState)),
+                g: 9.81,
+                x: 0, v: 0, a: 0, t: 0,
+                N: 0, f: 0,
+                isPlaying: false,
+                isDragging: false,
+                dt: 1 / 60,
+                clouds: [],
+                graphs: {
+                    pos: { show: false, data: [] },
+                    vel: { show: false, data: [] },
+                    acc: { show: false, data: [] },
+                    energy: { show: false, data: { K: [], P: [], E: [] } }
+                }
+            };
+            
+            // --- Physics Calculations ---
+            function calculateForces() {
+                const thetaRad = state.theta * Math.PI / 180;
+                const sinT = Math.sin(thetaRad);
+                const cosT = Math.cos(thetaRad);
+
+                state.N = state.m * state.g * cosT + state.f_perp;
+                if (state.N < 0) state.N = 0; 
+
+                const f_tend = state.f_par - state.m * state.g * sinT;
+
+                let f_friction = 0;
+                if (state.hasFriction && state.N > 0) {
+                    const f_s_max = state.mu_s * state.N;
+                    const f_k = state.mu_k * state.N;
+                    
+                    if (Math.abs(state.v) < 1e-5 && !state.isDragging) { 
+                        if (Math.abs(f_tend) <= f_s_max) {
+                            f_friction = -f_tend;
+                            state.a = 0;
+                        } else {
+                            f_friction = -Math.sign(f_tend) * f_k;
+                        }
+                    } else if (Math.abs(state.v) > 1e-5) { 
+                        f_friction = -Math.sign(state.v) * f_k;
+                    }
+                }
+                state.f = f_friction;
+
+                if (!(Math.abs(state.v) < 1e-5 && Math.abs(f_tend) <= state.mu_s * state.N && state.hasFriction) || state.isDragging) {
+                    const f_net = f_tend + f_friction;
+                    state.a = f_net / state.m;
+                }
+                 if(state.isDragging) {
+                    state.v = 0;
+                    state.a = 0;
+                }
+            }
+
+            function updateClouds() {
+                state.clouds.forEach(cloud => {
+                    cloud.x += cloud.speed * state.dt;
+                    if (cloud.x > dom.canvas.width / state.zoom + cloud.size * 2) {
+                        cloud.x = -cloud.size * 2;
+                    }
+                });
+            }
+
+            // --- Simulation Loop ---
+            function gameLoop() {
+                const planePhysicalLength = Math.hypot(state.planeBaseMeters, state.planeHeightMeters);
+
+                if (state.isPlaying && !state.isDragging) {
+                    const previousX = state.x;
+                    calculateForces();
+                    state.v += state.a * state.dt;
+                    state.x += state.v * state.dt;
+                    state.t += state.dt;
+
+                    const lowerBound = -planePhysicalLength / 2.0;
+                    const upperBound = planePhysicalLength / 2.0;
+                    
+                    updateGraphData(); // Update graphs before collision check
+
+                    if (state.x <= lowerBound) {
+                        state.x = lowerBound;
+                        if (state.v < 0) state.v = 0;
+                        state.isPlaying = false;
+                        dom.playPauseBtn.textContent = 'Arrancar';
+                        return; // Exit loop immediately to prevent last frame issues
+                    } else if (state.x >= upperBound) {
+                        state.x = upperBound;
+                        if (state.v > 0) state.v = 0;
+                    }
+                   
+                } else if (!state.isPlaying){
+                    calculateForces();
+                }
+                
+                updateClouds();
+                updateHUD();
+                draw(planePhysicalLength);
+                drawGraphs();
+                
+                animationFrameId = requestAnimationFrame(gameLoop);
+            }
+
+            // --- Drawing ---
+            function drawSkyAndClouds(w, h, groundY) {
+                // Sky
+                const skyGradient = ctx.createLinearGradient(0, 0, 0, groundY);
+                skyGradient.addColorStop(0, '#87CEEB');
+                skyGradient.addColorStop(1, '#B0E0E6');
+                ctx.fillStyle = skyGradient;
+                ctx.fillRect(0, 0, w, h);
+
+                // Clouds
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+                state.clouds.forEach(cloud => {
+                    ctx.beginPath();
+                    ctx.arc(cloud.x, cloud.y, cloud.size, 0, Math.PI * 2);
+                    ctx.arc(cloud.x + cloud.size * 0.8, cloud.y, cloud.size * 0.8, 0, Math.PI * 2);
+                    ctx.arc(cloud.x - cloud.size * 0.7, cloud.y, cloud.size * 0.7, 0, Math.PI * 2);
+                    ctx.fill();
+                });
+            }
+            
+            function drawGround(w, h, groundY) {
+                // Ground
+                ctx.fillStyle = grassPattern;
+                 // Draw a very wide rectangle to ensure it covers the screen when zoomed out
+                ctx.fillRect(-w * 5, groundY, w * 10, h * 5);
+            }
+
+            function draw(planePhysicalLength) {
+                const w = dom.canvas.width;
+                const h = dom.canvas.height;
+                const groundLevel = h * 0.85;
+
+                ctx.save();
+                ctx.clearRect(0, 0, w, h);
+
+                // 1. Draw non-zoomed background (sky, clouds)
+                drawSkyAndClouds(w, h, groundLevel);
+
+                // 2. Apply zoom transformation, anchored to the center of the ground
+                const zoomAnchorX = w / 2;
+                const zoomAnchorY = groundLevel;
+                ctx.translate(zoomAnchorX, zoomAnchorY);
+                ctx.scale(state.zoom, state.zoom);
+                ctx.translate(-zoomAnchorX, -zoomAnchorY);
+
+                // 3. Draw all zoomed elements (ground, plane, block)
+                drawGround(w, h, groundLevel);
+
+                const maxPlaneHeight = h * 0.75;
+                const maxPlaneWidth = w * 0.9;
+                
+                let planePixelHeight = (state.planeHeightMeters / (state.planeBaseMeters || 1)) * maxPlaneWidth;
+                let planePixelWidth = maxPlaneWidth;
+
+                if(planePixelHeight > maxPlaneHeight || state.planeHeightMeters === 0){
+                    planePixelHeight = maxPlaneHeight;
+                    planePixelWidth = planePixelHeight / (state.planeHeightMeters / (state.planeBaseMeters || 1e-6));
+                }
+
+                if (state.planeHeightMeters < 0.01) planePixelHeight = 0;
+                
+                const originX = (w - planePixelWidth) / 2;
+                const originY = groundLevel;
+                const thetaRad = Math.atan2(state.planeHeightMeters, state.planeBaseMeters);
+                
+                // Draw Plane
+                if (planePixelHeight > 0) {
+                    ctx.fillStyle = '#696969'; // Dim Gray
+                    ctx.beginPath();
+                    ctx.moveTo(originX, originY);
+                    ctx.lineTo(originX + planePixelWidth, originY);
+                    ctx.lineTo(originX + planePixelWidth, originY - planePixelHeight);
+                    ctx.closePath();
+                    ctx.fill();
+                }
+
+                // Draw hypotenuse / horizontal line
+                 ctx.strokeStyle = '#36454F'; // Charcoal
+                 ctx.lineWidth = 4;
+                 ctx.beginPath();
+                 ctx.moveTo(originX, originY);
+                 ctx.lineTo(originX + planePixelWidth, originY - planePixelHeight);
+                 ctx.stroke();
+
+                // Draw dimension labels
+                if (state.useDimensionMode) {
+                    ctx.fillStyle = "#111827";
+                    ctx.font = "bold 14px Inter";
+                    ctx.textAlign = "center";
+                    ctx.textBaseline = "middle";
+                    if(planePixelWidth > 50) ctx.fillText(`${state.planeBaseMeters.toFixed(2)} m`, originX + planePixelWidth / 2, originY + 20);
+                    if(planePixelHeight > 10) {
+                        ctx.save();
+                        ctx.translate(originX + planePixelWidth + 25, originY - planePixelHeight / 2);
+                        ctx.rotate(-Math.PI / 2);
+                        ctx.fillText(`${state.planeHeightMeters.toFixed(2)} m`, 0, 0);
+                        ctx.restore();
+                    }
+                }
+
+                // --- DIBUJO DEL BLOQUE ---
+                const planePixelLength = Math.hypot(planePixelWidth, planePixelHeight);
+                const pixelsPerMeter = planePixelLength / (planePhysicalLength || 1);
+                const blockWidth = 40;
+                const blockHeight = 25;
+                const blockPosOnPlane = (planePixelLength / 2) + state.x * pixelsPerMeter;
+                
+                const surfacePointX = originX + blockPosOnPlane * Math.cos(thetaRad);
+                const surfacePointY = originY - blockPosOnPlane * Math.sin(thetaRad);
+                
+                ctx.save();
+                ctx.translate(surfacePointX, surfacePointY);
+                ctx.rotate(-thetaRad);
+                
+                const blockGrad = ctx.createLinearGradient(0, -blockHeight, 0, 0);
+                blockGrad.addColorStop(0, '#818cf8');
+                blockGrad.addColorStop(1, '#4f46e5');
+                ctx.fillStyle = blockGrad;
+                ctx.shadowColor = "rgba(0,0,0,0.5)";
+                ctx.shadowBlur = 10;
+                ctx.fillRect(-blockWidth / 2, -blockHeight, blockWidth, blockHeight);
+                ctx.shadowColor = "transparent"; 
+                ctx.strokeStyle = "#c7d2fe";
+                ctx.lineWidth = 1;
+                ctx.strokeRect(-blockWidth / 2, -blockHeight, blockWidth, blockHeight);
+                
+                if (state.showVectors) {
+                    drawVectors(ctx, thetaRad);
+                }
+                ctx.restore();
+
+                 lastDragInfo = {
+                    blockScreenX: surfacePointX, blockScreenY: surfacePointY,
+                    blockWidth, blockHeight, thetaRad,
+                    planeOriginX: originX, planeOriginY: originY,
+                    planePixelLength, planePhysicalLength, pixelsPerMeter
+                 };
+
+                // Draw Angle Arc
+                if (planePixelHeight > 0) {
+                    ctx.strokeStyle = "#111827";
+                    ctx.lineWidth = 1.5;
+                    ctx.beginPath();
+                    ctx.arc(originX, originY, 30, 0, -thetaRad, true);
+                    ctx.stroke();
+                    ctx.fillStyle = "#111827";
+                    ctx.font = "bold 12px Inter";
+                    ctx.fillText(`θ=${state.theta.toFixed(1)}°`, originX + 35, originY - 15);
+                }
+                
+                ctx.restore();
+            }
+
+            function drawVectors(ctx, thetaRad) {
+                const blockH = 25;
+                const center = { x: 0, y: -blockH/2 };
+                const scale = 3;
+                const P = state.m * state.g;
+                drawVector(ctx, center, (Math.PI / 2) + thetaRad, P * scale, "#f59e0b", "P");
+                
+                if (state.theta > 0.1) {
+                    const P_par = P * Math.sin(thetaRad);
+                    const P_perp = P * Math.cos(thetaRad);
+                    drawVector(ctx, center, 90 * Math.PI/180, P_par * scale, "#fde047", "P∥", true);
+                    drawVector(ctx, center, 180 * Math.PI/180, P_perp * scale, "#fde047", "P⊥", true);
+                }
+                
+                if(state.N > 0) drawVector(ctx, center, 0, state.N * scale, "#4ade80", "N");
+                if(Math.abs(state.f) > 1e-3) drawVector(ctx, center, state.f > 0 ? -90 * Math.PI/180 : 90 * Math.PI/180, Math.abs(state.f) * scale, "#f87171", "f");
+                if(Math.abs(state.f_par) > 1e-3) drawVector(ctx, center, state.f_par > 0 ? -90 * Math.PI/180 : 90 * Math.PI/180, Math.abs(state.f_par) * scale, "#60a5fa", "F∥");
+                if(Math.abs(state.f_perp) > 1e-3) drawVector(ctx, center, state.f_perp > 0 ? 180 * Math.PI/180 : 0, Math.abs(state.f_perp) * scale, "#60a5fa", "F⊥");
+            }
+            
+            function drawVector(ctx, origin, angle, magnitude, color, label, dashed = false) {
+                 ctx.save();
+                 ctx.translate(origin.x, origin.y);
+                 ctx.rotate(angle);
+                 ctx.strokeStyle = color;
+                 ctx.fillStyle = color;
+                 ctx.lineWidth = 2;
+                 ctx.beginPath();
+                 if(dashed) ctx.setLineDash([5, 5]);
+                 ctx.moveTo(0, 0);
+                 ctx.lineTo(0, -magnitude);
+                 ctx.stroke();
+                 ctx.beginPath();
+                 ctx.moveTo(0, -magnitude);
+                 ctx.lineTo(-4, -magnitude + 8);
+                 ctx.lineTo(4, -magnitude + 8);
+                 ctx.closePath();
+                 ctx.fill();
+                 ctx.font = "12px Inter";
+                 ctx.fillText(label, 8, -magnitude/2);
+                 ctx.restore();
+            }
+
+            // --- UI & Graphs ---
+            function updateHUD(){
+                const thetaRad = state.theta * Math.PI / 180;
+                const planePhysicalLength = Math.hypot(state.planeBaseMeters, state.planeHeightMeters);
+                const distanceFromBottom = planePhysicalLength / 2 + state.x;
+                const verticalHeight = distanceFromBottom * Math.sin(thetaRad);
+
+                dom.aHud.textContent = `${state.a.toFixed(2)} m/s²`;
+                dom.vHud.textContent = `${state.v.toFixed(2)} m/s`;
+                dom.hHud.textContent = `${verticalHeight.toFixed(2)} m`;
+                dom.nHud.textContent = `${state.N.toFixed(2)} N`;
+                dom.fHud.textContent = `${state.f.toFixed(2)} N`;
+                dom.tHud.textContent = `${state.t.toFixed(2)} s`;
+            }
+
+            function setupGraph(id, title) {
+                const container = document.createElement('div');
+                container.id = `${id}-graph-container`;
+                container.className = "bg-slate-900/70 p-3 rounded-lg z-20 border border-slate-700 shadow-lg";
+                container.innerHTML = `<div class="flex justify-between items-center mb-2 flex-wrap"><h4 class="text-sm font-bold text-sky-400">${title}</h4></div><canvas id="${id}-graph-canvas" class="w-full h-32 rounded bg-slate-800/20"></canvas>`;
+                dom.graphPanel.appendChild(container);
+                const canvas = document.getElementById(`${id}-graph-canvas`);
+                canvas.width = canvas.clientWidth;
+                canvas.height = canvas.clientHeight;
+                return canvas.getContext('2d');
+            }
+
+            let graphContexts = {};
+            function setupAllGraphs() {
+                dom.graphPanel.innerHTML = ''; 
+                graphContexts = {};
+                if(state.graphs.pos.show) graphContexts.pos = setupGraph('pos', 'Posición (m) vs Tiempo (s)');
+                if(state.graphs.vel.show) graphContexts.vel = setupGraph('vel', 'Velocidad (m/s) vs Tiempo (s)');
+                if(state.graphs.acc.show) graphContexts.acc = setupGraph('acc', 'Aceleración (m/s²) vs Tiempo (s)');
+                if(state.graphs.energy.show) graphContexts.energy = setupGraph('energy', 'Energía (J) vs Tiempo (s)');
+            }
+            
+            function drawSingleGraph(ctx, data, color) {
+                if (!ctx) return;
+                const w = ctx.canvas.width;
+                const h = ctx.canvas.height;
+                ctx.clearRect(0, 0, w, h);
+
+                if (!data || data.length < 2) {
+                    ctx.fillStyle = 'rgba(156, 163, 175, 0.5)';
+                    ctx.font = '12px Inter';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText('Esperando datos...', w / 2, h / 2);
+                    return;
+                }
+
+                const padding = 30; // Increased padding
+                const xMax = data[data.length - 1].t;
+                const xMin = data[0].t;
+                const yData = data.map(p => p.y);
+                let yMin = Math.min(...yData);
+                let yMax = Math.max(...yData);
+
+                const yRange = yMax - yMin;
+                if (Math.abs(yRange) < 1e-6) {
+                    yMax += 0.5;
+                    yMin -= 0.5;
+                } else {
+                    yMax += yRange * 0.1;
+                    yMin -= yRange * 0.1;
+                }
+                
+                if (Math.abs(yMax - yMin) < 1e-6) { yMax += 0.5; yMin -=0.5; }
+
+
+                const xScale = (w - padding * 2) / (xMax - xMin || 1);
+                const yScale = (h - padding * 2) / (yMax - yMin || 1);
+
+                const toCanvasX = (t) => padding + (t - xMin) * xScale;
+                const toCanvasY = (y) => h - padding - (y - yMin) * yScale;
+
+                ctx.strokeStyle = '#475569';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(padding, padding);
+                ctx.lineTo(padding, h - padding);
+                ctx.lineTo(w - padding, h - padding);
+                ctx.stroke();
+
+                ctx.strokeStyle = color;
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(toCanvasX(data[0].t), toCanvasY(data[0].y));
+                for (let i = 1; i < data.length; i++) {
+                    ctx.lineTo(toCanvasX(data[i].t), toCanvasY(data[i].y));
+                }
+                ctx.stroke();
+
+                ctx.fillStyle = '#94a3b8';
+                ctx.font = '10px Inter';
+                ctx.textAlign = 'right';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(yMax.toFixed(1), padding - 5, padding);
+                ctx.fillText(yMin.toFixed(1), padding - 5, h - padding);
+
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'top';
+                ctx.fillText(xMax.toFixed(1) + 's', w - padding, h - padding + 5);
+            }
+
+            function drawMultiLineGraph(ctx, datasets, colors, labels) {
+                if (!ctx) return;
+                const w = ctx.canvas.width;
+                const h = ctx.canvas.height;
+                ctx.clearRect(0, 0, w, h);
+
+                const allDataPoints = Object.values(datasets).flatMap(d => d);
+                if (allDataPoints.length < 2) {
+                    ctx.fillStyle = 'rgba(156, 163, 175, 0.5)';
+                    ctx.font = '12px Inter';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText('Esperando datos...', w / 2, h / 2);
+                    return;
+                }
+
+                const padding = 30;
+                const xMax = allDataPoints[allDataPoints.length - 1].t;
+                const xMin = allDataPoints[0].t;
+                const yData = allDataPoints.map(p => p.y);
+                let yMin = Math.min(...yData);
+                let yMax = Math.max(...yData);
+                
+                const yRange = yMax - yMin;
+                if (Math.abs(yRange) < 1e-6) { yMax += 5; yMin -= 5; }
+                else { yMax += yRange * 0.1; yMin -= yRange * 0.1; }
+
+                const xScale = (w - padding * 2) / (xMax - xMin || 1);
+                const yScale = (h - padding * 2) / (yMax - yMin || 1);
+                const toCanvasX = (t) => padding + (t - xMin) * xScale;
+                const toCanvasY = (y) => h - padding - (y - yMin) * yScale;
+
+                // Axes
+                ctx.strokeStyle = '#475569';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(padding, padding); ctx.lineTo(padding, h - padding); ctx.lineTo(w - padding, h - padding);
+                ctx.stroke();
+
+                // Lines
+                Object.keys(datasets).forEach((key, index) => {
+                    const data = datasets[key];
+                    if (data.length < 2) return;
+                    ctx.strokeStyle = colors[key];
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.moveTo(toCanvasX(data[0].t), toCanvasY(data[0].y));
+                    for (let i = 1; i < data.length; i++) {
+                        ctx.lineTo(toCanvasX(data[i].t), toCanvasY(data[i].y));
+                    }
+                    ctx.stroke();
+                });
+
+                // Labels
+                ctx.fillStyle = '#94a3b8';
+                ctx.font = '10px Inter';
+                ctx.textAlign = 'right';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(yMax.toFixed(1), padding - 5, padding);
+                ctx.fillText(yMin.toFixed(1), padding - 5, h - padding);
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'top';
+                ctx.fillText(xMax.toFixed(1) + 's', w - padding, h - padding + 5);
+
+                // Legend
+                ctx.font = '10px Inter';
+                ctx.textAlign = 'left';
+                let legendX = padding + 10;
+                Object.keys(labels).forEach(key => {
+                    ctx.fillStyle = colors[key];
+                    ctx.fillText(`■ ${labels[key]}`, legendX, padding + 10);
+                    legendX += ctx.measureText(`■ ${labels[key]}`).width + 15;
+                });
+            }
+
+            function drawGraphs() {
+                if (state.graphs.pos.show) drawSingleGraph(graphContexts.pos, state.graphs.pos.data, '#818cf8');
+                if (state.graphs.vel.show) drawSingleGraph(graphContexts.vel, state.graphs.vel.data, '#60a5fa');
+                if (state.graphs.acc.show) drawSingleGraph(graphContexts.acc, state.graphs.acc.data, '#f87171');
+                if (state.graphs.energy.show) {
+                    drawMultiLineGraph(graphContexts.energy, 
+                        state.graphs.energy.data,
+                        { K: '#60a5fa', P: '#f59e0b', E: '#4ade80'},
+                        { K: 'K', P: 'P', E: 'E_total'}
+                    );
+                }
+            }
+
+            function updateGraphData() {
+                if(state.t > 300) return;
+                const dataPointLimit = 500;
+                if (state.graphs.pos.show) {
+                    state.graphs.pos.data.push({t: state.t, y: state.x});
+                    if (state.graphs.pos.data.length > dataPointLimit) state.graphs.pos.data.shift();
+                }
+                if (state.graphs.vel.show) {
+                    state.graphs.vel.data.push({t: state.t, y: state.v});
+                    if (state.graphs.vel.data.length > dataPointLimit) state.graphs.vel.data.shift();
+                }
+                if (state.graphs.acc.show) {
+                    state.graphs.acc.data.push({t: state.t, y: state.a});
+                    if (state.graphs.acc.data.length > dataPointLimit) state.graphs.acc.data.shift();
+                }
+                if (state.graphs.energy.show) {
+                    const thetaRad = state.theta * Math.PI / 180;
+                    const planePhysicalLength = Math.hypot(state.planeBaseMeters, state.planeHeightMeters);
+                    const distanceFromBottom = planePhysicalLength / 2 + state.x;
+                    const verticalHeight = distanceFromBottom * Math.sin(thetaRad);
+                    const K = 0.5 * state.m * state.v * state.v;
+                    const P = state.m * state.g * verticalHeight;
+                    const E = K + P;
+
+                    state.graphs.energy.data.K.push({t: state.t, y: K});
+                    state.graphs.energy.data.P.push({t: state.t, y: P});
+                    state.graphs.energy.data.E.push({t: state.t, y: E});
+                    
+                    if (state.graphs.energy.data.K.length > dataPointLimit) state.graphs.energy.data.K.shift();
+                    if (state.graphs.energy.data.P.length > dataPointLimit) state.graphs.energy.data.P.shift();
+                    if (state.graphs.energy.data.E.length > dataPointLimit) state.graphs.energy.data.E.shift();
+                }
+            }
+            
+            function updateControlsFromState() {
+                dom.massSlider.value = state.m; dom.massLabel.textContent = state.m.toFixed(1);
+                dom.angleSlider.value = state.theta; dom.angleLabel.textContent = state.theta.toFixed(1);
+                dom.baseSlider.value = state.planeBaseMeters; dom.baseLabel.textContent = state.planeBaseMeters.toFixed(2);
+                dom.heightSlider.value = state.planeHeightMeters; dom.heightLabel.textContent = state.planeHeightMeters.toFixed(2);
+                dom.dimensionModeCheckbox.checked = state.useDimensionMode;
+                dom.angleControls.classList.toggle('hidden', state.useDimensionMode);
+                dom.dimensionControls.classList.toggle('hidden', !state.useDimensionMode);
+                dom.fParSlider.value = state.f_par; dom.fParLabel.textContent = state.f_par;
+                dom.fPerpSlider.value = state.f_perp; dom.fPerpLabel.textContent = state.f_perp;
+                dom.frictionCheckbox.checked = state.hasFriction;
+                dom.frictionControls.classList.toggle('hidden', !state.hasFriction);
+                dom.muSSlider.value = state.mu_s; dom.muSLabel.textContent = state.mu_s.toFixed(2);
+                dom.muKSlider.value = state.mu_k; dom.muKLabel.textContent = state.mu_k.toFixed(2);
+                dom.showVectorsCheckbox.checked = state.showVectors;
+            }
+
+            function resetToDefaults() {
+                 if (state.isPlaying) dom.playPauseBtn.click();
+                 state = {...JSON.parse(JSON.stringify(defaultState)), ...{g: 9.81, x: 0, v: 0, a: 0, t: 0, N: 0, f: 0, isPlaying: false, isDragging: false, dt: 1/60, clouds: state.clouds, graphs: { pos: { show: false, data: [] }, vel: { show: false, data: [] }, acc: { show: false, data: [] }, energy: { show: false, data: { K:[],P:[],E:[] } } } } };
+                 updateControlsFromState();
+                 ['pos', 'vel', 'acc', 'energy'].forEach(key => {
+                    document.getElementById(`show-${key}-graph-checkbox`).checked = false;
+                    state.graphs[key].show = false;
+                 });
+                 setupAllGraphs();
+            }
+            let lastResizeWidth = 0;
+            function resizeCanvas() {
+                const newWidth = dom.simulationWrapper.clientWidth;
+                if(Math.abs(newWidth - lastResizeWidth) < 5) return;
+                lastResizeWidth = newWidth;
+                dom.canvas.width = newWidth;
+                dom.canvas.height = newWidth / 1.1; 
+                setupAllGraphs();
+            }
+
+            function initBackground() {
+                // Clouds
+                const numClouds = 5;
+                for (let i = 0; i < numClouds; i++) {
+                    state.clouds.push({
+                        x: Math.random() * dom.canvas.width,
+                        y: Math.random() * dom.canvas.height * 0.2 + 20,
+                        size: Math.random() * 20 + 20,
+                        speed: Math.random() * 5 + 2
+                    });
+                }
+                // Grass Pattern
+                const patternCanvas = document.createElement('canvas');
+                const patternCtx = patternCanvas.getContext('2d');
+                patternCanvas.width = 80;
+                patternCanvas.height = 20;
+                const groundGradient = patternCtx.createLinearGradient(0, 0, 0, 20);
+                groundGradient.addColorStop(0, '#6AAB5C');
+                groundGradient.addColorStop(1, '#5B944E');
+                patternCtx.fillStyle = groundGradient;
+                patternCtx.fillRect(0,0,80,20);
+
+                for(let i=0; i < 70; i++) {
+                    const x = Math.random() * 80;
+                    patternCtx.fillStyle = i % 2 === 0 ? 'rgba(46,139,87,0.5)' : 'rgba(60,179,113,0.5)';
+                    patternCtx.beginPath();
+                    const bladeHeight = Math.random() * 10 + 5;
+                    const bladeWidth = Math.random() * 2 + 1;
+                    patternCtx.moveTo(x, 20);
+                    patternCtx.lineTo(x + bladeWidth, 20);
+                    patternCtx.lineTo(x + bladeWidth/2, 20 - bladeHeight);
+                    patternCtx.closePath();
+                    patternCtx.fill();
+                }
+                grassPattern = ctx.createPattern(patternCanvas, 'repeat');
+            }
+
+             // --- DRAGGING LOGIC ---
+             function onMouseDown(e) {
+                if (state.isPlaying) return; // Can't drag while playing
+                const rect = dom.canvas.getBoundingClientRect();
+                let mouseX = e.clientX - rect.left;
+                let mouseY = e.clientY - rect.top;
+
+                // Inverse transform mouse coordinates to account for zoom
+                const w = dom.canvas.width;
+                const h = dom.canvas.height;
+                const groundLevel = h * 0.85;
+                const zoomAnchorX = w / 2;
+                const zoomAnchorY = groundLevel;
+
+                const worldMouseX = (mouseX - zoomAnchorX) / state.zoom + zoomAnchorX;
+                const worldMouseY = (mouseY - zoomAnchorY) / state.zoom + zoomAnchorY;
+
+                const info = lastDragInfo;
+                if (!info.blockScreenX) return;
+
+                const dx = worldMouseX - info.blockScreenX;
+                const dy = worldMouseY - info.blockScreenY;
+
+                const rotatedMouseX = dx * Math.cos(info.thetaRad) + dy * Math.sin(info.thetaRad);
+                const rotatedMouseY = -dx * Math.sin(info.thetaRad) + dy * Math.cos(info.thetaRad);
+
+                if (Math.abs(rotatedMouseX) < info.blockWidth / 2 && rotatedMouseY > -info.blockHeight && rotatedMouseY < 0) {
+                    state.isDragging = true;
+                    dom.canvas.style.cursor = 'grabbing';
+                    window.addEventListener('mousemove', onMouseMove);
+                    window.addEventListener('mouseup', onMouseUp);
+                }
+            }
+
+            function onMouseMove(e) {
+                if (!state.isDragging) return;
+                const rect = dom.canvas.getBoundingClientRect();
+                let mouseX = e.clientX - rect.left;
+                let mouseY = e.clientY - rect.top;
+                
+                 // Inverse transform mouse coordinates to account for zoom
+                const w = dom.canvas.width;
+                const h = dom.canvas.height;
+                const groundLevel = h * 0.85;
+                const zoomAnchorX = w / 2;
+                const zoomAnchorY = groundLevel;
+
+                mouseX = (mouseX - zoomAnchorX) / state.zoom + zoomAnchorX;
+                mouseY = (mouseY - zoomAnchorY) / state.zoom + zoomAnchorY;
+
+                const info = lastDragInfo;
+                const relMouseX = mouseX - info.planeOriginX;
+                const relMouseY = mouseY - info.planeOriginY;
+
+                let distAlongPlane = relMouseX * Math.cos(info.thetaRad) + relMouseY * -Math.sin(info.thetaRad);
+                
+                let newX = (distAlongPlane - info.planePixelLength / 2) / (info.pixelsPerMeter || 1);
+
+                const lowerBound = -info.planePhysicalLength / 2.0;
+                const upperBound = info.planePhysicalLength / 2.0;
+                state.x = Math.max(lowerBound, Math.min(upperBound, newX));
+            }
+
+            function onMouseUp(e) {
+                state.isDragging = false;
+                dom.canvas.style.cursor = 'grab';
+                window.removeEventListener('mousemove', onMouseMove);
+                window.removeEventListener('mouseup', onMouseUp);
+            }
+
+
+            function init() {
+                resizeCanvas();
+                initBackground();
+                setupAllGraphs();
+                updateControlsFromState();
+                
+                dom.playPauseBtn.addEventListener('click', () => {
+                    state.isPlaying = !state.isPlaying;
+                    dom.playPauseBtn.textContent = state.isPlaying ? 'Detener' : 'Arrancar';
+                });
+
+                dom.resetBtn.addEventListener('click', resetToDefaults);
+                dom.zoomInBtn.addEventListener('click', () => { state.zoom = Math.min(3, state.zoom + 0.2); });
+                dom.zoomOutBtn.addEventListener('click', () => { state.zoom = Math.max(0.5, state.zoom - 0.2); });
+
+                dom.canvas.addEventListener('mousedown', onMouseDown);
+                dom.canvas.addEventListener('mouseover', () => { if(!state.isPlaying) dom.canvas.style.cursor = 'grab'; });
+                dom.canvas.addEventListener('mouseout', () => { dom.canvas.style.cursor = 'default'; });
+
+
+                dom.massSlider.addEventListener('input', e => { state.m = parseFloat(e.target.value); dom.massLabel.textContent = state.m.toFixed(1); });
+                
+                dom.dimensionModeCheckbox.addEventListener('change', e => {
+                    state.useDimensionMode = e.target.checked;
+                    if (state.useDimensionMode) {
+                        state.planeHeightMeters = state.planeBaseMeters * Math.tan(state.theta * Math.PI / 180);
+                    }
+                    updateControlsFromState();
+                });
+                
+                dom.angleSlider.addEventListener('input', e => {
+                    state.theta = parseFloat(e.target.value);
+                    state.planeHeightMeters = state.planeBaseMeters * Math.tan(state.theta * Math.PI / 180);
+                    updateControlsFromState();
+                });
+
+                dom.baseSlider.addEventListener('input', e => {
+                    state.planeBaseMeters = parseFloat(e.target.value);
+                    const tanTheta = Math.tan(state.theta * Math.PI / 180);
+                    if (Math.abs(tanTheta) > 1e-6) {
+                        state.planeHeightMeters = state.planeBaseMeters * tanTheta;
+                    }
+                    updateControlsFromState();
+                });
+
+                dom.heightSlider.addEventListener('input', e => {
+                    state.planeHeightMeters = parseFloat(e.target.value);
+                     const tanTheta = Math.tan(state.theta * Math.PI / 180);
+                    if (Math.abs(tanTheta) > 1e-6) {
+                       state.planeBaseMeters = state.planeHeightMeters / tanTheta;
+                    }
+                    updateControlsFromState();
+                });
+
+                dom.fParSlider.addEventListener('input', e => { state.f_par = parseFloat(e.target.value); dom.fParLabel.textContent = state.f_par; });
+                dom.fPerpSlider.addEventListener('input', e => { state.f_perp = parseFloat(e.target.value); dom.fPerpLabel.textContent = state.f_perp; });
+                
+                dom.frictionCheckbox.addEventListener('change', e => {
+                    state.hasFriction = e.target.checked;
+                    dom.frictionControls.classList.toggle('hidden', !state.hasFriction);
+                });
+                 dom.muSSlider.addEventListener('input', e => { state.mu_s = parseFloat(e.target.value); dom.muSLabel.textContent = state.mu_s.toFixed(2); });
+                dom.muKSlider.addEventListener('input', e => { state.mu_k = parseFloat(e.target.value); dom.muKLabel.textContent = state.mu_k.toFixed(2); });
+
+                dom.showVectorsCheckbox.addEventListener('change', (e) => state.showVectors = e.target.checked);
+                
+                ['pos', 'vel', 'acc', 'energy'].forEach(key => {
+                    document.getElementById(`show-${key}-graph-checkbox`).addEventListener('change', (e) => {
+                        state.graphs[key].show = e.target.checked;
+                        if (state.graphs[key].show) {
+                            // Clear data when enabling a graph
+                             if (key === 'energy') state.graphs.energy.data = {K:[],P:[],E:[]};
+                             else state.graphs[key].data = [];
+                        }
+                        setupAllGraphs();
+                    });
+                });
+                
+                 window.addEventListener('resize', resizeCanvas);
+                 gameLoop();
+            }
+
+            init();
+        });
+    </script>
+</body>
+</html>
+
+

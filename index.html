@@ -438,6 +438,8 @@
                 
                 if (state.isPlaying) {
                     animationFrameId = requestAnimationFrame(gameLoop);
+                } else {
+                    cancelAnimationFrame(animationFrameId);
                 }
             }
 
@@ -628,9 +630,14 @@
                 const verticalHeight = distanceFromBottom * Math.sin(thetaRad);
                 const Ek = 0.5 * state.m * state.v * state.v;
                 const Ep = state.m * state.g * verticalHeight;
+                
+                // Apply sign convention for display
+                const tendency = getMotionTendency();
+                const displayA = state.a * tendency;
+                const displayV = state.v * tendency;
 
-                dom.aHud.textContent = `${state.a.toFixed(2)} m/s²`;
-                dom.vHud.textContent = `${state.v.toFixed(2)} m/s`;
+                dom.aHud.textContent = `${displayA.toFixed(2)} m/s²`;
+                dom.vHud.textContent = `${displayV.toFixed(2)} m/s`;
                 dom.hHud.textContent = `${verticalHeight.toFixed(2)} m`;
                 dom.ekHud.textContent = `${Ek.toFixed(2)} J`;
                 dom.epHud.textContent = `${Ep.toFixed(2)} J`;
@@ -824,13 +831,17 @@
                 const distanceFromBottom = planePhysicalLength / 2 + state.x;
                 const verticalHeight = distanceFromBottom * Math.sin(thetaRad);
 
+                const tendency = getMotionTendency();
+                const displayV = state.v * tendency;
+                const displayA = state.a * tendency;
+
                 state.graphs.pos.data.push({t: state.t, y: verticalHeight});
                 if (state.graphs.pos.data.length > dataPointLimit) state.graphs.pos.data.shift();
                 
-                state.graphs.vel.data.push({t: state.t, y: state.v});
+                state.graphs.vel.data.push({t: state.t, y: displayV});
                 if (state.graphs.vel.data.length > dataPointLimit) state.graphs.vel.data.shift();
                 
-                state.graphs.acc.data.push({t: state.t, y: state.a});
+                state.graphs.acc.data.push({t: state.t, y: displayA});
                 if (state.graphs.acc.data.length > dataPointLimit) state.graphs.acc.data.shift();
                 
                 const K = 0.5 * state.m * state.v * state.v;
@@ -875,10 +886,10 @@
                 // Velocity Graph: from theoretical min to max, including 0
                 const maxWork = Math.abs(state.f_par) * planeLength + Math.abs(state.f_horz * Math.cos(state.theta * Math.PI/180)) * planeLength;
                 const maxTheoreticalVel = Math.sqrt((2 * (state.m * state.g * maxHeight + maxWork)) / state.m);
-                state.graphs.vel.yBounds = { min: -maxTheoreticalVel, max: maxTheoreticalVel };
+                state.graphs.vel.yBounds = { min: 0, max: maxTheoreticalVel };
 
                 // Acceleration Graph: range includes 0 and the current acceleration
-                state.graphs.acc.yBounds = { min: Math.min(0, acc), max: Math.max(0, acc) };
+                state.graphs.acc.yBounds = { min: 0, max: Math.abs(acc) };
 
                 // Energy Graph: from 0 to max potential energy + work
                 const maxEnergy = state.m * state.g * maxHeight + maxWork;
@@ -1049,6 +1060,12 @@
                 }
             }
             
+             function getMotionTendency() {
+                const thetaRad = state.theta * Math.PI / 180;
+                const tendencyForce = (state.m * state.g * Math.sin(thetaRad)) - state.f_par - (state.f_horz * Math.cos(thetaRad));
+                return tendencyForce >= 0 ? 1 : -1; // 1 for DOWN, -1 for UP
+             }
+
              function updateFormulaPanel() {
                 const theta = state.theta;
                 const f_par = state.f_par;
@@ -1057,17 +1074,15 @@
                 
                 let motriz = [];
                 let resist = [];
-                let newtonTerms = [];
 
                 const p_par_str = "m g \\sin(\\theta)";
                 const f_par_str = "F_\\parallel";
                 const f_horz_par_str = "F_h \\cos(\\theta)";
                 const fr_str = "f_r";
+                
+                const tendency = getMotionTendency(); // 1 for DOWN, -1 for UP
 
-                // Positive direction is DOWN the plane
-                const tendency = (state.m * state.g * Math.sin(theta * Math.PI / 180)) - f_par - (f_horz * Math.cos(theta * Math.PI / 180));
-
-                if (tendency > 0) { // Tendency is DOWN
+                if (tendency === 1) { // Tendency is DOWN
                     if (theta > 0) motriz.push(p_par_str);
                     if (f_par < 0) motriz.push(`|${f_par_str}|`);
                     if (f_horz < 0) motriz.push(`|${f_horz_par_str}|`);
@@ -1085,20 +1100,15 @@
                     if (hasFriction) resist.push(fr_str);
                 }
 
-                // Build Newton's Law string (positive DOWN the plane)
-                let sum_str = [];
-                if (theta > 0) sum_str.push(p_par_str);
-                if (f_par !== 0) sum_str.push(f_par > 0 ? `- ${f_par_str}` : `+ |${f_par_str}|`);
-                if (f_horz !== 0) sum_str.push(f_horz > 0 ? `- ${f_horz_par_str}` : `+ |${f_horz_par_str}|`);
-                if (hasFriction) sum_str.push(`- ${fr_str}`);
+                const motriz_sum_str = motriz.length > 0 ? motriz.join(' + ') : '0';
+                const resist_sum_str = resist.length > 0 ? `(${resist.join(' + ')})` : '0';
 
-
-                dom.motrizForces.innerHTML = motriz.length > 0 ? `$${motriz.join(' + ')}$` : 'Ninguna';
-                dom.resistForces.innerHTML = resist.length > 0 ? `$${resist.join(' + ')}$` : 'Ninguna';
-                dom.newtonLaw.innerHTML = sum_str.length > 0 ? `$${sum_str.join(' ')} = m \\cdot a$` : '$0 = m \\cdot a$';
+                dom.motrizForces.innerHTML = `$${motriz_sum_str}$`;
+                dom.resistForces.innerHTML = `$${resist_sum_str}$`;
+                dom.newtonLaw.innerHTML = `$${motriz_sum_str} - ${resist_sum_str} = m \\cdot a$`;
 
                 if(window.MathJax && MathJax.typeset) {
-                    MathJax.typeset([dom.motrizForces, dom.resistForces, dom.newtonLaw]);
+                    setTimeout(() => MathJax.typeset([dom.motrizForces, dom.resistForces, dom.newtonLaw]), 0);
                 }
             }
 

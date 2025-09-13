@@ -95,6 +95,17 @@
         #formula-panel {
              background-color: rgba(18, 28, 48, 0.6);
         }
+         #guide-modal-bg {
+            transition: opacity 0.3s ease-in-out;
+        }
+        #guide-modal-content {
+            transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
+            max-height: 80vh;
+        }
+        #guide-modal-content::-webkit-scrollbar { width: 6px; }
+        #guide-modal-content::-webkit-scrollbar-track { background: #1e293b; }
+        #guide-modal-content::-webkit-scrollbar-thumb { background: #4f46e5; border-radius: 3px; }
+
     </style>
 </head>
 <body class="text-gray-300 flex flex-col lg:flex-row bg-slate-900 min-h-screen">
@@ -119,24 +130,25 @@
                 <div class="flex items-center justify-center gap-3">
                     <button id="play-pause-btn-mobile" class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs rounded-md transition w-24">Arrancar</button>
                     <button id="reset-btn-mobile" class="px-4 py-1.5 bg-green-600 hover:bg-green-700 text-white font-semibold text-xs rounded-md transition">Reiniciar</button>
+                    <button id="guide-btn-mobile" class="px-4 py-1.5 bg-sky-600 hover:bg-sky-700 text-white font-semibold text-xs rounded-md transition">Guía</button>
                 </div>
             </div>
         </div>
         
         <div id="formula-panel" class="w-full max-w-5xl mx-auto mt-4 p-4 rounded-lg border border-slate-700 text-sm">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <div>
-                    <h4 class="font-bold text-sky-400 mb-2">Fuerzas a Favor del Movimiento</h4>
+                    <h4 class="font-bold text-sky-400 mb-2">Fuerzas Motrices</h4>
                     <div id="motriz-forces" class="text-gray-300"></div>
                 </div>
                 <div>
-                    <h4 class="font-bold text-red-400 mb-2">Fuerzas en Contra del Movimiento</h4>
+                    <h4 class="font-bold text-red-400 mb-2">Fuerzas Resistentes</h4>
                     <div id="resist-forces" class="text-gray-300"></div>
                 </div>
-                <div>
-                    <h4 class="font-bold text-green-400 mb-2">2ª Ley de Newton ($\Sigma F = m \cdot a$)</h4>
-                    <div id="newton-law" class="text-gray-300"></div>
-                </div>
+            </div>
+            <div class="text-center border-t border-slate-700 pt-4">
+                 <h4 class="font-bold text-green-400 mb-2">$\\Sigma F = m \\cdot a$</h4>
+                 <div id="newton-law" class="text-gray-300"></div>
             </div>
         </div>
 
@@ -152,6 +164,7 @@
                 <div class="flex items-center justify-center gap-3">
                     <button id="play-pause-btn" class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs rounded-md transition w-24">Arrancar</button>
                     <button id="reset-btn" class="px-4 py-1.5 bg-green-600 hover:bg-green-700 text-white font-semibold text-xs rounded-md transition">Reiniciar</button>
+                    <button id="guide-btn" class="px-4 py-1.5 bg-sky-600 hover:bg-sky-700 text-white font-semibold text-xs rounded-md transition">Guía</button>
                 </div>
             </div>
 
@@ -179,7 +192,7 @@
             <div class="control-card space-y-3">
                  <h3 class="text-sm font-bold text-sky-400">Fuerzas Externas</h3>
                  <div><label for="f-par-slider" class="text-xs text-gray-400">Fuerza Paralela ($F_\parallel$): <span id="f-par-label" class="font-bold text-white">0</span> N</label><input type="range" id="f-par-slider" min="-50" max="50" step="1" value="0"><p class="text-xs text-gray-500 -mt-1">Positiva hacia arriba del plano.</p></div>
-                 <div><label for="f-perp-slider" class="text-xs text-gray-400">Fuerza Perpendicular ($F_\perp$): <span id="f-perp-label" class="font-bold text-white">0</span> N</label><input type="range" id="f-perp-slider" min="-50" max="50" step="1" value="0"><p class="text-xs text-gray-500 -mt-1">Positiva empujando hacia el plano.</p></div>
+                 <div><label for="f-horz-slider" class="text-xs text-gray-400">Fuerza Horizontal ($F_h$): <span id="f-horz-label" class="font-bold text-white">0</span> N</label><input type="range" id="f-horz-slider" min="-50" max="50" step="1" value="0"><p class="text-xs text-gray-500 -mt-1">Positiva hacia la derecha.</p></div>
             </div>
             
             <div class="control-card space-y-3">
@@ -198,6 +211,57 @@
     </div>
     <div id="graph-tooltip"></div>
 
+    <!-- Guide Modal -->
+    <div id="guide-modal" class="fixed inset-0 z-50 flex items-center justify-center hidden">
+        <div id="guide-modal-bg" class="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
+        <div id="guide-modal-content" class="relative bg-slate-800 border border-slate-700 rounded-lg shadow-xl w-11/12 max-w-2xl p-6 text-gray-300 transform scale-95 opacity-0 overflow-y-auto">
+            <h3 class="text-xl font-bold text-sky-400 mb-4">Guía del Simulador de Plano Inclinado</h3>
+            <div class="space-y-4 text-sm">
+                <p>Este simulador te permite explorar los principios de la dinámica y la energía en un plano inclinado. A continuación se detallan sus funciones:</p>
+                <div>
+                    <h4 class="font-semibold text-white mb-1">1. Controles Principales</h4>
+                    <ul class="list-disc list-inside space-y-1 pl-2">
+                        <li><b class="text-indigo-400">Arrancar/Detener:</b> Inicia o pausa la simulación física.</li>
+                        <li><b class="text-green-400">Reiniciar:</b> Devuelve todos los parámetros a sus valores por defecto y limpia las gráficas.</li>
+                        <li><b class="text-indigo-400">Arrastrar la Masa:</b> Cuando la simulación está en pausa, puedes hacer clic (o tocar) y arrastrar el bloque a cualquier posición del plano para definir un punto de partida personalizado.</li>
+                    </ul>
+                </div>
+                 <div>
+                    <h4 class="font-semibold text-white mb-1">2. Parámetros del Sistema</h4>
+                    <ul class="list-disc list-inside space-y-1 pl-2">
+                        <li><b class="text-indigo-400">Masa (m):</b> Ajusta la masa del bloque. Verás que su tamaño y los vectores de fuerza (como el peso) cambian visualmente.</li>
+                        <li><b class="text-indigo-400">Ángulo ($\theta$) vs. Medidas:</b> Puedes definir el plano de dos formas:
+                            <ul class="list-disc list-inside space-y-1 pl-4 mt-1">
+                                <li><b>Por Ángulo:</b> Controlas directamente la inclinación.</li>
+                                <li><b>Por Medidas:</b> Defines la base y altura. Al cambiar una, la otra se escala para mantener el ángulo constante. Esto te permite crear planos de cualquier tamaño.</li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+                 <div>
+                    <h4 class="font-semibold text-white mb-1">3. Fuerzas</h4>
+                    <ul class="list-disc list-inside space-y-1 pl-2">
+                        <li><b class="text-indigo-400">Fuerzas Externas:</b> Puedes aplicar una fuerza paralela al plano ($F_\parallel$) o una fuerza horizontal ($F_h$). <span class="text-amber-400">Nota:</span> Solo puedes aplicar una de las dos a la vez. Al ajustar una, la otra se reiniciará a cero.</li>
+                        <li><b class="text-indigo-400">Rozamiento ($f_r$):</b> Activa esta opción para simular la fricción. Puedes ajustar los coeficientes estático ($\mu_s$) y cinético ($\mu_k$). El vector de rozamiento siempre se opondrá al movimiento o a la tendencia de movimiento.</li>
+                        <li><b class="text-indigo-400">Vectores:</b> Todos los vectores de fuerza (Peso $P$, Normal $N$, etc.) se dibujan a escala y en la dirección correcta para ayudarte a visualizar el diagrama de cuerpo libre. La fuerza horizontal ($F_h$) se descompone en sus componentes paralela y perpendicular al plano.</li>
+                    </ul>
+                </div>
+                 <div>
+                    <h4 class="font-semibold text-white mb-1">4. Paneles de Datos</h4>
+                    <ul class="list-disc list-inside space-y-1 pl-2">
+                        <li><b class="text-indigo-400">Panel Superior:</b> Muestra en tiempo real los valores clave como la aceleración, velocidad, altura y las energías cinética y potencial.</li>
+                        <li><b class="text-indigo-400">Panel de Fórmulas:</b> Este panel te muestra las ecuaciones que se están usando. Clasifica las fuerzas en motrices y resistentes, y te presenta la 2ª Ley de Newton aplicada al sistema actual. Las fórmulas cambian dinámicamente según los parámetros que elijas.</li>
+                        <li><b class="text-indigo-400">Gráficas:</b> Visualizan la evolución de la altura, velocidad, aceleración y energía a lo largo del tiempo. Pasa el ratón sobre ellas para ver los valores exactos en cualquier punto.</li>
+                    </ul>
+                </div>
+            </div>
+            <button id="close-guide-btn" class="absolute top-4 right-4 text-gray-400 hover:text-white transition">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+        </div>
+    </div>
+
+
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             // DOM Elements
@@ -206,8 +270,10 @@
                 simulationWrapper: document.getElementById('simulation-wrapper'),
                 playPauseBtn: document.getElementById('play-pause-btn'),
                 resetBtn: document.getElementById('reset-btn'),
+                guideBtn: document.getElementById('guide-btn'),
                 playPauseBtnMobile: document.getElementById('play-pause-btn-mobile'),
                 resetBtnMobile: document.getElementById('reset-btn-mobile'),
+                guideBtnMobile: document.getElementById('guide-btn-mobile'),
                 aHud: document.getElementById('a-hud'),
                 vHud: document.getElementById('v-hud'),
                 hHud: document.getElementById('h-hud'),
@@ -227,8 +293,8 @@
                 heightLabel: document.getElementById('height-label'),
                 fParSlider: document.getElementById('f-par-slider'),
                 fParLabel: document.getElementById('f-par-label'),
-                fPerpSlider: document.getElementById('f-perp-slider'),
-                fPerpLabel: document.getElementById('f-perp-label'),
+                fHorzSlider: document.getElementById('f-horz-slider'),
+                fHorzLabel: document.getElementById('f-horz-label'),
                 frictionCheckbox: document.getElementById('friction-checkbox'),
                 frictionControls: document.getElementById('friction-controls'),
                 muSSlider: document.getElementById('mu-s-slider'),
@@ -240,6 +306,10 @@
                 motrizForces: document.getElementById('motriz-forces'),
                 resistForces: document.getElementById('resist-forces'),
                 newtonLaw: document.getElementById('newton-law'),
+                guideModal: document.getElementById('guide-modal'),
+                guideModalBg: document.getElementById('guide-modal-bg'),
+                guideModalContent: document.getElementById('guide-modal-content'),
+                closeGuideBtn: document.getElementById('close-guide-btn'),
             };
 
             const ctx = dom.canvas.getContext('2d');
@@ -254,7 +324,7 @@
                 planeHeightMeters: 2.5,
                 useDimensionMode: false,
                 f_par: 0,
-                f_perp: 0,
+                f_horz: 0,
                 mu_s: 0.12,
                 mu_k: 0.10,
                 hasFriction: false, // Default friction is OFF now
@@ -284,10 +354,18 @@
                 const sinT = Math.sin(thetaRad);
                 const cosT = Math.cos(thetaRad);
 
-                state.N = state.m * state.g * cosT + state.f_perp;
-                if (state.N < 0) state.N = 0; 
+                const f_h_par = state.f_horz * cosT;
+                const f_h_perp = state.f_horz * sinT;
 
-                const f_tend = state.f_par - state.m * state.g * sinT;
+                state.N = state.m * state.g * cosT + f_h_perp;
+                if (state.N < 0) state.N = 0; 
+                
+                // CONVENTION: Positive is DOWN the plane
+                const P_par = state.m * state.g * sinT;
+                const F_par_effective = -state.f_par; // Negative because positive f_par is UP
+                const F_h_par_effective = -state.f_horz * cosT; // Negative because positive f_horz is to the RIGHT (up the plane)
+
+                const f_tend = P_par + F_par_effective + F_h_par_effective;
 
                 let f_friction = 0;
                 if (state.hasFriction && state.N > 0) {
@@ -334,7 +412,7 @@
                 if (state.isPlaying && !state.isDragging) {
                     calculateForces();
                     state.v += state.a * state.dt;
-                    state.x += state.v * state.dt;
+                    state.x -= state.v * state.dt; // Position UP is negative velocity
                     state.t += state.dt;
 
                     const lowerBound = -planePhysicalLength / 2.0;
@@ -502,20 +580,21 @@
                 if(state.N > 0) drawVector(ctx, center, 0, state.N * vectorScale, "#4ade80", "N");
                 
                 // Friction vector logic
-                const f_tend = state.f_par - state.m * state.g * Math.sin(thetaRad);
+                const f_tend_internal = -state.f_par - (state.f_horz * Math.cos(thetaRad)) + (state.m * state.g * Math.sin(thetaRad));
+
                 if (state.hasFriction && Math.abs(state.f) > 1e-3) {
                     let frictionDirectionAngle = 0;
                      if (Math.abs(state.v) > 1e-5) { // Moving
-                        frictionDirectionAngle = state.v > 0 ? 90 * Math.PI/180 : -90 * Math.PI/180;
+                        frictionDirectionAngle = state.v > 0 ? -90 * Math.PI/180 : 90 * Math.PI/180; // UP if v is positive (DOWN)
                     } else { // Static
-                        frictionDirectionAngle = f_tend > 0 ? 90 * Math.PI/180 : -90 * Math.PI/180;
+                        frictionDirectionAngle = f_tend_internal > 0 ? -90 * Math.PI/180 : 90 * Math.PI/180; // UP if tendency is DOWN
                     }
                      drawVector(ctx, center, frictionDirectionAngle, Math.abs(state.f) * vectorScale, "#f87171", "f_r");
                 }
 
 
                 if(Math.abs(state.f_par) > 1e-3) drawVector(ctx, center, state.f_par > 0 ? -90 * Math.PI/180 : 90 * Math.PI/180, Math.abs(state.f_par) * vectorScale, "#60a5fa", "F_\\parallel");
-                if(Math.abs(state.f_perp) > 1e-3) drawVector(ctx, center, state.f_perp > 0 ? 180 * Math.PI/180 : 0, Math.abs(state.f_perp) * vectorScale, "#60a5fa", "F_\\perp");
+                if(Math.abs(state.f_horz) > 1e-3) drawVector(ctx, center, Math.PI + thetaRad, Math.abs(state.f_horz) * vectorScale, "#a78bfa", "F_h");
             }
             
             function drawVector(ctx, origin, angle, magnitude, color, label, dashed = false) {
@@ -776,7 +855,7 @@
                 dom.angleControls.classList.toggle('hidden', state.useDimensionMode);
                 dom.dimensionControls.classList.toggle('hidden', !state.useDimensionMode);
                 dom.fParSlider.value = state.f_par; dom.fParLabel.textContent = state.f_par;
-                dom.fPerpSlider.value = state.f_perp; dom.fPerpLabel.textContent = state.f_perp;
+                dom.fHorzSlider.value = state.f_horz; dom.fHorzLabel.textContent = state.f_horz;
                 dom.frictionCheckbox.checked = state.hasFriction;
                 dom.frictionControls.classList.toggle('hidden', !state.hasFriction);
                 dom.muSSlider.value = state.mu_s; dom.muSLabel.textContent = state.mu_s.toFixed(2);
@@ -794,7 +873,7 @@
                 state.graphs.pos.yBounds = { min: 0, max: maxHeight > 0 ? maxHeight : 1 };
 
                 // Velocity Graph: from theoretical min to max, including 0
-                const maxWork = Math.abs(state.f_par) * planeLength;
+                const maxWork = Math.abs(state.f_par) * planeLength + Math.abs(state.f_horz * Math.cos(state.theta * Math.PI/180)) * planeLength;
                 const maxTheoreticalVel = Math.sqrt((2 * (state.m * state.g * maxHeight + maxWork)) / state.m);
                 state.graphs.vel.yBounds = { min: -maxTheoreticalVel, max: maxTheoreticalVel };
 
@@ -846,9 +925,25 @@
                 if (state.isPlaying) return;
                 e.preventDefault();
                 const coords = e.touches ? e.touches[0] : e;
-                state.isDragging = true;
-                dom.canvas.style.cursor = 'grabbing';
-                handleDrag(coords);
+                
+                const rect = dom.canvas.getBoundingClientRect();
+                let mouseX = coords.clientX - rect.left;
+                let mouseY = coords.clientY - rect.top;
+
+                const info = lastDragInfo;
+                if (!info.blockScreenX) return;
+
+                const dx = mouseX - info.blockScreenX;
+                const dy = mouseY - info.blockScreenY;
+
+                const rotatedMouseX = dx * Math.cos(info.thetaRad) + dy * Math.sin(info.thetaRad);
+                const rotatedMouseY = -dx * Math.sin(info.thetaRad) + dy * Math.cos(info.thetaRad);
+
+                if (Math.abs(rotatedMouseX) < info.blockWidth / 2 && rotatedMouseY > -info.blockHeight && rotatedMouseY < 0) {
+                    state.isDragging = true;
+                    dom.canvas.style.cursor = 'grabbing';
+                    handleDrag(coords);
+                }
              }
 
              function handleDragMove(e) {
@@ -957,6 +1052,7 @@
              function updateFormulaPanel() {
                 const theta = state.theta;
                 const f_par = state.f_par;
+                const f_horz = state.f_horz;
                 const hasFriction = state.hasFriction;
                 
                 let motriz = [];
@@ -965,30 +1061,41 @@
 
                 const p_par_str = "m g \\sin(\\theta)";
                 const f_par_str = "F_\\parallel";
+                const f_horz_par_str = "F_h \\cos(\\theta)";
                 const fr_str = "f_r";
 
-                // Determine tendency of motion based on non-friction forces
-                const tendency = f_par - state.m * state.g * Math.sin(theta * Math.PI / 180);
+                // Positive direction is DOWN the plane
+                const tendency = (state.m * state.g * Math.sin(theta * Math.PI / 180)) - f_par - (f_horz * Math.cos(theta * Math.PI / 180));
 
-                if (tendency > 0) { // Tendency is UP the plane
-                    if (f_par > 0) motriz.push(f_par_str);
-                    if (theta > 0) resist.push(p_par_str);
-                    if (hasFriction) resist.push(fr_str);
-                } else { // Tendency is DOWN the plane
+                if (tendency > 0) { // Tendency is DOWN
                     if (theta > 0) motriz.push(p_par_str);
                     if (f_par < 0) motriz.push(`|${f_par_str}|`);
+                    if (f_horz < 0) motriz.push(`|${f_horz_par_str}|`);
+
                     if (f_par > 0) resist.push(f_par_str);
+                    if (f_horz > 0) resist.push(f_horz_par_str);
+                    if (hasFriction) resist.push(fr_str);
+                } else { // Tendency is UP
+                    if (f_par > 0) motriz.push(f_par_str);
+                    if (f_horz > 0) motriz.push(f_horz_par_str);
+                    
+                    if (theta > 0) resist.push(p_par_str);
+                    if (f_par < 0) resist.push(`|${f_par_str}|`);
+                    if (f_horz < 0) resist.push(`|${f_horz_par_str}|`);
                     if (hasFriction) resist.push(fr_str);
                 }
 
-                // Build Newton's Law string (always positive up the plane)
-                if (Math.abs(f_par) > 0) newtonTerms.push(f_par_str);
-                if (theta > 0) newtonTerms.push(`- ${p_par_str}`);
-                if (hasFriction) newtonTerms.push(`- ${fr_str}`);
+                // Build Newton's Law string (positive DOWN the plane)
+                let sum_str = [];
+                if (theta > 0) sum_str.push(p_par_str);
+                if (f_par !== 0) sum_str.push(f_par > 0 ? `- ${f_par_str}` : `+ |${f_par_str}|`);
+                if (f_horz !== 0) sum_str.push(f_horz > 0 ? `- ${f_horz_par_str}` : `+ |${f_horz_par_str}|`);
+                if (hasFriction) sum_str.push(`- ${fr_str}`);
 
-                dom.motrizForces.innerHTML = motriz.length > 0 ? `$${motriz.join(', ')}$` : 'Ninguna';
-                dom.resistForces.innerHTML = resist.length > 0 ? `$${resist.join(', ')}$` : 'Ninguna';
-                dom.newtonLaw.innerHTML = newtonTerms.length > 0 ? `$${newtonTerms.join(' ')} = m \\cdot a$` : '$0 = m \\cdot a$';
+
+                dom.motrizForces.innerHTML = motriz.length > 0 ? `$${motriz.join(' + ')}$` : 'Ninguna';
+                dom.resistForces.innerHTML = resist.length > 0 ? `$${resist.join(' + ')}$` : 'Ninguna';
+                dom.newtonLaw.innerHTML = sum_str.length > 0 ? `$${sum_str.join(' ')} = m \\cdot a$` : '$0 = m \\cdot a$';
 
                 if(window.MathJax && MathJax.typeset) {
                     MathJax.typeset([dom.motrizForces, dom.resistForces, dom.newtonLaw]);
@@ -1018,6 +1125,26 @@
                 updateControlsFromState();
                 onParamChange();
                 
+                // Guide Modal Events
+                const openGuide = () => {
+                    dom.guideModal.classList.remove('hidden');
+                    setTimeout(() => {
+                        dom.guideModalBg.classList.remove('opacity-0');
+                        dom.guideModalContent.classList.remove('scale-95', 'opacity-0');
+                    }, 10);
+                };
+                const closeGuide = () => {
+                     dom.guideModalBg.classList.add('opacity-0');
+                     dom.guideModalContent.classList.add('scale-95', 'opacity-0');
+                     setTimeout(() => dom.guideModal.classList.add('hidden'), 300);
+                };
+
+                dom.guideBtn.addEventListener('click', openGuide);
+                dom.guideBtnMobile.addEventListener('click', openGuide);
+                dom.closeGuideBtn.addEventListener('click', closeGuide);
+                dom.guideModalBg.addEventListener('click', closeGuide);
+
+
                 dom.playPauseBtn.addEventListener('click', togglePlayPause);
                 dom.playPauseBtnMobile.addEventListener('click', togglePlayPause);
                 dom.resetBtn.addEventListener('click', resetToDefaults);
@@ -1035,16 +1162,24 @@
                 dom.canvas.addEventListener('mouseout', () => { dom.canvas.style.cursor = 'default'; });
 
 
-                const allSliders = [dom.massSlider, dom.angleSlider, dom.baseSlider, dom.heightSlider, dom.fParSlider, dom.fPerpSlider];
-                allSliders.forEach(slider => slider.addEventListener('input', () => {
-                     // Get values from sliders
+                const allSliders = [dom.massSlider, dom.angleSlider, dom.baseSlider, dom.heightSlider, dom.fParSlider, dom.fHorzSlider, dom.muSSlider, dom.muKSlider];
+                allSliders.forEach(slider => slider.addEventListener('input', (e) => {
+                     // Update state from all sliders
                     state.m = parseFloat(dom.massSlider.value);
-                    dom.massLabel.textContent = state.m.toFixed(1);
                     state.f_par = parseFloat(dom.fParSlider.value);
-                    dom.fParLabel.textContent = state.f_par;
-                    state.f_perp = parseFloat(dom.fPerpSlider.value);
-                    dom.fPerpLabel.textContent = state.f_perp;
+                    state.f_horz = parseFloat(dom.fHorzSlider.value);
+                    state.mu_s = parseFloat(dom.muSSlider.value);
+                    state.mu_k = parseFloat(dom.muKSlider.value);
                     
+                    // Mutually exclusive forces
+                    if (e.target === dom.fParSlider && Math.abs(state.f_par) > 0) {
+                        state.f_horz = 0;
+                    }
+                    if (e.target === dom.fHorzSlider && Math.abs(state.f_horz) > 0) {
+                        state.f_par = 0;
+                    }
+
+                    // Angle/Dimension logic
                     if (state.useDimensionMode) {
                         state.planeBaseMeters = parseFloat(dom.baseSlider.value);
                         state.planeHeightMeters = parseFloat(dom.heightSlider.value);
@@ -1057,6 +1192,7 @@
                         state.theta = parseFloat(dom.angleSlider.value);
                         state.planeHeightMeters = state.planeBaseMeters * Math.tan(state.theta * Math.PI / 180);
                     }
+
                     updateControlsFromState();
                     onParamChange();
                 }));
@@ -1075,8 +1211,6 @@
                     dom.frictionControls.classList.toggle('hidden', !state.hasFriction);
                     onParamChange();
                 });
-                 dom.muSSlider.addEventListener('input', e => { state.mu_s = parseFloat(e.target.value); dom.muSLabel.textContent = state.mu_s.toFixed(2); onParamChange(); });
-                dom.muKSlider.addEventListener('input', e => { state.mu_k = parseFloat(e.target.value); dom.muKLabel.textContent = state.mu_k.toFixed(2); onParamChange(); });
                 
                  window.addEventListener('resize', resizeCanvas);
                  gameLoop();

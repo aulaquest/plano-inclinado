@@ -73,18 +73,19 @@
         }
         /* HUD adjustments */
         #info-hud {
-            padding: 0.4rem;
-            gap: 0.4rem;
+            padding: 0.5rem 1rem;
+            gap: 0.5rem;
             background-color: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(4px);
         }
         #info-hud > div {
-             font-size: 0.65rem; 
+             font-size: 0.7rem; 
         }
         #info-hud > div > span:first-child {
-            font-size: 0.6rem; 
+            font-size: 0.65rem; 
         }
         #info-hud > div > span:last-child {
-            font-size: 0.75rem; 
+            font-size: 0.8rem; 
         }
         .control-card {
             background-color: rgba(18, 28, 48, 0.6);
@@ -97,15 +98,16 @@
 
     <!-- Columna de Simulación (70%) -->
     <div class="w-full md:w-[70%] flex flex-col p-4">
-        <div id="info-hud" class="w-full max-w-5xl mx-auto grid grid-cols-3 sm:grid-cols-6 gap-2 text-center bg-slate-900/70 backdrop-blur-sm p-3 rounded-lg z-20 border border-slate-700 shadow-lg mb-4">
-            <div class="flex flex-col"><span class="text-xs text-sky-400">Aceleración</span><span id="a-hud" class="font-mono text-white">0.00 m/s²</span></div>
-            <div class="flex flex-col"><span class="text-xs text-sky-400">Velocidad</span><span id="v-hud" class="font-mono text-white">0.00 m/s</span></div>
-            <div class="flex flex-col"><span class="text-xs text-sky-400">Altura</span><span id="h-hud" class="font-mono text-white">0.00 m</span></div>
-            <div class="flex flex-col"><span class="text-xs text-sky-400">F. Normal</span><span id="n-hud" class="font-mono text-white">0.00 N</span></div>
-            <div class="flex flex-col"><span class="text-xs text-sky-400">F. Roce</span><span id="f-hud" class="font-mono text-white">0.00 N</span></div>
-            <div class="flex flex-col"><span class="text-xs text-sky-400">Tiempo</span><span id="t-hud" class="font-mono text-white">0.00 s</span></div>
-        </div>
+        
         <div id="simulation-wrapper" class="relative flex-grow flex flex-col items-center justify-center w-full max-w-5xl mx-auto bg-slate-800 rounded-lg border border-slate-700 overflow-hidden">
+             <div id="info-hud" class="absolute top-0 left-0 right-0 w-full mx-auto grid grid-cols-3 sm:grid-cols-6 gap-2 text-center rounded-b-lg z-30 border-b border-l border-r border-slate-700 shadow-lg">
+                <div class="flex flex-col"><span class="text-xs text-sky-400">Aceleración</span><span id="a-hud" class="font-mono text-white">0.00 m/s²</span></div>
+                <div class="flex flex-col"><span class="text-xs text-sky-400">Velocidad</span><span id="v-hud" class="font-mono text-white">0.00 m/s</span></div>
+                <div class="flex flex-col"><span class="text-xs text-sky-400">Altura</span><span id="h-hud" class="font-mono text-white">0.00 m</span></div>
+                <div class="flex flex-col"><span class="text-xs text-sky-400">F. Normal</span><span id="n-hud" class="font-mono text-white">0.00 N</span></div>
+                <div class="flex flex-col"><span class="text-xs text-sky-400">F. Roce</span><span id="f-hud" class="font-mono text-white">0.00 N</span></div>
+                <div class="flex flex-col"><span class="text-xs text-sky-400">Tiempo</span><span id="t-hud" class="font-mono text-white">0.00 s</span></div>
+            </div>
             <canvas id="simulation-canvas"></canvas>
             <div id="zoom-controls" class="absolute bottom-4 right-4 flex flex-col space-y-2 z-30">
                 <button id="zoom-in-btn">+</button>
@@ -326,9 +328,10 @@
                         if (state.v < 0) state.v = 0;
                         state.isPlaying = false;
                         dom.playPauseBtn.textContent = 'Arrancar';
-                        // One last graph update to show the final state
                         updateGraphData();
-                        gameLoop(); // Call one last time to redraw
+                        cancelAnimationFrame(animationFrameId);
+                        draw(planePhysicalLength); // Final draw call
+                        drawGraphs();
                         return; 
                     } else if (state.x >= upperBound) {
                         state.x = upperBound;
@@ -377,7 +380,7 @@
             function draw(planePhysicalLength) {
                 const w = dom.canvas.width;
                 const h = dom.canvas.height;
-                const groundLevel = h * 0.85;
+                const groundLevel = h * 0.9;
 
                 ctx.save();
                 ctx.clearRect(0, 0, w, h);
@@ -395,7 +398,7 @@
                 // 3. Draw all zoomed elements (ground, plane, block)
                 drawGround(w, h, groundLevel);
 
-                const maxPlaneHeight = h * 0.75;
+                const maxPlaneHeight = h * 0.8;
                 const maxPlaneWidth = w * 0.9;
                 
                 let planePixelHeight = (state.planeHeightMeters / (state.planeBaseMeters || 1)) * maxPlaneWidth;
@@ -505,21 +508,21 @@
 
             function drawVectors(ctx, thetaRad, blockH) {
                 const center = { x: 0, y: -blockH/2 };
-                const scale = 3;
+                const vectorScale = 3 + Math.log10(state.m + 1); // Vectors scale with mass
                 const P = state.m * state.g;
-                drawVector(ctx, center, (Math.PI / 2) + thetaRad, P * scale, "#f59e0b", "P");
+                drawVector(ctx, center, (Math.PI / 2) + thetaRad, P * vectorScale, "#f59e0b", "P");
                 
                 if (state.theta > 0.1) {
                     const P_par = P * Math.sin(thetaRad);
                     const P_perp = P * Math.cos(thetaRad);
-                    drawVector(ctx, center, 90 * Math.PI/180, P_par * scale, "#fde047", "P∥", true);
-                    drawVector(ctx, center, 180 * Math.PI/180, P_perp * scale, "#fde047", "P⊥", true);
+                    drawVector(ctx, center, 90 * Math.PI/180, P_par * vectorScale, "#fde047", "P∥", true);
+                    drawVector(ctx, center, 180 * Math.PI/180, P_perp * vectorScale, "#fde047", "P⊥", true);
                 }
                 
-                if(state.N > 0) drawVector(ctx, center, 0, state.N * scale, "#4ade80", "N");
-                if(Math.abs(state.f) > 1e-3) drawVector(ctx, center, state.f > 0 ? -90 * Math.PI/180 : 90 * Math.PI/180, Math.abs(state.f) * scale, "#f87171", "f");
-                if(Math.abs(state.f_par) > 1e-3) drawVector(ctx, center, state.f_par > 0 ? -90 * Math.PI/180 : 90 * Math.PI/180, Math.abs(state.f_par) * scale, "#60a5fa", "F∥");
-                if(Math.abs(state.f_perp) > 1e-3) drawVector(ctx, center, state.f_perp > 0 ? 180 * Math.PI/180 : 0, Math.abs(state.f_perp) * scale, "#60a5fa", "F⊥");
+                if(state.N > 0) drawVector(ctx, center, 0, state.N * vectorScale, "#4ade80", "N");
+                if(Math.abs(state.f) > 1e-3) drawVector(ctx, center, state.f > 0 ? -90 * Math.PI/180 : 90 * Math.PI/180, Math.abs(state.f) * vectorScale, "#f87171", "f");
+                if(Math.abs(state.f_par) > 1e-3) drawVector(ctx, center, state.f_par > 0 ? -90 * Math.PI/180 : 90 * Math.PI/180, Math.abs(state.f_par) * vectorScale, "#60a5fa", "F∥");
+                if(Math.abs(state.f_perp) > 1e-3) drawVector(ctx, center, state.f_perp > 0 ? 180 * Math.PI/180 : 0, Math.abs(state.f_perp) * vectorScale, "#60a5fa", "F⊥");
             }
             
             function drawVector(ctx, origin, angle, magnitude, color, label, dashed = false) {
@@ -588,7 +591,7 @@
                 const h = ctx.canvas.height;
                 ctx.clearRect(0, 0, w, h);
 
-                if (!data || data.length < 2) {
+                if (!data || data.length < 1) { // Changed to < 1 to draw single point
                     ctx.fillStyle = 'rgba(156, 163, 175, 0.5)';
                     ctx.font = '12px Inter';
                     ctx.textAlign = 'center';
@@ -598,7 +601,7 @@
                 }
 
                 const padding = 30; // Increased padding
-                const xMax = data[data.length - 1].t;
+                const xMax = data.length > 1 ? data[data.length - 1].t : data[0].t + 1;
                 const xMin = data[0].t;
                 const yData = data.map(p => p.y);
                 let yMin = Math.min(...yData);
@@ -663,7 +666,7 @@
                 ctx.clearRect(0, 0, w, h);
 
                 const allDataPoints = Object.values(datasets).flatMap(d => d);
-                if (allDataPoints.length < 2) {
+                if (allDataPoints.length < 1) { // Changed to < 1
                     ctx.fillStyle = 'rgba(156, 163, 175, 0.5)';
                     ctx.font = '12px Inter';
                     ctx.textAlign = 'center';
@@ -673,7 +676,7 @@
                 }
 
                 const padding = 30;
-                const xMax = allDataPoints[allDataPoints.length - 1].t;
+                const xMax = allDataPoints.length > 1 ? allDataPoints[allDataPoints.length - 1].t : allDataPoints[0].t + 1;
                 const xMin = allDataPoints[0].t;
                 const yData = allDataPoints.map(p => p.y);
                 let yMin = Math.min(...yData);
@@ -698,7 +701,7 @@
                 // Lines
                 Object.keys(datasets).forEach((key, index) => {
                     const data = datasets[key];
-                    if (data.length < 2) return;
+                    if (data.length < 1) return;
                     ctx.strokeStyle = colors[key];
                     ctx.lineWidth = 2;
                     ctx.beginPath();
@@ -796,7 +799,10 @@
             }
 
             function resetToDefaults() {
-                 if (state.isPlaying) dom.playPauseBtn.click();
+                 if (state.isPlaying) {
+                     dom.playPauseBtn.click();
+                 }
+                 cancelAnimationFrame(animationFrameId);
                  state = {...JSON.parse(JSON.stringify(defaultState)), ...{g: 9.81, x: 0, v: 0, a: 0, t: 0, N: 0, f: 0, isPlaying: false, isDragging: false, dt: 1/60, clouds: state.clouds, graphs: { pos: { show: false, data: [] }, vel: { show: false, data: [] }, acc: { show: false, data: [] }, energy: { show: false, data: { K:[],P:[],E:[] } } } } };
                  updateControlsFromState();
                  ['pos', 'vel', 'acc', 'energy'].forEach(key => {
@@ -804,6 +810,7 @@
                     state.graphs[key].show = false;
                  });
                  setupAllGraphs();
+                 gameLoop(); // Restart the loop
             }
             let lastResizeWidth = 0;
             function resizeCanvas() {
@@ -811,7 +818,7 @@
                 if(Math.abs(newWidth - lastResizeWidth) < 5) return;
                 lastResizeWidth = newWidth;
                 dom.canvas.width = newWidth;
-                dom.canvas.height = newWidth / 1.1; 
+                dom.canvas.height = newWidth / 1.7; 
                 setupAllGraphs();
             }
 
@@ -862,7 +869,7 @@
                 // Inverse transform mouse coordinates to account for zoom
                 const w = dom.canvas.width;
                 const h = dom.canvas.height;
-                const groundLevel = h * 0.85;
+                const groundLevel = h * 0.9;
                 const zoomAnchorX = w / 2;
                 const zoomAnchorY = groundLevel;
 
@@ -895,7 +902,7 @@
                  // Inverse transform mouse coordinates to account for zoom
                 const w = dom.canvas.width;
                 const h = dom.canvas.height;
-                const groundLevel = h * 0.85;
+                const groundLevel = h * 0.9;
                 const zoomAnchorX = w / 2;
                 const zoomAnchorY = groundLevel;
 
@@ -932,6 +939,10 @@
                 dom.playPauseBtn.addEventListener('click', () => {
                     state.isPlaying = !state.isPlaying;
                     dom.playPauseBtn.textContent = state.isPlaying ? 'Detener' : 'Arrancar';
+                    if(state.isPlaying) {
+                        cancelAnimationFrame(animationFrameId); // Ensure no multiple loops
+                        gameLoop();
+                    }
                 });
 
                 dom.resetBtn.addEventListener('click', resetToDefaults);
@@ -996,6 +1007,8 @@
                             // Clear data when enabling a graph
                              if (key === 'energy') state.graphs.energy.data = {K:[],P:[],E:[]};
                              else state.graphs[key].data = [];
+                             // Add initial point
+                             updateGraphData();
                         }
                         setupAllGraphs();
                     });

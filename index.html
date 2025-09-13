@@ -56,21 +56,7 @@
             border-color: #475569;
             cursor: not-allowed;
         }
-        #zoom-controls button {
-             width: 32px; height: 32px;
-             border-radius: 50%;
-             background-color: rgba(15, 23, 42, 0.8);
-             border: 1px solid #334155;
-             color: white;
-             font-weight: bold;
-             display: flex;
-             align-items: center;
-             justify-content: center;
-             transition: background-color: 0.2s;
-        }
-        #zoom-controls button:hover {
-            background-color: #334155;
-        }
+       
         /* HUD adjustments */
         #info-hud {
             padding: 0.5rem 1rem;
@@ -104,6 +90,7 @@
             white-space: pre;
             backdrop-filter: blur(4px);
             border: 1px solid #334155;
+            z-index: 100;
         }
     </style>
 </head>
@@ -122,10 +109,6 @@
         </div>
         <div id="simulation-wrapper" class="relative flex-grow flex flex-col items-center justify-center w-full max-w-5xl mx-auto bg-slate-800 rounded-lg border border-slate-700 overflow-hidden">
             <canvas id="simulation-canvas"></canvas>
-            <div id="zoom-controls" class="absolute bottom-4 right-4 flex flex-col space-y-2 z-30">
-                <button id="zoom-in-btn">+</button>
-                <button id="zoom-out-btn">-</button>
-            </div>
         </div>
         <div id="mobile-controls" class="w-full max-w-5xl mx-auto lg:hidden my-4">
              <div class="control-card space-y-3">
@@ -203,8 +186,6 @@
                 resetBtn: document.getElementById('reset-btn'),
                 playPauseBtnMobile: document.getElementById('play-pause-btn-mobile'),
                 resetBtnMobile: document.getElementById('reset-btn-mobile'),
-                zoomInBtn: document.getElementById('zoom-in-btn'),
-                zoomOutBtn: document.getElementById('zoom-out-btn'),
                 aHud: document.getElementById('a-hud'),
                 vHud: document.getElementById('v-hud'),
                 hHud: document.getElementById('h-hud'),
@@ -253,7 +234,6 @@
                 mu_k: 0.10,
                 hasFriction: false, // Default friction is OFF now
                 showVectors: true,
-                zoom: 1.0,
             };
 
             let state = {
@@ -313,9 +293,10 @@
             }
 
             function updateClouds() {
+                 if (!state.clouds) state.clouds = [];
                 state.clouds.forEach(cloud => {
                     cloud.x += cloud.speed * state.dt;
-                    if (cloud.x > dom.canvas.width / state.zoom + cloud.size * 2) {
+                    if (cloud.x > dom.canvas.width + cloud.size * 2) {
                         cloud.x = -cloud.size * 2;
                     }
                 });
@@ -326,6 +307,7 @@
                 const planePhysicalLength = Math.hypot(state.planeBaseMeters, state.planeHeightMeters);
 
                 if (state.isPlaying && !state.isDragging) {
+                    const lastV = state.v;
                     calculateForces();
                     state.v += state.a * state.dt;
                     state.x += state.v * state.dt;
@@ -334,19 +316,13 @@
                     const lowerBound = -planePhysicalLength / 2.0;
                     const upperBound = planePhysicalLength / 2.0;
                     
-                    updateGraphData(); // Update graphs before collision check
-
                     if (state.x <= lowerBound || state.x >= upperBound) {
                         state.x = Math.max(lowerBound, Math.min(upperBound, state.x)); // Clamp position
                         state.v = 0;
-                        state.isPlaying = false;
-                        dom.playPauseBtn.textContent = 'Arrancar';
-                        dom.playPauseBtnMobile.textContent = 'Arrancar';
-                        updateGraphData(); // Final update
-                        cancelAnimationFrame(animationFrameId);
-                        draw(planePhysicalLength); // Final draw
-                        drawGraphs();
-                        return; 
+                        updateGraphData(); // Final update with corrected values
+                        togglePlayPause();
+                    } else {
+                        updateGraphData(); // Update graphs during normal play
                     }
                    
                 } else {
@@ -362,31 +338,6 @@
             }
 
             // --- Drawing ---
-            function drawSkyAndClouds(w, h, groundY) {
-                // Sky
-                const skyGradient = ctx.createLinearGradient(0, 0, 0, groundY);
-                skyGradient.addColorStop(0, '#87CEEB');
-                skyGradient.addColorStop(1, '#B0E0E6');
-                ctx.fillStyle = skyGradient;
-                ctx.fillRect(0, 0, w, h);
-
-                // Clouds
-                ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-                state.clouds.forEach(cloud => {
-                    ctx.beginPath();
-                    ctx.arc(cloud.x, cloud.y, cloud.size, 0, Math.PI * 2);
-                    ctx.arc(cloud.x + cloud.size * 0.8, cloud.y, cloud.size * 0.8, 0, Math.PI * 2);
-                    ctx.arc(cloud.x - cloud.size * 0.7, cloud.y, cloud.size * 0.7, 0, Math.PI * 2);
-                    ctx.fill();
-                });
-            }
-            
-            function drawGround(w, h, groundY) {
-                // Ground line
-                ctx.fillStyle = '#228B22';
-                ctx.fillRect(-w * 5, groundY, w * 10, 20);
-            }
-
             function draw(planePhysicalLength) {
                 const w = dom.canvas.width;
                 const h = dom.canvas.height;
@@ -395,18 +346,27 @@
                 ctx.save();
                 ctx.clearRect(0, 0, w, h);
 
-                // 1. Draw non-zoomed background (sky, clouds)
-                drawSkyAndClouds(w, h, groundLevel);
-
-                // 2. Apply zoom transformation, anchored to the center of the ground
-                const zoomAnchorX = w / 2;
-                const zoomAnchorY = groundLevel;
-                ctx.translate(zoomAnchorX, zoomAnchorY);
-                ctx.scale(state.zoom, state.zoom);
-                ctx.translate(-zoomAnchorX, -zoomAnchorY);
-
-                // 3. Draw all zoomed elements (ground, plane, block)
-                drawGround(w, h, groundLevel);
+                // Sky and clouds
+                const skyGradient = ctx.createLinearGradient(0, 0, 0, groundLevel);
+                skyGradient.addColorStop(0, '#87CEEB');
+                skyGradient.addColorStop(1, '#B0E0E6');
+                ctx.fillStyle = skyGradient;
+                ctx.fillRect(0, 0, w, h);
+                
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+                if(state.clouds) {
+                    state.clouds.forEach(cloud => {
+                        ctx.beginPath();
+                        ctx.arc(cloud.x, cloud.y, cloud.size, 0, Math.PI * 2);
+                        ctx.arc(cloud.x + cloud.size * 0.8, cloud.y, cloud.size * 0.8, 0, Math.PI * 2);
+                        ctx.arc(cloud.x - cloud.size * 0.7, cloud.y, cloud.size * 0.7, 0, Math.PI * 2);
+                        ctx.fill();
+                    });
+                }
+                
+                // Ground line
+                ctx.fillStyle = '#228B22';
+                ctx.fillRect(0, groundLevel, w, h - groundLevel + 1);
 
                 const maxPlaneHeight = h * 0.8;
                 const maxPlaneWidth = w * 0.9;
@@ -443,22 +403,6 @@
                  ctx.moveTo(originX, originY);
                  ctx.lineTo(originX + planePixelWidth, originY - planePixelHeight);
                  ctx.stroke();
-
-                // Draw dimension labels
-                if (state.useDimensionMode) {
-                    ctx.fillStyle = "#111827";
-                    ctx.font = "bold 14px Inter";
-                    ctx.textAlign = "center";
-                    ctx.textBaseline = "middle";
-                    if(planePixelWidth > 50) ctx.fillText(`${state.planeBaseMeters.toFixed(2)} m`, originX + planePixelWidth / 2, originY + 20);
-                    if(planePixelHeight > 10) {
-                        ctx.save();
-                        ctx.translate(originX + planePixelWidth + 25, originY - planePixelHeight / 2);
-                        ctx.rotate(-Math.PI / 2);
-                        ctx.fillText(`${state.planeHeightMeters.toFixed(2)} m`, 0, 0);
-                        ctx.restore();
-                    }
-                }
 
                 // --- DIBUJO DEL BLOQUE ---
                 const planePixelLength = Math.hypot(planePixelWidth, planePixelHeight);
@@ -591,7 +535,7 @@
             function setupAllGraphs() {
                 dom.graphPanel.innerHTML = ''; 
                 graphContexts = {
-                    pos: setupGraph('pos', 'Posición (m) vs Tiempo (s)'),
+                    pos: setupGraph('pos', 'Altura (m) vs Tiempo (s)'),
                     vel: setupGraph('vel', 'Velocidad (m/s) vs Tiempo (s)'),
                     acc: setupGraph('acc', 'Aceleración (m/s²) vs Tiempo (s)'),
                     energy: setupGraph('energy', 'Energía (J) vs Tiempo (s)')
@@ -609,7 +553,7 @@
                     ctx.font = '12px Inter';
                     ctx.textAlign = 'center';
                     ctx.textBaseline = 'middle';
-                    ctx.fillText('Esperando datos...', w / 2, h / 2);
+                    ctx.fillText('Configura y arranca', w / 2, h / 2);
                     return;
                 }
 
@@ -618,16 +562,8 @@
                 const xMin = data[0].t;
                 
                 let {min: yMin, max: yMax} = yBounds;
+                if (Math.abs(yMax - yMin) < 1e-6) { yMax += 0.5; yMin -=0.5; }
 
-                const yRange = yMax - yMin;
-                if (Math.abs(yRange) < 1e-6) {
-                    yMax += 0.5;
-                    yMin -= 0.5;
-                } else {
-                    yMax += yRange * 0.1;
-                    yMin -= yRange * 0.1;
-                }
-                
                 const xScale = (w - padding * 2) / (xMax - xMin || 1);
                 const yScale = (h - padding * 2) / (yMax - yMin || 1);
                 
@@ -643,6 +579,14 @@
                 ctx.lineTo(padding, h - padding);
                 ctx.lineTo(w - padding, h - padding);
                 ctx.stroke();
+
+                if (yMin < 0.01 && yMax > -0.01) {
+                    ctx.strokeStyle = 'rgba(71, 85, 105, 0.5)';
+                    ctx.beginPath();
+                    ctx.moveTo(padding, toCanvasY(0));
+                    ctx.lineTo(w - padding, toCanvasY(0));
+                    ctx.stroke();
+                }
 
                 ctx.strokeStyle = color;
                 ctx.lineWidth = 2;
@@ -677,7 +621,7 @@
                     ctx.font = '12px Inter';
                     ctx.textAlign = 'center';
                     ctx.textBaseline = 'middle';
-                    ctx.fillText('Esperando datos...', w / 2, h / 2);
+                    ctx.fillText('Configura y arranca', w / 2, h / 2);
                     return;
                 }
 
@@ -686,10 +630,8 @@
                 const xMin = allDataPoints[0].t;
                 let {min: yMin, max: yMax} = yBounds;
 
-                const yRange = yMax - yMin;
-                if (Math.abs(yRange) < 1e-6) { yMax += 5; yMin -= 5; }
-                else { yMax += yRange * 0.1; yMin -= yRange * 0.1; }
-
+                if (Math.abs(yMax - yMin) < 1e-6) { yMax += 5; yMin -= 5; }
+                
                 const xScale = (w - padding * 2) / (xMax - xMin || 1);
                 const yScale = (h - padding * 2) / (yMax - yMin || 1);
 
@@ -757,7 +699,12 @@
                 if(state.t > 300) return;
                 const dataPointLimit = 500;
                 
-                state.graphs.pos.data.push({t: state.t, y: state.x});
+                const thetaRad = state.theta * Math.PI / 180;
+                const planePhysicalLength = Math.hypot(state.planeBaseMeters, state.planeHeightMeters);
+                const distanceFromBottom = planePhysicalLength / 2 + state.x;
+                const verticalHeight = distanceFromBottom * Math.sin(thetaRad);
+
+                state.graphs.pos.data.push({t: state.t, y: verticalHeight});
                 if (state.graphs.pos.data.length > dataPointLimit) state.graphs.pos.data.shift();
                 
                 state.graphs.vel.data.push({t: state.t, y: state.v});
@@ -766,10 +713,6 @@
                 state.graphs.acc.data.push({t: state.t, y: state.a});
                 if (state.graphs.acc.data.length > dataPointLimit) state.graphs.acc.data.shift();
                 
-                const thetaRad = state.theta * Math.PI / 180;
-                const planePhysicalLength = Math.hypot(state.planeBaseMeters, state.planeHeightMeters);
-                const distanceFromBottom = planePhysicalLength / 2 + state.x;
-                const verticalHeight = distanceFromBottom * Math.sin(thetaRad);
                 const K = 0.5 * state.m * state.v * state.v;
                 const P = state.m * state.g * verticalHeight;
                 const E = K + P;
@@ -802,20 +745,28 @@
              function calculateGraphBounds() {
                 const planeLength = Math.hypot(state.planeBaseMeters, state.planeHeightMeters);
                 const maxHeight = state.planeHeightMeters;
+                
+                calculateForces(); // Calculate a, N, etc. with current params
+                const acc = state.a;
 
-                // Position
-                state.graphs.pos.yBounds = { min: -planeLength / 2, max: planeLength / 2 };
+                // Height (Position) Graph: from 0 to max height
+                state.graphs.pos.yBounds = { min: 0, max: maxHeight > 0 ? maxHeight : 1 };
 
-                // Velocity (based on energy conservation from max height)
-                const maxTheoreticalVel = Math.sqrt(2 * state.g * maxHeight);
+                // Velocity Graph: from theoretical min to max, including 0
+                const maxTheoreticalVel = Math.sqrt(2 * state.g * maxHeight + state.v * state.v); // Energy conservation
                 state.graphs.vel.yBounds = { min: -maxTheoreticalVel, max: maxTheoreticalVel };
+                if (state.v !== 0) {
+                    state.graphs.vel.yBounds.min = Math.min(state.graphs.vel.yBounds.min, state.v);
+                    state.graphs.vel.yBounds.max = Math.max(state.graphs.vel.yBounds.max, state.v);
+                }
 
-                // Acceleration (based on g)
-                state.graphs.acc.yBounds = { min: -state.g, max: state.g };
+                // Acceleration Graph: range includes 0 and the current acceleration
+                state.graphs.acc.yBounds = { min: Math.min(0, acc), max: Math.max(0, acc) };
 
-                // Energy (based on max potential energy)
-                const maxEnergy = state.m * state.g * maxHeight;
-                state.graphs.energy.yBounds = { min: 0, max: maxEnergy };
+                // Energy Graph: from 0 to max potential energy + work
+                 const maxWork = Math.abs(state.f_par) * planeLength;
+                const maxEnergy = state.m * state.g * maxHeight + 0.5 * state.m * state.v * state.v + maxWork;
+                state.graphs.energy.yBounds = { min: 0, max: maxEnergy > 0 ? maxEnergy : 10 };
             }
 
             function resetToDefaults() {
@@ -826,8 +777,7 @@
                  state = {...JSON.parse(JSON.stringify(defaultState)), ...{g: 9.81, x: 0, v: 0, a: 0, t: 0, N: 0, f: 0, isPlaying: false, isDragging: false, dt: 1/60, clouds: state.clouds, graphs: { pos: { show: true, data: [] }, vel: { show: true, data: [] }, acc: { show: true, data: [] }, energy: { show: true, data: { K:[],P:[],E:[] } } } } };
                  updateControlsFromState();
                  setupAllGraphs();
-                 calculateGraphBounds();
-                 updateGraphData(); 
+                 onParamChange();
                  gameLoop(); // Restart the loop
             }
             let lastResizeWidth = 0;
@@ -842,6 +792,7 @@
 
             function initBackground() {
                 // Clouds
+                 state.clouds = [];
                 const numClouds = 5;
                 for (let i = 0; i < numClouds; i++) {
                     state.clouds.push({
@@ -851,6 +802,15 @@
                         speed: Math.random() * 5 + 2
                     });
                 }
+                
+                // Grass Pattern
+                const patternCanvas = document.createElement('canvas');
+                const patternCtx = patternCanvas.getContext('2d');
+                patternCanvas.width = 1;
+                patternCanvas.height = 1;
+                patternCtx.fillStyle = '#228B22';
+                patternCtx.fillRect(0,0,1,1);
+                grassPattern = ctx.createPattern(patternCanvas, 'repeat');
             }
 
              // --- DRAGGING LOGIC ---
@@ -880,15 +840,6 @@
                 let mouseX = coords.clientX - rect.left;
                 let mouseY = coords.clientY - rect.top;
                 
-                const w = dom.canvas.width;
-                const h = dom.canvas.height;
-                const groundLevel = h * 0.9;
-                const zoomAnchorX = w / 2;
-                const zoomAnchorY = groundLevel;
-
-                mouseX = (mouseX - zoomAnchorX) / state.zoom + zoomAnchorX;
-                mouseY = (mouseY - zoomAnchorY) / state.zoom + zoomAnchorY;
-
                 const info = lastDragInfo;
                 if(!info.planeOriginX) return;
                 const relMouseX = mouseX - info.planeOriginX;
@@ -948,7 +899,7 @@
                     tooltipText += `P: ${datasets.P[closestIndex].y.toFixed(2)}J\n`;
                     tooltipText += `E: ${datasets.E[closestIndex].y.toFixed(2)}J`;
                 } else if (key === 'pos'){
-                    tooltipText += `x: ${datasets.pos[closestIndex].y.toFixed(2)} m`;
+                    tooltipText += `h: ${datasets.pos[closestIndex].y.toFixed(2)} m`;
                 } else if (key === 'vel'){
                     tooltipText += `v: ${datasets.vel[closestIndex].y.toFixed(2)} m/s`;
                 } else if (key === 'acc'){
@@ -974,6 +925,14 @@
             
             function onParamChange() {
                 calculateGraphBounds();
+                // Reset data and add initial point
+                Object.keys(state.graphs).forEach(key => {
+                    if (key === 'energy') {
+                        state.graphs[key].data = {K: [], P: [], E: []};
+                    } else {
+                        state.graphs[key].data = [];
+                    }
+                });
                 updateGraphData();
                 drawGraphs();
             }
@@ -989,22 +948,44 @@
                 dom.playPauseBtnMobile.addEventListener('click', togglePlayPause);
                 dom.resetBtn.addEventListener('click', resetToDefaults);
                 dom.resetBtnMobile.addEventListener('click', resetToDefaults);
-                dom.zoomInBtn.addEventListener('click', () => { state.zoom = Math.min(3, state.zoom + 0.2); });
-                dom.zoomOutBtn.addEventListener('click', () => { state.zoom = Math.max(0.5, state.zoom - 0.2); });
 
                 // Dragging for mouse and touch
                 dom.canvas.addEventListener('mousedown', handleDragStart);
                 window.addEventListener('mousemove', handleDragMove);
                 window.addEventListener('mouseup', handleDragEnd);
-                dom.canvas.addEventListener('touchstart', handleDragStart);
-                window.addEventListener('touchmove', handleDragMove);
+                dom.canvas.addEventListener('touchstart', handleDragStart, { passive: false });
+                window.addEventListener('touchmove', handleDragMove, { passive: false });
                 window.addEventListener('touchend', handleDragEnd);
 
                 dom.canvas.addEventListener('mouseover', () => { if(!state.isPlaying) dom.canvas.style.cursor = 'grab'; });
                 dom.canvas.addEventListener('mouseout', () => { dom.canvas.style.cursor = 'default'; });
 
 
-                dom.massSlider.addEventListener('input', e => { state.m = parseFloat(e.target.value); dom.massLabel.textContent = state.m.toFixed(1); onParamChange(); });
+                const allSliders = [dom.massSlider, dom.angleSlider, dom.baseSlider, dom.heightSlider, dom.fParSlider, dom.fPerpSlider];
+                allSliders.forEach(slider => slider.addEventListener('input', () => {
+                     // Get values from sliders
+                    state.m = parseFloat(dom.massSlider.value);
+                    dom.massLabel.textContent = state.m.toFixed(1);
+                    state.f_par = parseFloat(dom.fParSlider.value);
+                    dom.fParLabel.textContent = state.f_par;
+                    state.f_perp = parseFloat(dom.fPerpSlider.value);
+                    dom.fPerpLabel.textContent = state.f_perp;
+                    
+                    if (state.useDimensionMode) {
+                        state.planeBaseMeters = parseFloat(dom.baseSlider.value);
+                        state.planeHeightMeters = parseFloat(dom.heightSlider.value);
+                         if (state.planeBaseMeters > 0) {
+                            state.theta = Math.atan2(state.planeHeightMeters, state.planeBaseMeters) * 180 / Math.PI;
+                        } else {
+                            state.theta = 90;
+                        }
+                    } else {
+                        state.theta = parseFloat(dom.angleSlider.value);
+                        state.planeHeightMeters = state.planeBaseMeters * Math.tan(state.theta * Math.PI / 180);
+                    }
+                    updateControlsFromState();
+                    onParamChange();
+                }));
                 
                 dom.dimensionModeCheckbox.addEventListener('change', e => {
                     state.useDimensionMode = e.target.checked;
@@ -1014,36 +995,6 @@
                     updateControlsFromState();
                     onParamChange();
                 });
-                
-                dom.angleSlider.addEventListener('input', e => {
-                    state.theta = parseFloat(e.target.value);
-                    state.planeHeightMeters = state.planeBaseMeters * Math.tan(state.theta * Math.PI / 180);
-                    updateControlsFromState();
-                    onParamChange();
-                });
-
-                dom.baseSlider.addEventListener('input', e => {
-                    state.planeBaseMeters = parseFloat(e.target.value);
-                    const tanTheta = Math.tan(state.theta * Math.PI / 180);
-                    if (Math.abs(tanTheta) > 1e-6) {
-                        state.planeHeightMeters = state.planeBaseMeters * tanTheta;
-                    }
-                    updateControlsFromState();
-                    onParamChange();
-                });
-
-                dom.heightSlider.addEventListener('input', e => {
-                    state.planeHeightMeters = parseFloat(e.target.value);
-                     const tanTheta = Math.tan(state.theta * Math.PI / 180);
-                    if (Math.abs(tanTheta) > 1e-6) {
-                       state.planeBaseMeters = state.planeHeightMeters / tanTheta;
-                    }
-                    updateControlsFromState();
-                    onParamChange();
-                });
-
-                dom.fParSlider.addEventListener('input', e => { state.f_par = parseFloat(e.target.value); dom.fParLabel.textContent = state.f_par; onParamChange(); });
-                dom.fPerpSlider.addEventListener('input', e => { state.f_perp = parseFloat(e.target.value); dom.fPerpLabel.textContent = state.f_perp; onParamChange();});
                 
                 dom.frictionCheckbox.addEventListener('change', e => {
                     state.hasFriction = e.target.checked;

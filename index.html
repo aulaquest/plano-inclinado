@@ -401,11 +401,9 @@
                 }
             };
             
-            function calculateForces() {
+            function calculateForces(isForDisplayOnly = false) {
                 const thetaRad = state.theta * Math.PI / 180;
                 const P_perp = state.m * state.g * Math.cos(thetaRad);
-                // CORRECCIÓN: La componente perpendicular de Fh siempre suma a N, independientemente de su signo.
-                // Usamos Math.abs para asegurar que la contribución sea siempre aditiva.
                 const f_h_perp = Math.abs(state.f_horz) * Math.sin(thetaRad);
                 state.N = P_perp + f_h_perp;
                 if (state.N < 0) state.N = 0;
@@ -415,7 +413,7 @@
                 const F_net_no_friction = P_par + F_applied_par;
 
                 let f_friction = 0;
-                state.isStatic = false;
+                let isStatic = false;
 
                 if (state.hasFriction && state.N > 0) {
                     const f_s_max = state.mu_s * state.N;
@@ -425,7 +423,7 @@
                         if (Math.abs(F_net_no_friction) <= f_s_max) {
                             f_friction = -F_net_no_friction;
                             state.a = 0;
-                            state.isStatic = true;
+                            isStatic = true;
                         } else {
                             f_friction = -Math.sign(F_net_no_friction) * f_k;
                         }
@@ -433,18 +431,32 @@
                         if (state.v !== 0) {
                            f_friction = -Math.sign(state.v) * f_k;
                         } else {
-                           f_friction = -Math.sign(F_net_no_friction) * f_k;
+                            // Si v=0 pero se arrastra o la fuerza neta supera la estática
+                            if (Math.abs(F_net_no_friction) > f_s_max) {
+                                f_friction = -Math.sign(F_net_no_friction) * f_k;
+                            } else if (!isForDisplayOnly) { 
+                                // Caso de arrastre para simulación: se queda estático
+                                f_friction = -F_net_no_friction;
+                                isStatic = true;
+                            } else {
+                                // Caso de display: muestra la fuerza estática necesaria
+                                f_friction = -F_net_no_friction;
+                                isStatic = true;
+                            }
                         }
                     }
                 }
-
+                state.isStatic = isStatic;
+                state.f = f_friction;
+                
                 if (!state.isStatic) {
                    state.a = (F_net_no_friction + f_friction) / state.m;
+                } else {
+                   state.a = 0;
                 }
 
-                state.f = f_friction;
-
-                if (state.isDragging) {
+                // Si es para la simulación (no para el panel), al arrastrar la aceleración es 0.
+                if (state.isDragging && !isForDisplayOnly) {
                     state.v = 0;
                     state.a = 0;
                 }
@@ -662,8 +674,7 @@
                 const P_y_val = P * Math.cos(thetaRad);
 
                 // Dibuja el Vector Peso (P) - Vertical hacia abajo
-                // CORRECCIÓN: Para que sea vertical en la pantalla, su ángulo debe compensar la rotación del bloque.
-                drawVector(ctx, center, Math.PI / 2 - thetaRad , P * vectorScale, "#f59e0b", "P");
+                drawVector(ctx, center, Math.PI  + thetaRad, P * vectorScale, "#f59e0b", "P");
 
                 // Dibuja componentes del Peso si el plano está inclinado
                 if (state.theta > 0.1) {
@@ -672,8 +683,13 @@
                     // Py: Componente perpendicular, apunta HACIA el plano (-Y)
                     drawVector(ctx, center, 180 * Math.PI / 180, P_y_val * vectorScale, "#fde047", "Py", true);
                     
-                    
-                    const tip_P = getTipCoords(Math.PI/2 - thetaRad , P * vectorScale);
+                    // Dibuja el paralelogramo para mostrar la suma de componentes
+                     const getTipCoords = (angle, magnitude) => ({
+                         x: magnitude * Math.sin(angle),
+                         y: -magnitude * Math.cos(angle)
+                    });
+
+                    const tip_P = getTipCoords(Math.PI + thetaRad, P * vectorScale);
                     const tip_Px = getTipCoords(-90 * Math.PI / 180, P_x_val * vectorScale);
                     const tip_Py = getTipCoords(180 * Math.PI / 180, P_y_val * vectorScale);
                     
@@ -699,7 +715,6 @@
                 if (state.hasFriction && Math.abs(state.f) > 1e-3) {
                     // state.f > 0 significa que la fuerza apunta hacia arriba del plano (+X).
                     // state.f < 0 significa que la fuerza apunta hacia abajo del plano (-X).
-                    // CORRECCIÓN: Invertir la dirección del vector
                     let frictionDirectionAngle = state.f > 0 ? 90 * Math.PI / 180 : -90 * Math.PI / 180;
                     drawVector(ctx, center, frictionDirectionAngle, Math.abs(state.f) * vectorScale, "#f87171", "fr");
                 }
@@ -713,7 +728,7 @@
                 
                 // Dibuja Fuerza Horizontal (Fh)
                 if (Math.abs(state.f_horz) > 1e-3) {
-                    const angle_Fh_in_block = state.f_horz > 0 ? (thetaRad + Math.PI/2) : (thetaRad - Math.PI/2);
+                    const angle_Fh_in_block = state.f_horz > 0 ? thetaRad : Math.PI + thetaRad;
                     drawVector(ctx, center, angle_Fh_in_block, Math.abs(state.f_horz) * vectorScale, "#a78bfa", "Fh");
                 }
             }

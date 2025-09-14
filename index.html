@@ -663,7 +663,7 @@
 
                 // Dibuja el Vector Peso (P) - Vertical hacia abajo
                 // CORRECCIÓN: Para que sea vertical en la pantalla, su ángulo debe compensar la rotación del bloque.
-                drawVector(ctx, center, Math.PI / 2 + thetaRad, P * vectorScale, "#f59e0b", "P");
+                drawVector(ctx, center, Math.PI / 2 , P * vectorScale, "#f59e0b", "P");
 
                 // Dibuja componentes del Peso si el plano está inclinado
                 if (state.theta > 0.1) {
@@ -672,13 +672,8 @@
                     // Py: Componente perpendicular, apunta HACIA el plano (-Y)
                     drawVector(ctx, center, 180 * Math.PI / 180, P_y_val * vectorScale, "#fde047", "Py", true);
                     
-                    // Dibuja el paralelogramo para mostrar la suma de componentes
-                     const getTipCoords = (angle, magnitude) => ({
-                         x: magnitude * Math.sin(angle),
-                         y: -magnitude * Math.cos(angle)
-                    });
-
-                    const tip_P = getTipCoords(Math.PI/2 + thetaRad, P * vectorScale);
+                    
+                    const tip_P = getTipCoords(Math.PI/2 , P * vectorScale);
                     const tip_Px = getTipCoords(-90 * Math.PI / 180, P_x_val * vectorScale);
                     const tip_Py = getTipCoords(180 * Math.PI / 180, P_y_val * vectorScale);
                     

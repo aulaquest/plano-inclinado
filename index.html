@@ -139,18 +139,25 @@
              <div class="text-center mb-4">
                  <h4 class="font-bold text-amber-400">Análisis de Fuerzas: <span id="prediction-text"></span></h4>
             </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4 border-t border-slate-700 pt-4">
+            
+            <div id="y-axis-analysis" class="mb-4 border-b border-slate-700 pb-4">
+                 <h4 class="font-bold text-violet-400 mb-2 text-center">Análisis Eje Y (Perpendicular al Plano)</h4>
+                 <div id="y-forces" class="text-gray-300 space-y-2 text-center"></div>
+            </div>
+
+            <div id="x-axis-analysis" class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                    <h4 class="font-bold text-sky-400 mb-2">Fuerzas Motrices</h4>
+                    <h4 class="font-bold text-sky-400 mb-2">Fuerzas Motrices (a favor del mov.)</h4>
                     <div id="motriz-forces" class="text-gray-300 space-y-2"></div>
                 </div>
                 <div>
-                    <h4 class="font-bold text-red-400 mb-2">Fuerzas Resistentes</h4>
+                    <h4 class="font-bold text-red-400 mb-2">Fuerzas Resistentes (en contra del mov.)</h4>
                     <div id="resist-forces" class="text-gray-300 space-y-2"></div>
                 </div>
             </div>
-            <div class="text-center border-t border-slate-700 pt-4">
-                 <h4 class="font-bold text-green-400 mb-2">Segunda Ley de Newton</h4>
+
+            <div class="text-center border-t border-slate-700 pt-4 mt-4">
+                 <h4 class="font-bold text-green-400 mb-2">Segunda Ley de Newton (Eje X)</h4>
                  <div id="newton-law" class="text-gray-300"></div>
             </div>
         </div>
@@ -327,6 +334,7 @@
                 muKLabel: document.getElementById('mu-k-label'),
                 graphPanel: document.getElementById('graph-panel'),
                 tooltip: document.getElementById('graph-tooltip'),
+                yForces: document.getElementById('y-forces'),
                 motrizForces: document.getElementById('motriz-forces'),
                 resistForces: document.getElementById('resist-forces'),
                 newtonLaw: document.getElementById('newton-law'),
@@ -391,8 +399,9 @@
                 // Define positive direction as UP the inclined plane
                 
                 // 1. Forces perpendicular to the plane to find Normal force (N)
+                const P_perp = state.m * state.g * Math.cos(thetaRad);
                 const f_h_perp = state.f_horz * Math.sin(thetaRad);
-                state.N = state.m * state.g * Math.cos(thetaRad) + f_h_perp;
+                state.N = P_perp + f_h_perp;
                 if (state.N < 0) state.N = 0;
 
                 // 2. Forces parallel to the plane
@@ -451,14 +460,13 @@
 
             // --- Simulation Loop ---
             function gameLoop() {
+                calculateForces();
+
                 if (state.isPlaying && !state.isDragging) {
-                    calculateForces();
-                    
                     const planePhysicalLength = Math.hypot(state.planeBaseMeters, state.planeHeightMeters);
                     const lowerBound = -planePhysicalLength / 2.0;
                     const upperBound = planePhysicalLength / 2.0;
 
-                    // Prevent "sticking" to walls if accelerating into them
                     if ((state.x >= upperBound && state.a > 0) || (state.x <= lowerBound && state.a < 0)) {
                         state.a = 0;
                         state.v = 0;
@@ -468,20 +476,22 @@
                     state.x += state.v * state.dt;
                     state.t += state.dt;
                     
-                    // Clamp position and stop if it hits a boundary
-                    if (state.x <= lowerBound || state.x >= upperBound) {
+                    const atBoundary = (state.x <= lowerBound || state.x >= upperBound);
+                    if (atBoundary) {
                         state.x = Math.max(lowerBound, Math.min(upperBound, state.x));
                         state.v = 0;
                     }
+                    
                     updateGraphData();
-                } else {
-                    // Always calculate forces even when paused for UI updates
-                    calculateForces();
+                    
+                    if (atBoundary) {
+                        togglePlayPause();
+                    }
                 }
                 
                 updateClouds();
                 updateHUD();
-                draw(); // Draw doesn't need planePhysicalLength anymore
+                draw();
                 if (state.showGraphs) drawGraphs();
                 
                 if (state.isPlaying || state.isDragging || state.ruler.dragging) {
@@ -1209,6 +1219,14 @@
                 calculateForces(); 
                 const thetaRad = state.theta * Math.PI / 180;
                 
+                // --- Y-Axis Analysis ---
+                const P_perp_val = state.m * state.g * Math.cos(thetaRad);
+                const F_h_perp_val = state.f_horz * Math.sin(thetaRad);
+                let y_forces_html = `<p>$\\sum F_y = N - P_{\\perp} - F_{h,\\perp} = 0$</p>`;
+                y_forces_html += `<p>$N = m g \\cos(\\theta) + F_h \\sin(\\theta) = ${P_perp_val.toFixed(2)} + ${F_h_perp_val.toFixed(2)} = ${state.N.toFixed(2)}\\ N$</p>`;
+                dom.yForces.innerHTML = y_forces_html;
+
+                // --- X-Axis Analysis ---
                 const P_par_abs = state.m * state.g * Math.sin(thetaRad);
                 const F_applied_par_val = state.f_par + (state.f_horz * Math.cos(thetaRad));
                 const F_net_no_friction = -P_par_abs + F_applied_par_val;
@@ -1222,7 +1240,7 @@
 
                 if (tendency_is_up) {
                     if (Math.abs(F_applied_par_val) > 1e-3) {
-                        motriz_html.push(`<p>$F_{app} = ${F_applied_par_val.toFixed(2)}\\ N$</p>`);
+                        motriz_html.push(`<p>$F_{app} = F_\\parallel + F_h \\cos(\\theta) = ${F_applied_par_val.toFixed(2)}\\ N$</p>`);
                         motriz_sum += F_applied_par_val;
                     }
                     if (P_par_abs > 0) {
@@ -1235,8 +1253,8 @@
                         motriz_sum += P_par_abs;
                     }
                      if (Math.abs(F_applied_par_val) > 1e-3) {
-                        resist_html.push(`<p>$F_{app} = ${F_applied_par_val.toFixed(2)}\\ N$</p>`);
-                        resist_sum += -F_applied_par_val;
+                        resist_html.push(`<p>$F_{app} = F_\\parallel + F_h \\cos(\\theta) = ${F_applied_par_val.toFixed(2)}\\ N$</p>`);
+                        resist_sum += Math.abs(F_applied_par_val);
                     }
                 }
 
@@ -1244,10 +1262,9 @@
                     const f_s_max = state.mu_s * state.N;
                     const f_k = state.mu_k * state.N;
                     resist_html.push(`<hr class="border-slate-600 my-1">`);
-                    resist_html.push(`<p>$N = ${state.N.toFixed(2)}\\ N$</p>`);
-
+                    
                     if (state.isStatic) {
-                         resist_html.push(`<p>$f_r \\le f_{s,max}$</p>`);
+                         resist_html.push(`<p>$f_r = |\\sum F_{s/roz}| = ${Math.abs(state.f).toFixed(2)}\\ N$</p>`);
                          resist_html.push(`<p>$f_{s,max} = \\mu_s N = ${f_s_max.toFixed(2)}\\ N$</p>`);
                     } else {
                          resist_html.push(`<p>$f_r = \\mu_k N = ${f_k.toFixed(2)}\\ N$</p>`);
@@ -1275,7 +1292,7 @@
                 dom.predictionText.textContent = prediction;
 
                 if(window.MathJax && MathJax.typeset) {
-                     setTimeout(() => MathJax.typeset([dom.motrizForces, dom.resistForces, dom.newtonLaw]), 0);
+                     setTimeout(() => MathJax.typeset([dom.yForces, dom.motrizForces, dom.resistForces, dom.newtonLaw]), 0);
                 }
             }
 

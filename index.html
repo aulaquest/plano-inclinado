@@ -608,16 +608,50 @@
             
             function drawVectors(ctx, thetaRad, blockH) {
                 const center = { x: 0, y: -blockH / 2 };
-                const vectorScale = 4 + Math.log10(state.m + 1); // Slightly larger vectors
+                const vectorScale = 4 + Math.log10(state.m + 1);
+
+                // Draw coordinate axes first
+                const axisLength = 80;
+                ctx.save();
+                ctx.globalAlpha = 0.5;
+                drawVector(ctx, center, -90 * Math.PI / 180, axisLength, '#cbd5e1', 'x+'); // X+ up the plane
+                drawVector(ctx, center, 0, axisLength, '#cbd5e1', 'y+'); // Y+ perp to the plane
+                ctx.restore();
 
                 const P = state.m * state.g;
                 drawVector(ctx, center, (Math.PI / 2) + thetaRad, P * vectorScale, "#f59e0b", "P");
 
                 if (state.theta > 0.1) {
-                    const P_x = P * Math.sin(thetaRad);
-                    const P_y = P * Math.cos(thetaRad);
-                    drawVector(ctx, center, 90 * Math.PI / 180, P_x * vectorScale, "#fde047", "Px", true);
-                    drawVector(ctx, center, 180 * Math.PI / 180, P_y * vectorScale, "#fde047", "Py", true);
+                    const P_x_val = P * Math.sin(thetaRad);
+                    const P_y_val = P * Math.cos(thetaRad);
+                    drawVector(ctx, center, 90 * Math.PI / 180, P_x_val * vectorScale, "#fde047", "Px", true);
+                    drawVector(ctx, center, 180 * Math.PI / 180, P_y_val * vectorScale, "#fde047", "Py", true);
+                    
+                    ctx.save();
+                    const P_vec_mag = P * vectorScale;
+                    const P_vec_angle = (Math.PI / 2) + thetaRad;
+                    const tip_P_x_world = P_vec_mag * Math.cos(P_vec_angle);
+                    const tip_P_y_world = P_vec_mag * Math.sin(P_vec_angle);
+
+                    const tip_Py_mag = P_y_val * vectorScale;
+                    const tip_Py_angle = 180 * Math.PI / 180;
+                    const tip_Py_x_block = tip_Py_mag * Math.cos(tip_Py_angle);
+                    const tip_Py_y_block = -tip_Py_mag * Math.sin(tip_Py_angle);
+                    
+                    ctx.strokeStyle = "#f59e0b";
+                    ctx.lineWidth = 1.5;
+                    ctx.setLineDash([3, 4]);
+                    ctx.globalAlpha = 0.8;
+                    ctx.beginPath();
+                    ctx.moveTo(tip_Py_x_block, tip_Py_y_block);
+                    ctx.lineTo(tip_P_x_world, tip_P_y_world);
+                    const tip_Px_mag = P_x_val * vectorScale;
+                    const tip_Px_angle = 90 * Math.PI / 180;
+                    const tip_Px_x_block = -tip_Px_mag * Math.sin(tip_Px_angle);
+                    const tip_Px_y_block = -tip_Px_mag * Math.cos(tip_Px_angle);
+                    ctx.lineTo(tip_Px_x_block, tip_Px_y_block);
+                    ctx.stroke();
+                    ctx.restore();
                 }
 
                 if (state.N > 0) drawVector(ctx, center, 0, state.N * vectorScale, "#4ade80", "N");
@@ -629,12 +663,12 @@
 
                 if (Math.abs(state.f_par) > 1e-3) {
                     let fParDirectionAngle = state.f_par > 0 ? -90 * Math.PI / 180 : 90 * Math.PI / 180;
-                    drawVector(ctx, center, fParDirectionAngle, Math.abs(state.f_par) * vectorScale, "#60a5fa", "F_\\parallel");
+                    drawVector(ctx, center, fParDirectionAngle, Math.abs(state.f_par) * vectorScale, "#60a5fa", "F∥");
                 }
 
                 if (Math.abs(state.f_horz) > 1e-3) {
-                    const angle_Fh = state.f_horz > 0 ? thetaRad : Math.PI + thetaRad;
-                    drawVector(ctx, center, angle_Fh, Math.abs(state.f_horz) * vectorScale, "#a78bfa", "Fh");
+                    const angle_Fh_in_block = state.f_horz > 0 ? thetaRad : Math.PI + thetaRad;
+                    drawVector(ctx, center, angle_Fh_in_block, Math.abs(state.f_horz) * vectorScale, "#a78bfa", "Fh");
                 }
             }
             
@@ -644,7 +678,7 @@
                  ctx.rotate(angle);
                  ctx.strokeStyle = color;
                  ctx.fillStyle = color;
-                 ctx.lineWidth = 3; // Thicker vectors
+                 ctx.lineWidth = 3; 
                  ctx.beginPath();
                  if(dashed) ctx.setLineDash([4, 4]);
                  ctx.moveTo(0, 0);
@@ -652,14 +686,16 @@
                  ctx.stroke();
                  ctx.beginPath();
                  ctx.moveTo(0, -magnitude);
-                 ctx.lineTo(-5, -magnitude + 10); // Bigger arrowheads
+                 ctx.lineTo(-5, -magnitude + 10); 
                  ctx.lineTo(5, -magnitude + 10);
                  ctx.closePath();
                  ctx.fill();
                  ctx.font = "bold 13px Inter";
                  ctx.textAlign = "left";
                  ctx.textBaseline = "middle";
-                 ctx.fillText(label, 10, -magnitude / 2); // Position label
+                 ctx.shadowColor = "black";
+                 ctx.shadowBlur = 4;
+                 ctx.fillText(label, 10, -magnitude / 2);
                  ctx.restore();
             }
 
@@ -1003,8 +1039,6 @@
             let lastResizeWidth = 0;
             function resizeCanvas() {
                 const newWidth = dom.simulationWrapper.clientWidth;
-                if(Math.abs(newWidth - lastResizeWidth) < 5) return;
-                lastResizeWidth = newWidth;
                 dom.canvas.width = newWidth;
                 dom.canvas.height = newWidth / (window.innerWidth < 1024 ? 1.5 : 1.8);
                 if(state.showGraphs) {
@@ -1206,19 +1240,18 @@
                 calculateForces(); 
                 const thetaRad = state.theta * Math.PI / 180;
                 
-                const P_perp_val = state.m * state.g * Math.cos(thetaRad);
                 const F_h_perp_val = state.f_horz * Math.sin(thetaRad);
                 let y_forces_html = `<p>$\\sum F_y = N - P_y`;
-                if (Math.abs(F_h_perp_val) > 1e-3) y_forces_html += ` - F_{h,y}`;
+                if (Math.abs(state.f_horz) > 1e-3) y_forces_html += ` - F_{h,y}`;
                 y_forces_html += ` = 0$</p>`;
                 y_forces_html += `<p>$N = m g \\cos(\\theta)`;
-                if (Math.abs(F_h_perp_val) > 1e-3) y_forces_html += ` + F_h \\sin(\\theta)`;
+                if (Math.abs(state.f_horz) > 1e-3) y_forces_html += ` + F_h \\sin(\\theta)`;
                 y_forces_html += ` = ${state.N.toFixed(2)}\\ N$</p>`;
                 dom.yForces.innerHTML = y_forces_html;
                 
                 const P_par_abs = state.m * state.g * Math.sin(thetaRad);
-                const F_applied_par_val = state.f_par + (state.f_horz * Math.cos(thetaRad));
-                const F_net_no_friction = -P_par_abs + F_applied_par_val;
+                const F_h_par_val = state.f_horz * Math.cos(thetaRad);
+                const F_net_no_friction = -P_par_abs + state.f_par + F_h_par_val;
                 
                 let motriz_html = [];
                 let resist_html = [];
@@ -1228,26 +1261,20 @@
                 const tendency_is_up = F_net_no_friction > 0;
 
                 if (tendency_is_up) {
-                    if (Math.abs(F_applied_par_val) > 1e-3) {
-                        motriz_html.push(`<p>$F_{app} = ${F_applied_par_val.toFixed(2)}\\ N$</p>`);
-                        motriz_sum += F_applied_par_val;
-                    }
-                    if (P_par_abs > 0) {
-                        resist_html.push(`<p>$P_x = m g \\sin(\\theta) = ${P_par_abs.toFixed(2)}\\ N$</p>`);
-                        resist_sum += P_par_abs;
-                    }
+                    if (state.f_par > 0) { motriz_html.push(`<p>$F_\\parallel = ${state.f_par.toFixed(2)}\\ N$</p>`); motriz_sum += state.f_par; }
+                    if (F_h_par_val > 0) { motriz_html.push(`<p>$F_{h,x} = F_h \\cos(\\theta) = ${F_h_par_val.toFixed(2)}\\ N$</p>`); motriz_sum += F_h_par_val; }
+                    if (P_par_abs > 0) { resist_html.push(`<p>$P_x = m g \\sin(\\theta) = ${P_par_abs.toFixed(2)}\\ N$</p>`); resist_sum += P_par_abs; }
+                    if (state.f_par < 0) { resist_html.push(`<p>$F_\\parallel = ${state.f_par.toFixed(2)}\\ N$</p>`); resist_sum += Math.abs(state.f_par); }
+                    if (F_h_par_val < 0) { resist_html.push(`<p>$F_{h,x} = F_h \\cos(\\theta) = ${F_h_par_val.toFixed(2)}\\ N$</p>`); resist_sum += Math.abs(F_h_par_val); }
                 } else { 
-                    if (P_par_abs > 0) {
-                        motriz_html.push(`<p>$P_x = m g \\sin(\\theta) = ${P_par_abs.toFixed(2)}\\ N$</p>`);
-                        motriz_sum += P_par_abs;
-                    }
-                     if (Math.abs(F_applied_par_val) > 1e-3) {
-                        resist_html.push(`<p>$F_{app} = ${F_applied_par_val.toFixed(2)}\\ N$</p>`);
-                        resist_sum += Math.abs(F_applied_par_val);
-                    }
+                    if (P_par_abs > 0) { motriz_html.push(`<p>$P_x = m g \\sin(\\theta) = ${P_par_abs.toFixed(2)}\\ N$</p>`); motriz_sum += P_par_abs; }
+                    if (state.f_par < 0) { motriz_html.push(`<p>$F_\\parallel = ${Math.abs(state.f_par).toFixed(2)}\\ N$</p>`); motriz_sum += Math.abs(state.f_par); }
+                    if (F_h_par_val < 0) { motriz_html.push(`<p>$F_{h,x} = |F_h \\cos(\\theta)| = ${Math.abs(F_h_par_val).toFixed(2)}\\ N$</p>`); motriz_sum += Math.abs(F_h_par_val); }
+                    if (state.f_par > 0) { resist_html.push(`<p>$F_\\parallel = ${state.f_par.toFixed(2)}\\ N$</p>`); resist_sum += state.f_par; }
+                    if (F_h_par_val > 0) { resist_html.push(`<p>$F_{h,x} = F_h \\cos(\\theta) = ${F_h_par_val.toFixed(2)}\\ N$</p>`); resist_sum += F_h_par_val; }
                 }
 
-                if (state.hasFriction && state.N > 0) {
+                if (state.hasFriction && state.N > 0 && Math.abs(state.f) > 1e-3) {
                     const f_s_max = state.mu_s * state.N;
                     const f_k = state.mu_k * state.N;
                     resist_html.push(`<hr class="border-slate-600 my-1">`);
@@ -1280,8 +1307,8 @@
                 }
                 dom.predictionText.textContent = prediction;
 
-                if(window.MathJax && MathJax.typeset) {
-                     setTimeout(() => MathJax.typeset([dom.yForces, dom.motrizForces, dom.resistForces, dom.newtonLaw]), 0);
+                if(window.MathJax && MathJax.typesetPromise) {
+                     MathJax.typesetPromise([dom.yForces, dom.motrizForces, dom.resistForces, dom.newtonLaw]);
                 }
             }
 
@@ -1388,8 +1415,12 @@
                 });
                 
                 window.addEventListener('resize', () => {
-                    resizeCanvas();
-                    onParamChange();
+                    const newWidth = dom.simulationWrapper.clientWidth;
+                    if (Math.abs(newWidth - lastResizeWidth) > 5) {
+                        lastResizeWidth = newWidth;
+                        resizeCanvas();
+                        onParamChange();
+                    }
                 });
             }
 

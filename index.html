@@ -534,36 +534,54 @@
                 const maxPlaneHeight = h * 0.8;
                 const maxPlaneWidth = w * 0.9;
                 
-                let planePixelHeight = (state.planeHeightMeters / (state.planeBaseMeters || 1)) * maxPlaneWidth;
-                let planePixelWidth = maxPlaneWidth;
+                let planePixelWidth, planePixelHeight;
+                
+                if (state.theta < 0.1) {
+                    // Caso para plano horizontal
+                    planePixelWidth = maxPlaneWidth;
+                    planePixelHeight = 0;
+                } else {
+                    // Caso para plano inclinado, calcular dimensiones para que quepa
+                    const aspectRatio = state.planeHeightMeters / state.planeBaseMeters;
+                    planePixelWidth = maxPlaneWidth;
+                    planePixelHeight = planePixelWidth * aspectRatio;
 
-                if(planePixelHeight > maxPlaneHeight || state.planeHeightMeters === 0){
-                    planePixelHeight = maxPlaneHeight;
-                    planePixelWidth = planePixelHeight / (state.planeHeightMeters / (state.planeBaseMeters || 1e-6));
+                    if (planePixelHeight > maxPlaneHeight) {
+                        planePixelHeight = maxPlaneHeight;
+                        planePixelWidth = planePixelHeight / aspectRatio;
+                    }
                 }
-
-                if (state.planeHeightMeters < 0.01) planePixelHeight = 0;
                 
                 const originX = (w - planePixelWidth) / 2;
                 const originY = groundLevel;
                 const thetaRad = Math.atan2(state.planeHeightMeters, state.planeBaseMeters);
                 
-                if (planePixelHeight > 0) {
-                    ctx.fillStyle = '#696969';
+                // Dibuja el plano o la superficie horizontal
+                if (state.theta > 0.1) { // Plano inclinado
+                    if (planePixelHeight > 0) {
+                        ctx.fillStyle = '#696969';
+                        ctx.beginPath();
+                        ctx.moveTo(originX, originY);
+                        ctx.lineTo(originX + planePixelWidth, originY);
+                        ctx.lineTo(originX + planePixelWidth, originY - planePixelHeight);
+                        ctx.closePath();
+                        ctx.fill();
+                    }
+
+                    ctx.strokeStyle = '#36454F';
+                    ctx.lineWidth = 4;
+                    ctx.beginPath();
+                    ctx.moveTo(originX, originY);
+                    ctx.lineTo(originX + planePixelWidth, originY - planePixelHeight);
+                    ctx.stroke();
+                } else { // Plano horizontal (ángulo cero)
+                    ctx.strokeStyle = '#36454F';
+                    ctx.lineWidth = 4;
                     ctx.beginPath();
                     ctx.moveTo(originX, originY);
                     ctx.lineTo(originX + planePixelWidth, originY);
-                    ctx.lineTo(originX + planePixelWidth, originY - planePixelHeight);
-                    ctx.closePath();
-                    ctx.fill();
+                    ctx.stroke();
                 }
-
-                 ctx.strokeStyle = '#36454F';
-                 ctx.lineWidth = 4;
-                 ctx.beginPath();
-                 ctx.moveTo(originX, originY);
-                 ctx.lineTo(originX + planePixelWidth, originY - planePixelHeight);
-                 ctx.stroke();
 
                 const planePixelLength = Math.hypot(planePixelWidth, planePixelHeight);
                 const pixelsPerMeter = planePixelLength / (planePhysicalLength || 1);
@@ -606,7 +624,8 @@
                      planePixelLength, planePhysicalLength, pixelsPerMeter
                  };
 
-                if (planePixelHeight > 0) {
+                // Solo dibuja el arco del ángulo si es significativo
+                if (state.theta > 0.1 && planePixelHeight > 0) {
                     ctx.strokeStyle = "#111827";
                     ctx.lineWidth = 1.5;
                     ctx.beginPath();
@@ -1359,8 +1378,23 @@
                 }
             }
 
+            function updateControlStates() {
+                const isAngleZero = state.theta < 0.1;
+
+                // Desactivar F_horz si el ángulo es cero
+                dom.fHorzSlider.disabled = isAngleZero;
+                if (dom.fHorzSlider.disabled && state.f_horz !== 0) {
+                    state.f_horz = 0;
+                    dom.fHorzSlider.value = 0;
+                    dom.fHorzLabel.textContent = '0';
+                }
+
+                // Desactivar Altura (h) si el ángulo es cero Y estamos en modo medidas
+                dom.heightSlider.disabled = isAngleZero && state.useDimensionMode;
+            }
 
             function onParamChange() {
+                updateControlStates();
                 calculateGraphBounds();
                 Object.keys(state.graphs).forEach(key => state.graphs[key].data = key === 'energy' ? {K: [], P: [], E: []} : []);
                 updateGraphData();
@@ -1481,6 +1515,9 @@
     </script>
 </body>
 </html>
+
+
+
 
 
 

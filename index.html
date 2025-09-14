@@ -1164,6 +1164,10 @@
                 updateGraphData();
                 updateFormulaPanel();
                 if(state.showGraphs) drawGraphs();
+                // Force a single redraw if the simulation is paused
+                if (!state.isPlaying && !state.isDragging && !state.ruler.dragging) {
+                    requestAnimationFrame(gameLoop);
+                }
             }
 
             function init() {
@@ -1257,4 +1261,5 @@
     </script>
 </body>
 </html>
+
 

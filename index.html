@@ -133,7 +133,7 @@
              </div>
         </div>
         
-        <div id="formula-panel" class="w-full max-w-5xl mx-auto mt-4 p-4 rounded-lg border border-slate-700 text-sm">
+        <div id="formula-panel" class="w-full max-w-5xl mx-auto mt-4 p-4 rounded-lg border border-slate-700 text-sm hidden">
              <div class="text-center mb-4">
                  <h4 class="font-bold text-amber-400">Análisis de Fuerzas: <span id="prediction-text"></span></h4>
              </div>
@@ -214,22 +214,35 @@
 
             <div class="control-card space-y-3">
                 <h3 class="text-sm font-bold text-sky-400">Visualización</h3>
-                <div class="space-y-2 pt-2 border-t border-slate-700">
-                    <label class="checkbox-label text-sm">
-                        <input type="checkbox" id="show-vectors-checkbox">
-                        <span class="checkmark"></span>
-                        Ver Vectores
-                    </label>
-                    <label class="checkbox-label text-sm">
-                        <input type="checkbox" id="show-graphs-checkbox">
-                        <span class="checkmark"></span>
-                        Ver Gráficas
-                    </label>
-                    <label class="checkbox-label text-sm">
-                        <input type="checkbox" id="show-ruler-checkbox">
-                        <span class="checkmark"></span>
-                        Ver Regla
-                    </label>
+                <div class="space-y-3 pt-2 border-t border-slate-700">
+                    <div>
+                        <label class="checkbox-label text-sm">
+                            <input type="checkbox" id="show-vectors-checkbox">
+                            <span class="checkmark"></span>
+                            Ver Vectores
+                        </label>
+                    </div>
+                    <div>
+                        <label class="checkbox-label text-sm">
+                            <input type="checkbox" id="show-graphs-checkbox">
+                            <span class="checkmark"></span>
+                            Ver Gráficas
+                        </label>
+                    </div>
+                    <div>
+                        <label class="checkbox-label text-sm">
+                            <input type="checkbox" id="show-ruler-checkbox">
+                            <span class="checkmark"></span>
+                            Ver Regla
+                        </label>
+                    </div>
+                    <div>
+                        <label class="checkbox-label text-sm">
+                            <input type="checkbox" id="show-forces-checkbox">
+                            <span class="checkmark"></span>
+                            Ver Análisis de Fuerzas
+                        </label>
+                    </div>
                 </div>
             </div>
             
@@ -340,6 +353,8 @@
                 showVectorsCheckbox: document.getElementById('show-vectors-checkbox'),
                 showGraphsCheckbox: document.getElementById('show-graphs-checkbox'),
                 showRulerCheckbox: document.getElementById('show-ruler-checkbox'),
+                showForcesCheckbox: document.getElementById('show-forces-checkbox'),
+                formulaPanel: document.getElementById('formula-panel'),
             };
 
             const ctx = dom.canvas.getContext('2d');
@@ -360,6 +375,7 @@
                 showGraphs: false,
                 showRuler: false,
                 showVectors: false,
+                showForces: false,
             };
 
             let state = {
@@ -1038,6 +1054,7 @@
                 dom.showGraphsCheckbox.checked = state.showGraphs;
                 dom.showRulerCheckbox.checked = state.showRuler;
                 dom.showVectorsCheckbox.checked = state.showVectors;
+                dom.showForcesCheckbox.checked = state.showForces;
             }
 
              function calculateGraphBounds() {
@@ -1060,6 +1077,7 @@
                  const oldClouds = state.clouds;
                  state = {...JSON.parse(JSON.stringify(defaultState)), ...{g: 9.81, x: 0, v: 0, a: 0, t: 0, N: 0, f: 0, isStatic: false, isPlaying: false, isDragging: false, dt: 1/60, clouds: oldClouds, graphs: { pos: { show: true, data: [] }, vel: { show: true, data: [] }, acc: { show: true, data: [] }, energy: { show: true, data: { K:[],P:[],E:[] } } }, ruler: { start: { x: 100, y: 150 }, end: { x: 300, y: 150 }, dragging: null, dragOffset: { x: 0, y: 0 } } } };
                  dom.graphPanel.classList.add('hidden');
+                 dom.formulaPanel.classList.add('hidden');
                  updateControlsFromState();
                  onParamChange();
             }
@@ -1442,6 +1460,11 @@
                     state.showVectors = e.target.checked;
                     onParamChange();
                 });
+
+                dom.showForcesCheckbox.addEventListener('change', e => {
+                    state.showForces = e.target.checked;
+                    dom.formulaPanel.classList.toggle('hidden', !state.showForces);
+                });
                 
                 window.addEventListener('resize', () => {
                     const newWidth = dom.simulationWrapper.clientWidth;
@@ -1458,6 +1481,7 @@
     </script>
 </body>
 </html>
+
 
 
 

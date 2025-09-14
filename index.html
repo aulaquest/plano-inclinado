@@ -1,1505 +1,3033 @@
 <!DOCTYPE html>
+
 <html lang="es">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simulador de Plano Inclinado con Rozamiento y Fuerzas</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <script>
-      window.MathJax = {
-        tex: {
-          inlineMath: [['$', '$'], ['\\(', '\\)']],
-          displayMath: [['$$', '$$'], ['\\[', '\\]']]
-        }
-      };
-    </script>
-    <script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.js"></script>
-    <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #020617;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
-        }
-        .control-panel {
-            background-color: rgba(15, 23, 42, 0.8);
-            backdrop-filter: blur(8px);
-        }
-        .control-panel::-webkit-scrollbar { width: 6px; }
-        .control-panel::-webkit-scrollbar-track { background: transparent; }
-        .control-panel::-webkit-scrollbar-thumb { background: #4f46e5; border-radius: 3px; }
-        
-        .checkbox-label { position: relative; cursor: pointer; user-select: none; padding-left: 30px; display: block; }
-        .checkbox-label input { position: absolute; opacity: 0; cursor: pointer; height: 0; width: 0; }
-        .checkmark { position: absolute; top: 2px; left: 0; height: 20px; width: 20px; background-color: #334155; border: 1px solid #475569; border-radius: 4px; transition: background-color: 0.2s; }
-        .checkbox-label:hover input ~ .checkmark { background-color: #475569; }
-        .checkbox-label input:checked ~ .checkmark { background-color: #4f46e5; }
-        .checkmark:after { content: ""; position: absolute; display: none; left: 6px; top: 2px; width: 5px; height: 10px; border: solid white; border-width: 0 3px 3px 0; transform: rotate(45deg); }
-        .checkbox-label input:checked ~ .checkmark:after { display: block; }
 
-        input[type="range"] {
-            -webkit-appearance: none; appearance: none;
-            width: 100%; height: 8px;
-            background: #334155; border-radius: 5px; outline: none;
-        }
-        input[type="range"]::-webkit-slider-thumb {
-            -webkit-appearance: none; appearance: none;
-            width: 20px; height: 20px;
-            background: #a5b4fc; cursor: pointer; border-radius: 50%;
-            border: 2px solid #4f46e5;
-        }
-        input[type="range"]:disabled::-webkit-slider-thumb {
-            background: #64748b;
-            border-color: #475569;
-            cursor: not-allowed;
-        }
-        
-        #info-hud {
-            padding: 0.5rem 1rem;
-            gap: 0.5rem;
-            background-color: rgba(15, 23, 42, 0.8);
-            backdrop-filter: blur(4px);
-        }
-        #info-hud > div {
-             font-size: 0.7rem; 
-        }
-        #info-hud > div > span:first-child {
-            font-size: 0.65rem; 
-        }
-        #info-hud > div > span:last-child {
-            font-size: 0.8rem; 
-        }
-        .control-card {
-            background-color: rgba(18, 28, 48, 0.6);
-            padding: 1rem;
-            border-radius: 0.5rem;
-        }
-        #graph-tooltip {
-            position: fixed;
-            display: none;
-            background-color: rgba(15, 23, 42, 0.8);
-            color: white;
-            padding: 5px 10px;
-            border-radius: 5px;
-            font-size: 0.75rem;
-            pointer-events: none; 
-            white-space: pre;
-            backdrop-filter: blur(4px);
-            border: 1px solid #334155;
-            z-index: 100;
-        }
-        #formula-panel {
-             background-color: rgba(18, 28, 48, 0.6);
-        }
-         #guide-modal-bg {
-             transition: opacity 0.3s ease-in-out;
-         }
-         #guide-modal-content {
-             transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
-             max-height: 80vh;
-         }
-         #guide-modal-content::-webkit-scrollbar { width: 6px; }
-         #guide-modal-content::-webkit-scrollbar-track { background: #1e293b; }
-         #guide-modal-content::-webkit-scrollbar-thumb { background: #4f46e5; border-radius: 3px; }
+    <meta charset="UTF-8">
 
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Simulador de Plano Inclinado con Rozamiento y Fuerzas</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <script>
+
+      window.MathJax = {
+
+        tex: {
+
+          inlineMath: [['$', '$'], ['\\(', '\\)']],
+
+          displayMath: [['$$', '$$'], ['\\[', '\\]']]
+
+        }
+
+      };
+
+    </script>
+
+    <script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.js"></script>
+
+    <style>
+
+        body {
+
+            font-family: 'Inter', sans-serif;
+
+            background-color: #020617;
+
+            -webkit-font-smoothing: antialiased;
+
+            -moz-osx-font-smoothing: grayscale;
+
+        }
+
+        .control-panel {
+
+            background-color: rgba(15, 23, 42, 0.8);
+
+            backdrop-filter: blur(8px);
+
+        }
+
+        .control-panel::-webkit-scrollbar { width: 6px; }
+
+        .control-panel::-webkit-scrollbar-track { background: transparent; }
+
+        .control-panel::-webkit-scrollbar-thumb { background: #4f46e5; border-radius: 3px; }
+
+        
+
+        .checkbox-label { position: relative; cursor: pointer; user-select: none; padding-left: 30px; }
+
+        .checkbox-label input { position: absolute; opacity: 0; cursor: pointer; height: 0; width: 0; }
+
+        .checkmark { position: absolute; top: 2px; left: 0; height: 20px; width: 20px; background-color: #334155; border: 1px solid #475569; border-radius: 4px; transition: background-color: 0.2s; }
+
+        .checkbox-label:hover input ~ .checkmark { background-color: #475569; }
+
+        .checkbox-label input:checked ~ .checkmark { background-color: #4f46e5; }
+
+        .checkmark:after { content: ""; position: absolute; display: none; left: 6px; top: 2px; width: 5px; height: 10px; border: solid white; border-width: 0 3px 3px 0; transform: rotate(45deg); }
+
+        .checkbox-label input:checked ~ .checkmark:after { display: block; }
+
+
+
+        input[type="range"] {
+
+            -webkit-appearance: none; appearance: none;
+
+            width: 100%; height: 8px;
+
+            background: #334155; border-radius: 5px; outline: none;
+
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+
+            -webkit-appearance: none; appearance: none;
+
+            width: 20px; height: 20px;
+
+            background: #a5b4fc; cursor: pointer; border-radius: 50%;
+
+            border: 2px solid #4f46e5;
+
+        }
+
+        input[type="range"]:disabled::-webkit-slider-thumb {
+
+            background: #64748b;
+
+            border-color: #475569;
+
+            cursor: not-allowed;
+
+        }
+
+        
+
+        #info-hud {
+
+            padding: 0.5rem 1rem;
+
+            gap: 0.5rem;
+
+            background-color: rgba(15, 23, 42, 0.8);
+
+            backdrop-filter: blur(4px);
+
+        }
+
+        #info-hud > div {
+
+             font-size: 0.7rem; 
+
+        }
+
+        #info-hud > div > span:first-child {
+
+            font-size: 0.65rem; 
+
+        }
+
+        #info-hud > div > span:last-child {
+
+            font-size: 0.8rem; 
+
+        }
+
+        .control-card {
+
+            background-color: rgba(18, 28, 48, 0.6);
+
+            padding: 1rem;
+
+            border-radius: 0.5rem;
+
+        }
+
+        #graph-tooltip {
+
+            position: fixed;
+
+            display: none;
+
+            background-color: rgba(15, 23, 42, 0.8);
+
+            color: white;
+
+            padding: 5px 10px;
+
+            border-radius: 5px;
+
+            font-size: 0.75rem;
+
+            pointer-events: none; 
+
+            white-space: pre;
+
+            backdrop-filter: blur(4px);
+
+            border: 1px solid #334155;
+
+            z-index: 100;
+
+        }
+
+        #formula-panel {
+
+             background-color: rgba(18, 28, 48, 0.6);
+
+        }
+
+         #guide-modal-bg {
+
+             transition: opacity 0.3s ease-in-out;
+
+         }
+
+         #guide-modal-content {
+
+             transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
+
+             max-height: 80vh;
+
+         }
+
+         #guide-modal-content::-webkit-scrollbar { width: 6px; }
+
+         #guide-modal-content::-webkit-scrollbar-track { background: #1e293b; }
+
+         #guide-modal-content::-webkit-scrollbar-thumb { background: #4f46e5; border-radius: 3px; }
+
+
+
+    </style>
+
 </head>
+
 <body class="text-gray-300 flex flex-col lg:flex-row bg-slate-900 min-h-screen">
 
-    <div class="w-full lg:w-[70%] flex flex-col p-4">
-        
-        <div id="info-hud" class="w-full max-w-5xl mx-auto grid grid-cols-3 sm:grid-cols-6 gap-2 text-center bg-slate-900/70 backdrop-blur-sm p-3 rounded-lg z-20 border border-slate-700 shadow-lg mb-4">
-            <div class="flex flex-col"><span class="text-xs text-sky-400">Aceleración</span><span id="a-hud" class="font-mono text-white">0.00 m/s²</span></div>
-            <div class="flex flex-col"><span class="text-xs text-sky-400">Velocidad</span><span id="v-hud" class="font-mono text-white">0.00 m/s</span></div>
-            <div class="flex flex-col"><span class="text-xs text-sky-400">Altura</span><span id="h-hud" class="font-mono text-white">0.00 m</span></div>
-            <div class="flex flex-col"><span class="text-xs text-sky-400">E. Cinética</span><span id="ek-hud" class="font-mono text-white">0.00 J</span></div>
-            <div class="flex flex-col"><span class="text-xs text-sky-400">E. Potencial</span><span id="ep-hud" class="font-mono text-white">0.00 J</span></div>
-            <div class="flex flex-col"><span class="text-xs text-sky-400">Tiempo</span><span id="t-hud" class="font-mono text-white">0.00 s</span></div>
-        </div>
-        <div id="simulation-wrapper" class="relative flex-grow flex flex-col items-center justify-center w-full max-w-5xl mx-auto bg-slate-800 rounded-lg border border-slate-700 overflow-hidden">
-            <canvas id="simulation-canvas"></canvas>
-        </div>
-
-        <div id="mobile-controls" class="w-full max-w-5xl mx-auto lg:hidden my-4">
-             <div class="control-card space-y-3">
-                 <div class="flex items-center justify-center gap-3">
-                     <button id="play-pause-btn-mobile" class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs rounded-md transition w-24">Arrancar</button>
-                     <button id="reset-btn-mobile" class="px-4 py-1.5 bg-green-600 hover:bg-green-700 text-white font-semibold text-xs rounded-md transition">Reiniciar</button>
-                     <button id="guide-btn-mobile" class="px-4 py-1.5 bg-sky-600 hover:bg-sky-700 text-white font-semibold text-xs rounded-md transition">Guía</button>
-                 </div>
-            </div>
-        </div>
-        
-        <div id="formula-panel" class="w-full max-w-5xl mx-auto mt-4 p-4 rounded-lg border border-slate-700 text-sm hidden">
-             <div class="text-center mb-4">
-                 <h4 class="font-bold text-amber-400">Análisis de Fuerzas: <span id="prediction-text"></span></h4>
-            </div>
-            
-            <div id="y-axis-analysis" class="mb-4 border-b border-slate-700 pb-4">
-                 <h4 class="font-bold text-violet-400 mb-2 text-center">Análisis Eje Y (Perpendicular al Plano)</h4>
-                 <div id="y-forces" class="text-gray-300 space-y-2 text-center"></div>
-            </div>
-
-            <div id="x-axis-analysis" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                    <h4 class="font-bold text-sky-400 mb-2">Fuerzas Motrices (a favor del mov.)</h4>
-                    <div id="motriz-forces" class="text-gray-300 space-y-2"></div>
-                </div>
-                <div>
-                    <h4 class="font-bold text-red-400 mb-2">Fuerzas Resistentes (en contra del mov.)</h4>
-                    <div id="resist-forces" class="text-gray-300 space-y-2"></div>
-                </div>
-            </div>
-
-            <div class="text-center border-t border-slate-700 pt-4 mt-4">
-                 <h4 class="font-bold text-green-400 mb-2">Segunda Ley de Newton (Eje X)</h4>
-                 <div id="newton-law" class="text-gray-300"></div>
-            </div>
-        </div>
-
-        <div id="graph-panel" class="w-full max-w-5xl mx-auto mt-4 grid grid-cols-2 gap-4 hidden">
-        </div>
-    </div>
-    
-    <div class="w-full lg:w-[30%] control-panel p-4 z-10 border-t lg:border-t-0 lg:border-l border-slate-800 lg:h-screen lg:sticky lg:top-0 lg:overflow-y-auto flex flex-col">
-        <div class="space-y-4 flex-grow w-full">
-            <div class="control-card space-y-3 hidden lg:block">
-                <div class="flex items-center justify-center gap-3">
-                    <button id="play-pause-btn" class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs rounded-md transition w-24">Arrancar</button>
-                    <button id="reset-btn" class="px-4 py-1.5 bg-green-600 hover:bg-green-700 text-white font-semibold text-xs rounded-md transition">Reiniciar</button>
-                    <button id="guide-btn" class="px-4 py-1.5 bg-sky-600 hover:bg-sky-700 text-white font-semibold text-xs rounded-md transition">Guía</button>
-                </div>
-            </div>
-
-            <div class="control-card space-y-3">
-                <h3 class="text-sm font-bold text-sky-400">Parámetros del Sistema</h3>
-                <div class="space-y-3 pt-2 border-t border-slate-700">
-                    <div><label for="mass-slider" class="text-xs text-gray-400">Masa ($m$): <span id="mass-label" class="font-bold text-white">2.0</span> kg</label><input type="range" id="mass-slider" min="0.1" max="10" step="0.1" value="2.0"></div>
-                     <div class="pt-2">
-                         <label class="checkbox-label text-sm">
-                             <input type="checkbox" id="dimension-mode-checkbox">
-                             <span class="checkmark"></span>
-                             Medidas
-                         </label>
-                     </div>
-                     <div id="angle-controls" class="space-y-3">
-                         <div><label for="angle-slider" class="text-xs text-gray-400">Ángulo ($\theta$): <span id="angle-label" class="font-bold text-white">30</span>°</label><input type="range" id="angle-slider" min="0" max="90" step="1" value="30"></div>
-                    </div>
-                    <div id="dimension-controls" class="hidden space-y-3">
-                        <div><label for="base-slider" class="text-xs text-gray-400">Base ($b$): <span id="base-label" class="font-bold text-white">4.33</span> m</label><input type="range" id="base-slider" min="1" max="500" step="0.1" value="4.33"></div>
-                        <div><label for="height-slider" class="text-xs text-gray-400">Altura ($h$): <span id="height-label" class="font-bold text-white">2.50</span> m</label><input type="range" id="height-slider" min="0" max="500" step="0.1" value="2.50"></div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="control-card space-y-3">
-                 <h3 class="text-sm font-bold text-sky-400">Fuerzas Externas</h3>
-                 <div><label for="f-par-slider" class="text-xs text-gray-400">Fuerza Paralela ($F_\parallel$): <span id="f-par-label" class="font-bold text-white">0</span> N</label><input type="range" id="f-par-slider" min="-50" max="50" step="1" value="0"><p class="text-xs text-gray-500 -mt-1">Positiva hacia arriba del plano.</p></div>
-                 <div><label for="f-horz-slider" class="text-xs text-gray-400">Fuerza Horizontal ($F_h$): <span id="f-horz-label" class="font-bold text-white">0</span> N</label><input type="range" id="f-horz-slider" min="-50" max="50" step="1" value="0"><p class="text-xs text-gray-500 -mt-1">Positiva hacia la derecha.</p></div>
-            </div>
-            
-            <div class="control-card space-y-3">
-                <div class="flex justify-between items-center">
-                    <h3 class="text-sm font-bold text-sky-400">Rozamiento</h3>
-                    <label class="checkbox-label text-sm"><input type="checkbox" id="friction-checkbox"><span class="checkmark"></span></input></label>
-                </div>
-                <div id="friction-controls" class="space-y-3 pt-2 border-t border-slate-700 hidden">
-                    <div><label for="mu-s-slider" class="text-xs text-gray-400">Coef. Estático ($\mu_s$): <span id="mu-s-label" class="font-bold text-white">0.12</span></label><input type="range" id="mu-s-slider" min="0" max="1" step="0.01" value="0.12"></div>
-                    <div><label for="mu-k-slider" class="text-xs text-gray-400">Coef. Cinético ($\mu_k$): <span id="mu-k-label" class="font-bold text-white">0.10</span></label><input type="range" id="mu-k-slider" min="0" max="1" step="0.01" value="0.10"></div>
-                </div>
-            </div>
-
-            <div class="control-card space-y-3">
-                <h3 class="text-sm font-bold text-sky-400">Visualización</h3>
-                <div class="space-y-2 pt-2 border-t border-slate-700">
-                    <label class="checkbox-label text-sm">
-                        <input type="checkbox" id="show-vectors-checkbox">
-                        <span class="checkmark"></span>
-                        Ver Vectores
-                    </label>
-                    <label class="checkbox-label text-sm">
-                        <input type="checkbox" id="show-graphs-checkbox">
-                        <span class="checkmark"></span>
-                        Ver Gráficas
-                    </label>
-                    <label class="checkbox-label text-sm">
-                        <input type="checkbox" id="show-ruler-checkbox">
-                        <span class="checkmark"></span>
-                        Ver Regla
-                    </label>
-                    <label class="checkbox-label text-sm">
-                        <input type="checkbox" id="show-analysis-checkbox">
-                        <span class="checkmark"></span>
-                        Ver Análisis de Fuerzas
-                    </label>
-                </div>
-            </div>
-            
-        </div>
-        <footer class="p-2 text-center text-xs text-gray-500 z-20 mt-auto pt-4">Simulación creada por <a href="https://aulaquest.com" target="_blank" rel="noopener noreferrer" class="underline hover:text-indigo-400">Aulaquest</a></footer>
-    </div>
-    <div id="graph-tooltip"></div>
-
-    <div id="guide-modal" class="fixed inset-0 z-50 flex items-center justify-center hidden">
-        <div id="guide-modal-bg" class="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
-        <div id="guide-modal-content" class="relative bg-slate-800 border border-slate-700 rounded-lg shadow-xl w-11/12 max-w-2xl p-6 text-gray-300 transform scale-95 opacity-0 overflow-y-auto">
-            <h3 class="text-xl font-bold text-sky-400 mb-4">Guía del Simulador de Plano Inclinado</h3>
-            <div class="space-y-4 text-sm">
-                <p>Este simulador te permite explorar los principios de la dinámica y la energía en un plano inclinado. A continuación se detallan sus funciones:</p>
-                <div>
-                    <h4 class="font-semibold text-white mb-1">1. Controles Principales</h4>
-                    <ul class="list-disc list-inside space-y-1 pl-2">
-                        <li><b class="text-indigo-400">Arrancar/Detener:</b> Inicia o pausa la simulación física.</li>
-                        <li><b class="text-green-400">Reiniciar:</b> Devuelve todos los parámetros a sus valores por defecto y limpia las gráficas.</li>
-                        <li><b class="text-indigo-400">Arrastrar la Masa:</b> Cuando la simulación está en pausa, puedes hacer clic (o tocar) y arrastrar el bloque a cualquier posición del plano para definir un punto de partida personalizado.</li>
-                    </ul>
-                </div>
-                 <div>
-                    <h4 class="font-semibold text-white mb-1">2. Parámetros del Sistema</h4>
-                    <ul class="list-disc list-inside space-y-1 pl-2">
-                        <li><b class="text-indigo-400">Masa (m):</b> Ajusta la masa del bloque. Verás que su tamaño y los vectores de fuerza (como el peso) cambian visualmente.</li>
-                        <li><b class="text-indigo-400">Ángulo ($\theta$) vs. Medidas:</b> Puedes definir el plano de dos formas:
-                             <ul class="list-disc list-inside space-y-1 pl-4 mt-1">
-                                 <li><b>Por Ángulo:</b> Controlas directamente la inclinación.</li>
-                                 <li><b>Por Medidas:</b> Defines la base y altura. Al cambiar una, la otra se escala para mantener el ángulo constante. Esto te permite crear planos de cualquier tamaño.</li>
-                             </ul>
-                        </li>
-                    </ul>
-                </div>
-                 <div>
-                    <h4 class="font-semibold text-white mb-1">3. Fuerzas</h4>
-                    <ul class="list-disc list-inside space-y-1 pl-2">
-                        <li><b class="text-indigo-400">Fuerzas Externas:</b> Puedes aplicar una fuerza paralela al plano ($F_\parallel$) o una fuerza horizontal ($F_h$). <span class="text-amber-400">Nota:</span> Solo puedes aplicar una de las dos a la vez. Al ajustar una, la otra se reiniciará a cero.</li>
-                        <li><b class="text-indigo-400">Rozamiento ($f_r$):</b> Activa esta opción para simular la fricción.</li>
-                    </ul>
-                </div>
-                 <div>
-                    <h4 class="font-semibold text-white mb-1">4. Paneles de Datos y Herramientas</h4>
-                    <ul class="list-disc list-inside space-y-1 pl-2">
-                        <li><b class="text-indigo-400">Panel Superior:</b> Muestra en tiempo real los valores clave como la aceleración, velocidad, altura y las energías.</li>
-                        <li><b class="text-indigo-400">Panel de Fórmulas:</b> Te muestra las ecuaciones que se están usando, clasificando las fuerzas en motrices y resistentes.</li>
-                        <li><b class="text-indigo-400">Gráficas:</b> Activa el checkbox "Ver Gráficas" para visualizar la evolución de las variables en el tiempo.</li>
-                        <li><b class="text-indigo-400">Regla:</b> Activa "Ver Regla" para mostrar una regla medidora. Puedes arrastrar sus extremos para medir distancias en metros sobre el lienzo.</li>
-                    </ul>
-                </div>
-            </div>
-            <button id="close-guide-btn" class="absolute top-4 right-4 text-gray-400 hover:text-white transition">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-            </button>
-        </div>
-    </div>
-
-
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const dom = {
-                canvas: document.getElementById('simulation-canvas'),
-                simulationWrapper: document.getElementById('simulation-wrapper'),
-                playPauseBtn: document.getElementById('play-pause-btn'),
-                resetBtn: document.getElementById('reset-btn'),
-                guideBtn: document.getElementById('guide-btn'),
-                playPauseBtnMobile: document.getElementById('play-pause-btn-mobile'),
-                resetBtnMobile: document.getElementById('reset-btn-mobile'),
-                guideBtnMobile: document.getElementById('guide-btn-mobile'),
-                aHud: document.getElementById('a-hud'),
-                vHud: document.getElementById('v-hud'),
-                hHud: document.getElementById('h-hud'),
-                ekHud: document.getElementById('ek-hud'),
-                epHud: document.getElementById('ep-hud'),
-                tHud: document.getElementById('t-hud'),
-                massSlider: document.getElementById('mass-slider'),
-                massLabel: document.getElementById('mass-label'),
-                angleSlider: document.getElementById('angle-slider'),
-                angleLabel: document.getElementById('angle-label'),
-                dimensionModeCheckbox: document.getElementById('dimension-mode-checkbox'),
-                angleControls: document.getElementById('angle-controls'),
-                dimensionControls: document.getElementById('dimension-controls'),
-                baseSlider: document.getElementById('base-slider'),
-                baseLabel: document.getElementById('base-label'),
-                heightSlider: document.getElementById('height-slider'),
-                heightLabel: document.getElementById('height-label'),
-                fParSlider: document.getElementById('f-par-slider'),
-                fParLabel: document.getElementById('f-par-label'),
-                fHorzSlider: document.getElementById('f-horz-slider'),
-                fHorzLabel: document.getElementById('f-horz-label'),
-                frictionCheckbox: document.getElementById('friction-checkbox'),
-                frictionControls: document.getElementById('friction-controls'),
-                muSSlider: document.getElementById('mu-s-slider'),
-                muSLabel: document.getElementById('mu-s-label'),
-                muKSlider: document.getElementById('mu-k-slider'),
-                muKLabel: document.getElementById('mu-k-label'),
-                formulaPanel: document.getElementById('formula-panel'),
-                graphPanel: document.getElementById('graph-panel'),
-                tooltip: document.getElementById('graph-tooltip'),
-                yForces: document.getElementById('y-forces'),
-                motrizForces: document.getElementById('motriz-forces'),
-                resistForces: document.getElementById('resist-forces'),
-                newtonLaw: document.getElementById('newton-law'),
-                predictionText: document.getElementById('prediction-text'),
-                guideModal: document.getElementById('guide-modal'),
-                guideModalBg: document.getElementById('guide-modal-bg'),
-                guideModalContent: document.getElementById('guide-modal-content'),
-                closeGuideBtn: document.getElementById('close-guide-btn'),
-                showVectorsCheckbox: document.getElementById('show-vectors-checkbox'),
-                showGraphsCheckbox: document.getElementById('show-graphs-checkbox'),
-                showRulerCheckbox: document.getElementById('show-ruler-checkbox'),
-                showAnalysisCheckbox: document.getElementById('show-analysis-checkbox'),
-            };
-
-            const ctx = dom.canvas.getContext('2d');
-            let animationFrameId;
-            let lastDragInfo = {}; 
-
-            const defaultState = {
-                m: 2.0,
-                theta: 30,
-                planeBaseMeters: 4.33,
-                planeHeightMeters: 2.5,
-                useDimensionMode: false,
-                f_par: 0,
-                f_horz: 0,
-                mu_s: 0.12,
-                mu_k: 0.10,
-                hasFriction: false,
-                showGraphs: false,
-                showRuler: false,
-                showVectors: false,
-                showAnalysis: false,
-            };
-
-            let state = {
-                ...JSON.parse(JSON.stringify(defaultState)),
-                g: 9.81,
-                x: 0, v: 0, a: 0, t: 0,
-                N: 0, f: 0, isStatic: false,
-                isPlaying: false,
-                isDragging: false,
-                dt: 1 / 60,
-                clouds: [],
-                graphs: {
-                    pos: { show: true, data: [], yBounds: {min: -10, max: 10} },
-                    vel: { show: true, data: [], yBounds: {min: -10, max: 10} },
-                    acc: { show: true, data: [], yBounds: {min: -10, max: 10} },
-                    energy: { show: true, data: { K: [], P: [], E: [] }, yBounds: {min: 0, max: 100} }
-                },
-                ruler: {
-                    start: { x: 100, y: 150 },
-                    end: { x: 300, y: 150 },
-                    dragging: null,
-                    dragOffset: { x: 0, y: 0 }
-                }
-            };
-            
-            // isForDisplayOnly: si es true, no pone a=0 al arrastrar.
-            function calculateForces(isForDisplayOnly = false) {
-                const thetaRad = state.theta * Math.PI / 180;
-                const P_perp = state.m * state.g * Math.cos(thetaRad);
-                const f_h_perp = Math.abs(state.f_horz) * Math.sin(thetaRad);
-                state.N = P_perp + f_h_perp;
-                if (state.N < 0) state.N = 0;
-
-                const P_par = -state.m * state.g * Math.sin(thetaRad);
-                const F_applied_par = state.f_par + (state.f_horz * Math.cos(thetaRad));
-                const F_net_no_friction = P_par + F_applied_par;
-
-                let f_friction = 0;
-                let isStatic = false;
-
-                if (state.hasFriction && state.N > 0) {
-                    const f_s_max = state.mu_s * state.N;
-                    const f_k = state.mu_k * state.N;
-
-                    if (Math.abs(state.v) < 1e-5 && !state.isDragging) {
-                        if (Math.abs(F_net_no_friction) <= f_s_max) {
-                            f_friction = -F_net_no_friction;
-                            state.a = 0;
-                            isStatic = true;
-                        } else {
-                            f_friction = -Math.sign(F_net_no_friction) * f_k;
-                        }
-                    } else {
-                        if (state.v !== 0) {
-                           f_friction = -Math.sign(state.v) * f_k;
-                        } else {
-                            // Si v=0 pero se arrastra o la fuerza neta supera la estática
-                            if (Math.abs(F_net_no_friction) > f_s_max) {
-                                f_friction = -Math.sign(F_net_no_friction) * f_k;
-                            } else if (!isForDisplayOnly) { 
-                                // Caso de arrastre para simulación: se queda estático
-                                f_friction = -F_net_no_friction;
-                                isStatic = true;
-                            } else {
-                                // Caso de display: muestra la fuerza estática necesaria
-                                f_friction = -F_net_no_friction;
-                                isStatic = true;
-                            }
-                        }
-                    }
-                }
-                state.isStatic = isStatic;
-                state.f = f_friction;
-                
-                if (!state.isStatic) {
-                   state.a = (F_net_no_friction + f_friction) / state.m;
-                } else {
-                   state.a = 0;
-                }
-
-                // Si es para la simulación (no para el panel), al arrastrar la aceleración es 0.
-                if (state.isDragging && !isForDisplayOnly) {
-                    state.v = 0;
-                    state.a = 0;
-                }
-            }
-
-            function updateClouds() {
-                 if (!state.clouds) state.clouds = [];
-                state.clouds.forEach(cloud => {
-                    cloud.x += cloud.speed * state.dt;
-                    if (cloud.x > dom.canvas.width + cloud.size * 2) {
-                        cloud.x = -cloud.size * 2;
-                    }
-                });
-            }
-
-            function gameLoop() {
-                calculateForces();
-
-                if (state.isPlaying && !state.isDragging) {
-                    const planePhysicalLength = Math.hypot(state.planeBaseMeters, state.planeHeightMeters);
-                    const lowerBound = -planePhysicalLength / 2.0;
-                    const upperBound = planePhysicalLength / 2.0;
-
-                    if ((state.x >= upperBound && state.a > 0) || (state.x <= lowerBound && state.a < 0)) {
-                        state.a = 0;
-                        state.v = 0;
-                    }
-
-                    state.v += state.a * state.dt;
-                    state.x += state.v * state.dt;
-                    state.t += state.dt;
-                    
-                    const atBoundary = (state.x <= lowerBound || state.x >= upperBound);
-                    if (atBoundary) {
-                        state.x = Math.max(lowerBound, Math.min(upperBound, state.x));
-                        state.v = 0;
-                    }
-                    
-                    updateGraphData();
-                    
-                    if (atBoundary) {
-                        togglePlayPause();
-                    }
-                }
-                
-                updateClouds();
-                updateHUD();
-                draw();
-                if (state.showGraphs) drawGraphs();
-                
-                if (state.isPlaying || state.isDragging || state.ruler.dragging) {
-                    animationFrameId = requestAnimationFrame(gameLoop);
-                } else {
-                    cancelAnimationFrame(animationFrameId);
-                }
-            }
-
-            function draw() {
-                const planePhysicalLength = Math.hypot(state.planeBaseMeters, state.planeHeightMeters);
-                const w = dom.canvas.width;
-                const h = dom.canvas.height;
-                const groundLevel = h * 0.9;
-
-                ctx.save();
-                ctx.clearRect(0, 0, w, h);
-
-                const skyGradient = ctx.createLinearGradient(0, 0, 0, groundLevel);
-                skyGradient.addColorStop(0, '#87CEEB');
-                skyGradient.addColorStop(1, '#B0E0E6');
-                ctx.fillStyle = skyGradient;
-                ctx.fillRect(0, 0, w, h);
-                
-                ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-                if(state.clouds) {
-                    state.clouds.forEach(cloud => {
-                        ctx.beginPath();
-                        ctx.arc(cloud.x, cloud.y, cloud.size, 0, Math.PI * 2);
-                        ctx.arc(cloud.x + cloud.size * 0.8, cloud.y, cloud.size * 0.8, 0, Math.PI * 2);
-                        ctx.arc(cloud.x - cloud.size * 0.7, cloud.y, cloud.size * 0.7, 0, Math.PI * 2);
-                        ctx.fill();
-                    });
-                }
-                
-                ctx.fillStyle = '#228B22';
-                ctx.fillRect(0, groundLevel, w, h - groundLevel + 1);
-
-                const maxPlaneHeight = h * 0.8;
-                const maxPlaneWidth = w * 0.9;
-                
-                let planePixelWidth, planePixelHeight;
-                
-                if (state.theta < 0.1) {
-                    planePixelWidth = maxPlaneWidth;
-                    planePixelHeight = 0;
-                } else {
-                    const aspectRatio = state.planeBaseMeters === 0 ? Infinity : state.planeHeightMeters / state.planeBaseMeters;
-                    planePixelWidth = maxPlaneWidth;
-                    planePixelHeight = planePixelWidth * aspectRatio;
-
-                    if (planePixelHeight > maxPlaneHeight || state.planeBaseMeters === 0) {
-                        planePixelHeight = maxPlaneHeight;
-                        if (aspectRatio > 1e-6 && aspectRatio !== Infinity) planePixelWidth = planePixelHeight / aspectRatio;
-                    }
-                }
-                
-                const originX = (w - planePixelWidth) / 2;
-                const originY = groundLevel;
-                const thetaRad = Math.atan2(state.planeHeightMeters, state.planeBaseMeters);
-                
-                if (state.theta > 0.1) {
-                    if (planePixelHeight > 0) {
-                        ctx.fillStyle = '#696969';
-                        ctx.beginPath();
-                        ctx.moveTo(originX, originY);
-                        ctx.lineTo(originX + planePixelWidth, originY);
-                        ctx.lineTo(originX + planePixelWidth, originY - planePixelHeight);
-                        ctx.closePath();
-                        ctx.fill();
-                    }
-                    ctx.strokeStyle = '#36454F';
-                    ctx.lineWidth = 4;
-                    ctx.beginPath();
-                    ctx.moveTo(originX, originY);
-                    ctx.lineTo(originX + planePixelWidth, originY - planePixelHeight);
-                    ctx.stroke();
-                } else { 
-                    ctx.strokeStyle = '#36454F';
-                    ctx.lineWidth = 4;
-                    ctx.beginPath();
-                    ctx.moveTo(originX, originY);
-                    ctx.lineTo(originX + planePixelWidth, originY);
-                    ctx.stroke();
-                }
-
-                const planePixelLength = Math.hypot(planePixelWidth, planePixelHeight);
-                const pixelsPerMeter = planePixelLength / (planePhysicalLength || 1);
-
-                const blockScale = 0.8 + Math.log10(state.m + 1) * 0.5;
-                const blockWidth = 40 * blockScale;
-                const blockHeight = 25 * blockScale;
-                
-                const blockPosOnPlane = (planePixelLength / 2) + state.x * pixelsPerMeter;
-                
-                const surfacePointX = originX + blockPosOnPlane * Math.cos(thetaRad);
-                const surfacePointY = originY - blockPosOnPlane * Math.sin(thetaRad);
-                
-                ctx.save();
-                ctx.translate(surfacePointX, surfacePointY);
-                ctx.rotate(-thetaRad);
-                
-                const blockGrad = ctx.createLinearGradient(0, -blockHeight, 0, 0);
-                blockGrad.addColorStop(0, '#818cf8');
-                blockGrad.addColorStop(1, '#4f46e5');
-                ctx.fillStyle = blockGrad;
-                ctx.shadowColor = "rgba(0,0,0,0.5)";
-                ctx.shadowBlur = 10;
-                ctx.fillRect(-blockWidth / 2, -blockHeight, blockWidth, blockHeight);
-                ctx.shadowColor = "transparent"; 
-                ctx.strokeStyle = "#c7d2fe";
-                ctx.lineWidth = 1;
-                ctx.strokeRect(-blockWidth / 2, -blockHeight, blockWidth, blockHeight);
-                
-                if (state.showVectors) {
-                    drawVectors(ctx, thetaRad, blockHeight);
-                }
-
-                ctx.restore();
-
-                 lastDragInfo = {
-                     blockScreenX: surfacePointX, blockScreenY: surfacePointY,
-                     blockWidth, blockHeight, thetaRad,
-                     planeOriginX: originX, planeOriginY: originY,
-                     planePixelLength, planePhysicalLength, pixelsPerMeter
-                 };
-
-                if (state.theta > 0.1 && planePixelHeight > 0) {
-                    ctx.strokeStyle = "#111827";
-                    ctx.lineWidth = 1.5;
-                    ctx.beginPath();
-                    ctx.arc(originX, originY, 30, 0, -thetaRad, true);
-                    ctx.stroke();
-                    ctx.fillStyle = "#111827";
-                    ctx.font = "bold 12px Inter";
-                    ctx.fillText(`θ=${state.theta.toFixed(1)}°`, originX + 35, originY - 15);
-                }
-                
-                if (state.showRuler) {
-                    drawRuler(ctx, pixelsPerMeter);
-                }
-
-                ctx.restore();
-            }
-            
-            function drawVectors(ctx, thetaRad, blockH) {
-                const center = { x: 0, y: -blockH / 2 };
-                const vectorScale = 4 + Math.log10(state.m + 1);
-
-                // --- Sistema de Coordenadas del Plano Inclinado ---
-                // El contexto ya está rotado. El eje X positivo apunta HACIA ABAJO del plano.
-                // El eje Y positivo apunta HACIA DENTRO del plano.
-                ctx.save();
-                ctx.translate(center.x, center.y);
-
-                const N_vec = state.N;
-                const F_par_vec = state.f_par;
-                const Px_vec = state.m * state.g * Math.sin(thetaRad);
-                const Py_vec = state.m * state.g * Math.cos(thetaRad);
-                const fr_vec = state.f;
-
-                // N: Perpendicular hacia afuera (-Y local). Ángulo = -90 grados.
-                if (N_vec > 0) drawVector(ctx, -90, N_vec * vectorScale, "#4ade80", "N");
-                
-                // F||: Positiva es hacia arriba (-X local), Negativa es hacia abajo (+X local)
-                if (Math.abs(F_par_vec) > 1e-3) {
-                    // CORRECCIÓN SOLICITADA: Invertir la dirección de F||
-                    const angle = F_par_vec > 0 ? 0 : 180;
-                    drawVector(ctx, angle, Math.abs(F_par_vec) * vectorScale, "#60a5fa", "F∥");
-                }
-                
-                // Componentes del peso (solo si hay inclinación)
-                if (state.theta > 0.1) {
-                    // Px: Hacia abajo del plano (+X local). Ángulo = 0 grados.
-                    // CORRECCIÓN SOLICITADA: Invertir la dirección de Px
-                    drawVector(ctx, 180, Px_vec * vectorScale, "#fde047", "Px", true);
-                    // Py: Hacia adentro del plano (+Y local). Ángulo = 90 grados.
-                    drawVector(ctx, 90, Py_vec * vectorScale, "#fde047", "Py", true);
-                }
-
-                // Fuerza de rozamiento
-                if (state.hasFriction && Math.abs(fr_vec) > 1e-3) {
-                     // fr_vec es positivo si apunta hacia arriba (-X), negativo si apunta hacia abajo (+X)
-                     const angle = fr_vec > 0 ? 180 : 0;
-                     drawVector(ctx, angle, Math.abs(fr_vec) * vectorScale, "#f87171", "fr");
-                }
-                
-                ctx.restore();
-                
-                // --- Sistema de Coordenadas de la Pantalla (sin rotar) ---
-                ctx.save();
-                ctx.rotate(thetaRad); // Contra-rota para volver al sistema de la pantalla
-                ctx.translate(center.x, center.y);
-                
-                const P_vec = state.m * state.g;
-                const Fh_vec = state.f_horz;
-
-                // P: Vertical hacia abajo. Ángulo = 90 grados.
-                drawVector(ctx, 90, P_vec * vectorScale, "#f59e0b", "P");
-
-                // Fh: Horizontal. Positiva a la derecha, negativa a la izquierda.
-                if (Math.abs(Fh_vec) > 1e-3) {
-                    const angle = Fh_vec > 0 ? 0 : 180;
-                    drawVector(ctx, angle, Math.abs(Fh_vec) * vectorScale, "#a78bfa", "Fh");
-                }
-                
-                ctx.restore();
-            }
-            
-            function drawVector(ctx, angleDeg, magnitude, color, label, dashed = false) {
-                 const angleRad = angleDeg * Math.PI / 180;
-                 ctx.save();
-                 ctx.rotate(angleRad);
-                 ctx.strokeStyle = color;
-                 ctx.fillStyle = color;
-                 ctx.lineWidth = 3; 
-                 ctx.beginPath();
-                 if(dashed) ctx.setLineDash([4, 4]);
-                 ctx.moveTo(0, 0);
-                 ctx.lineTo(magnitude, 0);
-                 ctx.stroke();
-                 ctx.beginPath();
-                 ctx.moveTo(magnitude, 0);
-                 ctx.lineTo(magnitude - 10, -5); 
-                 ctx.lineTo(magnitude - 10, 5);
-                 ctx.closePath();
-                 ctx.fill();
-                 ctx.restore();
-
-                 ctx.save();
-                 ctx.rotate(angleRad);
-                 ctx.font = "bold 13px Inter";
-                 ctx.textAlign = "center";
-                 ctx.textBaseline = "middle";
-                 ctx.fillStyle = color;
-                 ctx.strokeStyle = 'black';
-                 ctx.lineWidth = 2;
-                 ctx.strokeText(label, magnitude / 2, -15);
-                 ctx.fillText(label, magnitude / 2, -15);
-                 ctx.restore();
-            }
-
-            function drawRuler(ctx, pixelsPerMeter) {
-                const { start, end } = state.ruler;
-                const handleRadius = 8;
-                
-                ctx.save();
-                
-                ctx.strokeStyle = 'rgba(251, 191, 36, 0.8)';
-                ctx.lineWidth = 3;
-                ctx.beginPath();
-                ctx.moveTo(start.x, start.y);
-                ctx.lineTo(end.x, end.y);
-                ctx.stroke();
-
-                const dx = end.x - start.x;
-                const dy = end.y - start.y;
-                const pixelDist = Math.hypot(dx, dy);
-                if (pixelDist > 0 && pixelsPerMeter > 0) {
-                    const ux = dx / pixelDist;
-                    const uy = dy / pixelDist;
-                    const px = -uy;
-                    const py = ux;
-
-                    ctx.strokeStyle = 'rgba(251, 191, 36, 0.9)';
-                    ctx.lineWidth = 2;
-
-                    for (let d = 0; d <= pixelDist; d += pixelsPerMeter) {
-                        const currentMeter = Math.round(d / pixelsPerMeter);
-                        const isFiveMeterMark = currentMeter % 5 === 0 && currentMeter !== 0;
-                        const tickLength = isFiveMeterMark ? 10 : 5;
-
-                        const pointX = start.x + d * ux;
-                        const pointY = start.y + d * uy;
-
-                        ctx.beginPath();
-                        ctx.moveTo(pointX - px * tickLength, pointY - py * tickLength);
-                        ctx.lineTo(pointX + px * tickLength, pointY + py * tickLength);
-                        ctx.stroke();
-                    }
-                }
-                
-                ctx.fillStyle = 'rgba(251, 191, 36, 1)';
-                ctx.beginPath();
-                ctx.arc(start.x, start.y, handleRadius, 0, 2 * Math.PI);
-                ctx.fill();
-                ctx.beginPath();
-                ctx.arc(end.x, end.y, handleRadius, 0, 2 * Math.PI);
-                ctx.fill();
-                
-                const meterDist = pixelDist / (pixelsPerMeter || 1);
-                
-                const midX = start.x + dx / 2;
-                const midY = start.y + dy / 2;
-                
-                const text = `${meterDist.toFixed(2)} m`;
-                ctx.font = 'bold 14px Inter';
-                const textMetrics = ctx.measureText(text);
-                const textWidth = textMetrics.width;
-                const textHeight = 14; 
-                
-                ctx.fillStyle = 'rgba(15, 23, 42, 0.7)';
-                ctx.fillRect(midX - textWidth / 2 - 5, midY - textHeight / 2 - 12, textWidth + 10, textHeight + 10);
-                
-                ctx.fillStyle = '#facc15';
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-                ctx.fillText(text, midX, midY - 5);
-                
-                ctx.restore();
-            }
-
-            function updateHUD(){
-                const thetaRad = state.theta * Math.PI / 180;
-                const planePhysicalLength = Math.hypot(state.planeBaseMeters, state.planeHeightMeters);
-                const distanceFromBottom = planePhysicalLength / 2 + state.x;
-                const verticalHeight = distanceFromBottom * Math.sin(thetaRad);
-                const Ek = 0.5 * state.m * state.v * state.v;
-                const Ep = state.m * state.g * verticalHeight;
-                
-                dom.aHud.textContent = `${state.a.toFixed(2)} m/s²`;
-                dom.vHud.textContent = `${state.v.toFixed(2)} m/s`;
-                dom.hHud.textContent = `${verticalHeight.toFixed(2)} m`;
-                dom.ekHud.textContent = `${Ek.toFixed(2)} J`;
-                dom.epHud.textContent = `${Ep.toFixed(2)} J`;
-                dom.tHud.textContent = `${state.t.toFixed(2)} s`;
-            }
-
-            function setupGraph(id, title) {
-                const container = document.createElement('div');
-                container.id = `${id}-graph-container`;
-                container.className = "bg-slate-900/70 p-3 rounded-lg z-20 border border-slate-700 shadow-lg";
-                container.innerHTML = `<div class="flex justify-between items-center mb-2 flex-wrap"><h4 class="text-sm font-bold text-sky-400">${title}</h4></div><canvas id="${id}-graph-canvas" class="w-full h-32 rounded bg-slate-800/20"></canvas>`;
-                dom.graphPanel.appendChild(container);
-                const canvas = document.getElementById(`${id}-graph-canvas`);
-                canvas.width = canvas.clientWidth;
-                canvas.height = canvas.clientHeight;
-                 canvas.addEventListener('mousemove', (e) => handleGraphMouseMove(e, id));
-                 canvas.addEventListener('mouseout', () => dom.tooltip.style.display = 'none');
-                return canvas.getContext('2d');
-            }
-
-            let graphContexts = {};
-            function setupAllGraphs() {
-                dom.graphPanel.innerHTML = ''; 
-                graphContexts = {
-                    pos: setupGraph('pos', 'Altura (m) vs Tiempo (s)'),
-                    vel: setupGraph('vel', 'Velocidad (m/s) vs Tiempo (s)'),
-                    acc: setupGraph('acc', 'Aceleración (m/s²) vs Tiempo (s)'),
-                    energy: setupGraph('energy', 'Energía (J) vs Tiempo (s)')
-                };
-            }
-            
-            function drawSingleGraph(ctx, data, color, yBounds) {
-                if (!ctx || !ctx.canvas.width || !ctx.canvas.height) return;
-                const w = ctx.canvas.width;
-                const h = ctx.canvas.height;
-                ctx.clearRect(0, 0, w, h);
-
-                if (!data || data.length < 1) { 
-                    ctx.fillStyle = 'rgba(156, 163, 175, 0.5)';
-                    ctx.font = '12px Inter';
-                    ctx.textAlign = 'center';
-                    ctx.textBaseline = 'middle';
-                    ctx.fillText('Configura y arranca', w / 2, h / 2);
-                    return;
-                }
-
-                const padding = 30;
-                const xMax = data.length > 1 ? data[data.length - 1].t : data[0].t + 1;
-                const xMin = data[0].t;
-                
-                let {min: yMin, max: yMax} = yBounds;
-                if (Math.abs(yMax - yMin) < 1e-6) { yMax += 0.5; yMin -=0.5; }
-
-                const xScale = (w - padding * 2) / (xMax - xMin || 1);
-                const yScale = (h - padding * 2) / (yMax - yMin || 1);
-                
-                ctx.graphMetrics = {xScale, yScale, xMin, yMin, padding, w, h};
-
-                const toCanvasX = (t) => padding + (t - xMin) * xScale;
-                const toCanvasY = (y) => h - padding - (y - yMin) * yScale;
-
-                ctx.strokeStyle = '#475569';
-                ctx.lineWidth = 1;
-                ctx.beginPath();
-                ctx.moveTo(padding, padding);
-                ctx.lineTo(padding, h - padding);
-                ctx.lineTo(w - padding, h - padding);
-                ctx.stroke();
-
-                if (yMin < 0.01 && yMax > -0.01) {
-                    ctx.strokeStyle = 'rgba(71, 85, 105, 0.5)';
-                    ctx.beginPath();
-                    ctx.moveTo(padding, toCanvasY(0));
-                    ctx.lineTo(w - padding, toCanvasY(0));
-                    ctx.stroke();
-                }
-
-                ctx.strokeStyle = color;
-                ctx.lineWidth = 2;
-                ctx.beginPath();
-                ctx.moveTo(toCanvasX(data[0].t), toCanvasY(data[0].y));
-                for (let i = 1; i < data.length; i++) {
-                    ctx.lineTo(toCanvasX(data[i].t), toCanvasY(data[i].y));
-                }
-                ctx.stroke();
-
-                ctx.fillStyle = '#94a3b8';
-                ctx.font = '10px Inter';
-                ctx.textAlign = 'right';
-                ctx.textBaseline = 'middle';
-                ctx.fillText(yMax.toFixed(1), padding - 5, padding);
-                ctx.fillText(yMin.toFixed(1), padding - 5, h - padding);
-
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'top';
-                ctx.fillText(xMax.toFixed(1) + 's', w - padding, h - padding + 5);
-            }
-
-            function drawMultiLineGraph(ctx, datasets, colors, labels, yBounds) {
-                if (!ctx || !ctx.canvas.width || !ctx.canvas.height) return;
-                const w = ctx.canvas.width;
-                const h = ctx.canvas.height;
-                ctx.clearRect(0, 0, w, h);
-
-                const allDataPoints = Object.values(datasets).flatMap(d => d);
-                if (allDataPoints.length < 1) {
-                    ctx.fillStyle = 'rgba(156, 163, 175, 0.5)';
-                    ctx.font = '12px Inter';
-                    ctx.textAlign = 'center';
-                    ctx.textBaseline = 'middle';
-                    ctx.fillText('Configura y arranca', w / 2, h / 2);
-                    return;
-                }
-
-                const padding = 30;
-                const xMax = allDataPoints.length > 1 ? allDataPoints[allDataPoints.length - 1].t : allDataPoints[0].t + 1;
-                const xMin = allDataPoints[0].t;
-                let {min: yMin, max: yMax} = yBounds;
-
-                if (Math.abs(yMax - yMin) < 1e-6) { yMax += 5; yMin -= 5; }
-                
-                const xScale = (w - padding * 2) / (xMax - xMin || 1);
-                const yScale = (h - padding * 2) / (yMax - yMin || 1);
-
-                ctx.graphMetrics = {xScale, yScale, xMin, yMin, padding, w, h};
-
-                const toCanvasX = (t) => padding + (t - xMin) * xScale;
-                const toCanvasY = (y) => h - padding - (y - yMin) * yScale;
-
-                ctx.strokeStyle = '#475569';
-                ctx.lineWidth = 1;
-                ctx.beginPath();
-                ctx.moveTo(padding, padding); ctx.lineTo(padding, h - padding); ctx.lineTo(w - padding, h - padding);
-                ctx.stroke();
-
-                Object.keys(datasets).forEach((key) => {
-                    const data = datasets[key];
-                    if (data.length < 1) return;
-                    ctx.strokeStyle = colors[key];
-                    ctx.lineWidth = 2;
-                    ctx.beginPath();
-                    ctx.moveTo(toCanvasX(data[0].t), toCanvasY(data[0].y));
-                    for (let i = 1; i < data.length; i++) {
-                        ctx.lineTo(toCanvasX(data[i].t), toCanvasY(data[i].y));
-                    }
-                    ctx.stroke();
-                });
-
-                ctx.fillStyle = '#94a3b8';
-                ctx.font = '10px Inter';
-                ctx.textAlign = 'right';
-                ctx.textBaseline = 'middle';
-                ctx.fillText(yMax.toFixed(1), padding - 5, padding);
-                ctx.fillText(yMin.toFixed(1), padding - 5, h - padding);
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'top';
-                ctx.fillText(xMax.toFixed(1) + 's', w - padding, h - padding + 5);
-
-                ctx.font = '10px Inter';
-                ctx.textAlign = 'left';
-                let legendX = padding + 10;
-                Object.keys(labels).forEach(key => {
-                    ctx.fillStyle = colors[key];
-                    ctx.fillText(`■ ${labels[key]}`, legendX, padding + 10);
-                    legendX += ctx.measureText(`■ ${labels[key]}`).width + 15;
-                });
-            }
-
-            function drawGraphs() {
-                if(!state.showGraphs) return;
-                drawSingleGraph(graphContexts.pos, state.graphs.pos.data, '#818cf8', state.graphs.pos.yBounds);
-                drawSingleGraph(graphContexts.vel, state.graphs.vel.data, '#60a5fa', state.graphs.vel.yBounds);
-                drawSingleGraph(graphContexts.acc, state.graphs.acc.data, '#f87171', state.graphs.acc.yBounds);
-                drawMultiLineGraph(graphContexts.energy, 
-                    state.graphs.energy.data,
-                    { K: '#60a5fa', P: '#f59e0b', E: '#4ade80'},
-                    { K: 'K', P: 'P', E: 'E_total'},
-                    state.graphs.energy.yBounds
-                );
-            }
-
-            function updateGraphData() {
-                if(state.t > 300) return;
-                const dataPointLimit = 500;
-                
-                const thetaRad = state.theta * Math.PI / 180;
-                const planePhysicalLength = Math.hypot(state.planeBaseMeters, state.planeHeightMeters);
-                const distanceFromBottom = planePhysicalLength / 2 + state.x;
-                const verticalHeight = distanceFromBottom * Math.sin(thetaRad);
-
-                const K = 0.5 * state.m * state.v * state.v;
-                const P = state.m * state.g * verticalHeight;
-                const E = K + P;
-                
-                state.graphs.pos.data.push({t: state.t, y: verticalHeight});
-                if (state.graphs.pos.data.length > dataPointLimit) state.graphs.pos.data.shift();
-                
-                state.graphs.vel.data.push({t: state.t, y: state.v});
-                if (state.graphs.vel.data.length > dataPointLimit) state.graphs.vel.data.shift();
-                
-                state.graphs.acc.data.push({t: state.t, y: state.a});
-                if (state.graphs.acc.data.length > dataPointLimit) state.graphs.acc.data.shift();
-                
-                state.graphs.energy.data.K.push({t: state.t, y: K});
-                state.graphs.energy.data.P.push({t: state.t, y: P});
-                state.graphs.energy.data.E.push({t: state.t, y: E});
-                
-                if (state.graphs.energy.data.K.length > dataPointLimit) {
-                    state.graphs.energy.data.K.shift();
-                    state.graphs.energy.data.P.shift();
-                    state.graphs.energy.data.E.shift();
-                }
-            }
-            
-            function updateControlsFromState() {
-                dom.massSlider.value = state.m; dom.massLabel.textContent = state.m.toFixed(1);
-                dom.angleSlider.value = state.theta; dom.angleLabel.textContent = state.theta.toFixed(1);
-                dom.baseSlider.value = state.planeBaseMeters; dom.baseLabel.textContent = state.planeBaseMeters.toFixed(2);
-                dom.heightSlider.value = state.planeHeightMeters; dom.heightLabel.textContent = state.planeHeightMeters.toFixed(2);
-                dom.dimensionModeCheckbox.checked = state.useDimensionMode;
-                dom.angleControls.classList.toggle('hidden', state.useDimensionMode);
-                dom.dimensionControls.classList.toggle('hidden', !state.useDimensionMode);
-                dom.fParSlider.value = state.f_par; dom.fParLabel.textContent = state.f_par;
-                dom.fHorzSlider.value = state.f_horz; dom.fHorzLabel.textContent = state.f_horz;
-                dom.frictionCheckbox.checked = state.hasFriction;
-                dom.frictionControls.classList.toggle('hidden', !state.hasFriction);
-                dom.muSSlider.value = state.mu_s; dom.muSLabel.textContent = state.mu_s.toFixed(2);
-                dom.muKSlider.value = state.mu_k; dom.muKLabel.textContent = state.mu_k.toFixed(2);
-                dom.showGraphsCheckbox.checked = state.showGraphs;
-                dom.showRulerCheckbox.checked = state.showRuler;
-                dom.showVectorsCheckbox.checked = state.showVectors;
-                dom.showAnalysisCheckbox.checked = state.showAnalysis;
-            }
-
-             function calculateGraphBounds() {
-                const planeLength = Math.hypot(state.planeBaseMeters, state.planeHeightMeters);
-                const maxHeight = state.planeHeightMeters;
-                calculateForces(true);
-                const acc = state.a;
-                state.graphs.pos.yBounds = { min: 0, max: maxHeight > 0 ? maxHeight : 1 };
-                const maxWork = Math.abs(state.f_par) * planeLength + Math.abs(state.f_horz * Math.cos(state.theta * Math.PI/180)) * planeLength;
-                const maxTheoreticalVel = Math.sqrt((2 * (state.m * state.g * maxHeight + maxWork)) / state.m);
-                state.graphs.vel.yBounds = { min: -maxTheoreticalVel, max: maxTheoreticalVel };
-                state.graphs.acc.yBounds = { min: Math.min(0, acc, -9.8), max: Math.max(0, acc, 9.8) };
-                const maxEnergy = state.m * state.g * maxHeight + maxWork;
-                state.graphs.energy.yBounds = { min: 0, max: maxEnergy > 0 ? maxEnergy : 10 };
-            }
-
-            function resetToDefaults() {
-                 if (state.isPlaying) togglePlayPause();
-                 cancelAnimationFrame(animationFrameId);
-                 const oldClouds = state.clouds;
-                 state = {...JSON.parse(JSON.stringify(defaultState)), ...{g: 9.81, x: 0, v: 0, a: 0, t: 0, N: 0, f: 0, isStatic: false, isPlaying: false, isDragging: false, dt: 1/60, clouds: oldClouds, graphs: { pos: { show: true, data: [] }, vel: { show: true, data: [] }, acc: { show: true, data: [] }, energy: { show: true, data: { K:[],P:[],E:[] } } }, ruler: { start: { x: 100, y: 150 }, end: { x: 300, y: 150 }, dragging: null, dragOffset: { x: 0, y: 0 } } } };
-                 dom.graphPanel.classList.add('hidden');
-                 dom.formulaPanel.classList.add('hidden');
-                 updateControlsFromState();
-                 onParamChange();
-            }
-            
-            let lastResizeWidth = 0;
-            function resizeCanvas() {
-                const newWidth = dom.simulationWrapper.clientWidth;
-                dom.canvas.width = newWidth;
-                dom.canvas.height = newWidth / (window.innerWidth < 1024 ? 1.5 : 1.8);
-                if(state.showGraphs) {
-                    requestAnimationFrame(() => {
-                        setupAllGraphs();
-                        drawGraphs();
-                    });
-                }
-            }
-
-            function initBackground() {
-                 state.clouds = [];
-                const numClouds = 5;
-                for (let i = 0; i < numClouds; i++) {
-                    state.clouds.push({
-                        x: Math.random() * dom.canvas.width,
-                        y: Math.random() * dom.canvas.height * 0.2 + 20,
-                        size: Math.random() * 20 + 20,
-                        speed: Math.random() * 5 + 2
-                    });
-                }
-            }
-
-            function handleCanvasMouseDown(e) {
-                e.preventDefault();
-                if (tryStartRulerDrag(e)) return;
-                if (tryStartBlockDrag(e)) return;
-            }
-
-            function tryStartBlockDrag(e) {
-                if (state.isPlaying) return false;
-                const coords = e.touches ? e.touches[0] : e;
-                const rect = dom.canvas.getBoundingClientRect();
-                let mouseX = coords.clientX - rect.left;
-                let mouseY = coords.clientY - rect.top;
-                const info = lastDragInfo;
-                if (!info.blockScreenX) return false;
-                const dx = mouseX - info.blockScreenX;
-                const dy = mouseY - info.blockScreenY;
-                const rotatedMouseX = dx * Math.cos(info.thetaRad) + dy * Math.sin(info.thetaRad);
-                const rotatedMouseY = -dx * Math.sin(info.thetaRad) + dy * Math.cos(info.thetaRad);
-
-                if (Math.abs(rotatedMouseX) < info.blockWidth / 2 && rotatedMouseY > -info.blockHeight && rotatedMouseY < 0) {
-                    state.isDragging = true;
-                    dom.canvas.style.cursor = 'grabbing';
-                    handleBlockDrag(coords);
-                    window.addEventListener('mousemove', handleBlockDragMove);
-                    window.addEventListener('mouseup', handleBlockDragEnd);
-                    window.addEventListener('touchmove', handleBlockDragMove, { passive: false });
-                    window.addEventListener('touchend', handleBlockDragEnd);
-                    requestAnimationFrame(gameLoop);
-                    return true;
-                }
-                return false;
-            }
-
-            function handleBlockDragMove(e) {
-                if (!state.isDragging) return;
-                e.preventDefault();
-                handleBlockDrag(e.touches ? e.touches[0] : e);
-            }
-
-            function handleBlockDragEnd() {
-                state.isDragging = false;
-                dom.canvas.style.cursor = 'grab';
-                window.removeEventListener('mousemove', handleBlockDragMove);
-                window.removeEventListener('mouseup', handleBlockDragEnd);
-                window.removeEventListener('touchmove', handleBlockDragMove);
-                window.removeEventListener('touchend', handleBlockDragEnd);
-            }
-
-            function handleBlockDrag(coords) {
-                const rect = dom.canvas.getBoundingClientRect();
-                let mouseX = coords.clientX - rect.left;
-                let mouseY = coords.clientY - rect.top;
-                const info = lastDragInfo;
-                if(!info.planeOriginX) return;
-                const relMouseX = mouseX - info.planeOriginX;
-                const relMouseY = mouseY - info.planeOriginY;
-                let distAlongPlane = relMouseX * Math.cos(info.thetaRad) - relMouseY * Math.sin(info.thetaRad);
-                let newX = (distAlongPlane - info.planePixelLength / 2) / (info.pixelsPerMeter || 1);
-                const lowerBound = -info.planePhysicalLength / 2.0;
-                const upperBound = info.planePhysicalLength / 2.0;
-                state.x = Math.max(lowerBound, Math.min(upperBound, newX));
-                onParamChange();
-            }
-            
-            function tryStartRulerDrag(e) {
-                if (!state.showRuler) return false;
-                const coords = e.touches ? e.touches[0] : e;
-                const rect = dom.canvas.getBoundingClientRect();
-                const mouseX = coords.clientX - rect.left;
-                const mouseY = coords.clientY - rect.top;
-                const handleRadius = 15;
-
-                const distToStart = Math.hypot(mouseX - state.ruler.start.x, mouseY - state.ruler.start.y);
-                const distToEnd = Math.hypot(mouseX - state.ruler.end.x, mouseY - state.ruler.end.y);
-
-                let draggingPart = null;
-                if (distToStart < handleRadius) draggingPart = 'start';
-                else if (distToEnd < handleRadius) draggingPart = 'end';
-                
-                if (draggingPart) {
-                    state.ruler.dragging = draggingPart;
-                    window.addEventListener('mousemove', handleRulerDragMove);
-                    window.addEventListener('mouseup', handleRulerDragEnd);
-                    window.addEventListener('touchmove', handleRulerDragMove, { passive: false });
-                    window.addEventListener('touchend', handleRulerDragEnd);
-                    requestAnimationFrame(gameLoop);
-                    return true;
-                }
-                return false;
-            }
-
-            function handleRulerDragMove(e) {
-                if (!state.ruler.dragging) return;
-                e.preventDefault();
-                const coords = e.touches ? e.touches[0] : e;
-                const rect = dom.canvas.getBoundingClientRect();
-                const mouseX = coords.clientX - rect.left;
-                const mouseY = coords.clientY - rect.top;
-                state.ruler[state.ruler.dragging].x = mouseX;
-                state.ruler[state.ruler.dragging].y = mouseY;
-            }
-
-            function handleRulerDragEnd() {
-                state.ruler.dragging = null;
-                window.removeEventListener('mousemove', handleRulerDragMove);
-                window.removeEventListener('mouseup', handleRulerDragEnd);
-                window.removeEventListener('touchmove', handleRulerDragMove);
-                window.removeEventListener('touchend', handleRulerDragEnd);
-            }
-
-            function handleGraphMouseMove(e, key) {
-                if (!state.showGraphs) return;
-                const canvas = e.target;
-                const ctx = graphContexts[key];
-                if (!ctx || !ctx.graphMetrics) return;
-
-                const metrics = ctx.graphMetrics;
-                const rect = canvas.getBoundingClientRect();
-                const mouseX = e.clientX - rect.left;
-
-                if (mouseX < metrics.padding || mouseX > metrics.w - metrics.padding) {
-                    dom.tooltip.style.display = 'none';
-                    return;
-                }
-
-                const time = (mouseX - metrics.padding) / metrics.xScale + metrics.xMin;
-                
-                let datasets = key === 'energy' ? state.graphs[key].data : {[key]: state.graphs[key].data};
-                if (!Object.values(datasets).some(d => d.length > 0)) return;
-
-                const primaryData = datasets[Object.keys(datasets)[0]];
-                
-                let closestIndex = 0;
-                let minDiff = Infinity;
-                for(let i=0; i < primaryData.length; i++) {
-                    const diff = Math.abs(primaryData[i].t - time);
-                    if (diff < minDiff) {
-                        minDiff = diff;
-                        closestIndex = i;
-                    }
-                }
-
-                let tooltipText = `t: ${primaryData[closestIndex].t.toFixed(2)}s\n`;
-                if (key === 'energy') {
-                    tooltipText += `K: ${datasets.K[closestIndex].y.toFixed(2)}J\n`;
-                    tooltipText += `P: ${datasets.P[closestIndex].y.toFixed(2)}J\n`;
-                    tooltipText += `E: ${datasets.E[closestIndex].y.toFixed(2)}J`;
-                } else if (key === 'pos'){
-                    tooltipText += `h: ${datasets.pos[closestIndex].y.toFixed(2)} m`;
-                } else if (key === 'vel'){
-                    tooltipText += `v: ${datasets.vel[closestIndex].y.toFixed(2)} m/s`;
-                } else if (key === 'acc'){
-                    tooltipText += `a: ${datasets.acc[closestIndex].y.toFixed(2)} m/s²`;
-                }
-
-                dom.tooltip.style.display = 'block';
-                dom.tooltip.style.left = `${e.clientX + 15}px`;
-                dom.tooltip.style.top = `${e.clientY}px`;
-                dom.tooltip.innerText = tooltipText;
-            }
-            
-            function togglePlayPause() {
-                state.isPlaying = !state.isPlaying;
-                const text = state.isPlaying ? 'Detener' : 'Arrancar';
-                dom.playPauseBtn.textContent = text;
-                dom.playPauseBtnMobile.textContent = text;
-                if(state.isPlaying) {
-                    cancelAnimationFrame(animationFrameId);
-                    gameLoop();
-                } else {
-                     cancelAnimationFrame(animationFrameId);
-                }
-            }
-
-            function updateFormulaPanel() {
-                // Se pasa 'true' para obtener la aceleración teórica, incluso al arrastrar.
-                calculateForces(true); 
-                const thetaRad = state.theta * Math.PI / 180;
-                
-                const F_h_perp_val = Math.abs(state.f_horz) * Math.sin(thetaRad);
-                let y_forces_html = `<p>$\\sum F_y = N - P_y`;
-                if (Math.abs(state.f_horz) > 1e-3) y_forces_html += ` - F_{h,y}`;
-                y_forces_html += ` = 0$</p>`;
-                y_forces_html += `<p>$N = m g \\cos(\\theta)`;
-                if (Math.abs(state.f_horz) > 1e-3) y_forces_html += ` + |F_h| \\sin(\\theta)`;
-                y_forces_html += ` = ${state.N.toFixed(2)}\\ N$</p>`;
-                dom.yForces.innerHTML = y_forces_html;
-                
-                const P_par_abs = state.m * state.g * Math.sin(thetaRad);
-                const F_h_par_val = state.f_horz * Math.cos(thetaRad);
-                const F_net_no_friction = -P_par_abs + state.f_par + F_h_par_val;
-                
-                let motriz_html = [];
-                let resist_html = [];
-                let motriz_sum = 0;
-                let resist_sum = 0;
-
-                // Determina la tendencia al movimiento basado en las fuerzas sin rozamiento
-                const tendency_is_up = F_net_no_friction > 0;
-
-                if (tendency_is_up) {
-                    if (state.f_par > 0) { motriz_html.push(`<p>$F_\\parallel = ${state.f_par.toFixed(2)}\\ N$</p>`); motriz_sum += state.f_par; }
-                    if (F_h_par_val > 0) { motriz_html.push(`<p>$F_{h,x} = F_h \\cos(\\theta) = ${F_h_par_val.toFixed(2)}\\ N$</p>`); motriz_sum += F_h_par_val; }
-                    if (P_par_abs > 0) { resist_html.push(`<p>$P_x = m g \\sin(\\theta) = ${P_par_abs.toFixed(2)}\\ N$</p>`); resist_sum += P_par_abs; }
-                    if (state.f_par < 0) { resist_html.push(`<p>$F_\\parallel = ${state.f_par.toFixed(2)}\\ N$</p>`); resist_sum += Math.abs(state.f_par); }
-                    if (F_h_par_val < 0) { resist_html.push(`<p>$F_{h,x} = F_h \\cos(\\theta) = ${F_h_par_val.toFixed(2)}\\ N$</p>`); resist_sum += Math.abs(F_h_par_val); }
-                } else { 
-                    if (P_par_abs > 0) { motriz_html.push(`<p>$P_x = m g \\sin(\\theta) = ${P_par_abs.toFixed(2)}\\ N$</p>`); motriz_sum += P_par_abs; }
-                    if (state.f_par < 0) { motriz_html.push(`<p>$F_\\parallel = ${Math.abs(state.f_par).toFixed(2)}\\ N$</p>`); motriz_sum += Math.abs(state.f_par); }
-                    if (F_h_par_val < 0) { motriz_html.push(`<p>$F_{h,x} = |F_h \\cos(\\theta)| = ${Math.abs(F_h_par_val).toFixed(2)}\\ N$</p>`); motriz_sum += Math.abs(F_h_par_val); }
-                    if (state.f_par > 0) { resist_html.push(`<p>$F_\\parallel = ${state.f_par.toFixed(2)}\\ N$</p>`); resist_sum += state.f_par; }
-                    if (F_h_par_val > 0) { resist_html.push(`<p>$F_{h,x} = F_h \\cos(\\theta) = ${F_h_par_val.toFixed(2)}\\ N$</p>`); resist_sum += F_h_par_val; }
-                }
-
-                if (state.hasFriction && state.N > 0 && Math.abs(state.f) > 1e-3) {
-                    const f_s_max = state.mu_s * state.N;
-                    const f_k = state.mu_k * state.N;
-                    resist_html.push(`<hr class="border-slate-600 my-1">`);
-                    
-                    if (state.isStatic) {
-                         resist_html.push(`<p>$f_r = ${Math.abs(state.f).toFixed(2)}\\ N$ (estática)</p>`);
-                         resist_html.push(`<p>$f_{s,max} = \\mu_s N = ${f_s_max.toFixed(2)}\\ N$</p>`);
-                    } else {
-                         resist_html.push(`<p>$f_r = \\mu_k N = ${f_k.toFixed(2)}\\ N$</p>`);
-                    }
-                    resist_sum += Math.abs(state.f);
-                }
-
-                dom.motrizForces.innerHTML = motriz_html.length > 0 ? motriz_html.join('') : '<p>$0\\ N$</p>';
-                dom.resistForces.innerHTML = resist_html.length > 0 ? resist_html.join('') : '<p>$0\\ N$</p>';
-                
-                dom.newtonLaw.innerHTML = `$\\sum F_{motriz} - \\sum F_{resist} = m \\cdot a$ <br> $${motriz_sum.toFixed(2)} - ${resist_sum.toFixed(2)} = ${state.m} \\cdot ${state.a.toFixed(2)}$`;
-
-                let prediction = '';
-                if (state.isStatic) {
-                    prediction = "REPOSO (FRICCIÓN ESTÁTICA)";
-                } else if (Math.abs(state.a) < 1e-3) {
-                    prediction = "EQUILIBRIO DINÁMICO (v=cte)";
-                } else if (state.a > 1e-3) {
-                    prediction = "ACELERA HACIA ARRIBA";
-                } else if (state.a < -1e-3) {
-                    prediction = "ACELERA HACIA ABAJO";
-                } else {
-                    prediction = "REPOSO";
-                }
-                dom.predictionText.textContent = prediction;
-
-                if(window.MathJax && MathJax.typesetPromise) {
-                     MathJax.typesetPromise([dom.yForces, dom.motrizForces, dom.resistForces, dom.newtonLaw]);
-                }
-            }
-
-            function updateControlStates() {
-                const isAngleZero = state.theta < 0.1;
-
-                dom.fHorzSlider.disabled = isAngleZero;
-                if (dom.fHorzSlider.disabled && state.f_horz !== 0) {
-                    state.f_horz = 0;
-                    dom.fHorzSlider.value = 0;
-                    dom.fHorzLabel.textContent = '0';
-                }
-                
-                dom.heightSlider.disabled = isAngleZero && state.useDimensionMode;
-                 if (dom.heightSlider.disabled && state.planeHeightMeters !== 0) {
-                    state.planeHeightMeters = 0;
-                    dom.heightSlider.value = 0;
-                    dom.heightLabel.textContent = '0.00';
-                }
-            }
-
-            function onParamChange() {
-                updateControlStates();
-                calculateGraphBounds();
-                Object.keys(state.graphs).forEach(key => state.graphs[key].data = key === 'energy' ? {K: [], P: [], E: []} : []);
-                updateGraphData();
-                updateFormulaPanel();
-                if(state.showGraphs) drawGraphs();
-                if (!state.isPlaying && !state.isDragging && !state.ruler.dragging) {
-                    requestAnimationFrame(gameLoop);
-                }
-            }
-
-            function init() {
-                resizeCanvas();
-                initBackground();
-                updateControlsFromState();
-                onParamChange();
-                
-                const openGuide = () => {
-                    dom.guideModal.classList.remove('hidden');
-                    setTimeout(() => {
-                        dom.guideModalBg.classList.remove('opacity-0');
-                        dom.guideModalContent.classList.remove('scale-95', 'opacity-0');
-                    }, 10);
-                };
-                const closeGuide = () => {
-                     dom.guideModalBg.classList.add('opacity-0');
-                     dom.guideModalContent.classList.add('scale-95', 'opacity-0');
-                     setTimeout(() => dom.guideModal.classList.add('hidden'), 300);
-                };
-
-                [dom.guideBtn, dom.guideBtnMobile].forEach(btn => btn.addEventListener('click', openGuide));
-                [dom.closeGuideBtn, dom.guideModalBg].forEach(el => el.addEventListener('click', closeGuide));
-
-                [dom.playPauseBtn, dom.playPauseBtnMobile].forEach(btn => btn.addEventListener('click', togglePlayPause));
-                [dom.resetBtn, dom.resetBtnMobile].forEach(btn => btn.addEventListener('click', resetToDefaults));
-
-                dom.canvas.addEventListener('mousedown', handleCanvasMouseDown);
-                dom.canvas.addEventListener('touchstart', handleCanvasMouseDown, { passive: false });
-                dom.canvas.addEventListener('mouseover', () => { if(!state.isPlaying && !state.ruler.dragging) dom.canvas.style.cursor = 'grab'; });
-                dom.canvas.addEventListener('mouseout', () => { dom.canvas.style.cursor = 'default'; });
-
-                const sliders = [dom.massSlider, dom.fParSlider, dom.fHorzSlider, dom.muSSlider, dom.muKSlider, dom.angleSlider, dom.baseSlider, dom.heightSlider];
-                sliders.forEach(slider => slider.addEventListener('input', (e) => {
-                    switch(e.target.id) {
-                        case 'mass-slider': state.m = parseFloat(e.target.value); break;
-                        case 'f-par-slider': state.f_par = parseFloat(e.target.value); if(Math.abs(state.f_par) > 0) state.f_horz = 0; break;
-                        case 'f-horz-slider': state.f_horz = parseFloat(e.target.value); if(Math.abs(state.f_horz) > 0) state.f_par = 0; break;
-                        case 'mu-s-slider': state.mu_s = parseFloat(e.target.value); break;
-                        case 'mu-k-slider': state.mu_k = parseFloat(e.target.value); break;
-                        case 'angle-slider':
-                            state.theta = parseFloat(e.target.value);
-                            state.planeHeightMeters = state.planeBaseMeters * Math.tan(state.theta * Math.PI / 180);
-                            break;
-                        case 'base-slider':
-                             state.planeBaseMeters = parseFloat(e.target.value);
-                             state.planeHeightMeters = state.planeBaseMeters * Math.tan(state.theta * Math.PI/180);
-                             break;
-                        case 'height-slider':
-                            state.planeHeightMeters = parseFloat(e.target.value);
-                            const tanTheta = Math.tan(state.theta * Math.PI / 180);
-                            if(Math.abs(tanTheta) > 1e-6) state.planeBaseMeters = state.planeHeightMeters / tanTheta;
-                            break;
-                    }
-                    updateControlsFromState(); 
-                    onParamChange();
-                }));
-
-                dom.dimensionModeCheckbox.addEventListener('change', e => {
-                    state.useDimensionMode = e.target.checked;
-                    if (state.useDimensionMode) {
-                        state.planeHeightMeters = state.planeBaseMeters * Math.tan(state.theta * Math.PI / 180);
-                    } else {
-                         state.theta = Math.atan2(state.planeHeightMeters, state.planeBaseMeters) * 180 / Math.PI;
-                    }
-                    updateControlsFromState(); onParamChange();
-                });
-                
-                dom.frictionCheckbox.addEventListener('change', e => {
-                    state.hasFriction = e.target.checked;
-                    dom.frictionControls.classList.toggle('hidden', !state.hasFriction);
-                    onParamChange();
-                });
-
-                dom.showGraphsCheckbox.addEventListener('change', e => {
-                    state.showGraphs = e.target.checked;
-                    dom.graphPanel.classList.toggle('hidden', !state.showGraphs);
-                    if (state.showGraphs) {
-                        requestAnimationFrame(() => {
-                           setupAllGraphs();
-                           calculateGraphBounds();
-                           drawGraphs();
-                        });
-                    }
-                });
-
-                dom.showRulerCheckbox.addEventListener('change', e => {
-                    state.showRuler = e.target.checked;
-                    onParamChange();
-                });
-
-                dom.showVectorsCheckbox.addEventListener('change', e => {
-                    state.showVectors = e.target.checked;
-                    onParamChange();
-                });
-                
-                dom.showAnalysisCheckbox.addEventListener('change', e => {
-                    state.showAnalysis = e.target.checked;
-                    dom.formulaPanel.classList.toggle('hidden', !state.showAnalysis);
-                    onParamChange();
-                });
-                
-                window.addEventListener('resize', () => {
-                    const newWidth = dom.simulationWrapper.clientWidth;
-                    if (Math.abs(newWidth - lastResizeWidth) > 5) {
-                        lastResizeWidth = newWidth;
-                        resizeCanvas();
-                        onParamChange();
-                    }
-                });
-            }
-
-            init();
-        });
-    </script>
+
+
+    <div class="w-full lg:w-[70%] flex flex-col p-4">
+
+        
+
+        <div id="info-hud" class="w-full max-w-5xl mx-auto grid grid-cols-3 sm:grid-cols-6 gap-2 text-center bg-slate-900/70 backdrop-blur-sm p-3 rounded-lg z-20 border border-slate-700 shadow-lg mb-4">
+
+            <div class="flex flex-col"><span class="text-xs text-sky-400">Aceleración</span><span id="a-hud" class="font-mono text-white">0.00 m/s²</span></div>
+
+            <div class="flex flex-col"><span class="text-xs text-sky-400">Velocidad</span><span id="v-hud" class="font-mono text-white">0.00 m/s</span></div>
+
+            <div class="flex flex-col"><span class="text-xs text-sky-400">Altura</span><span id="h-hud" class="font-mono text-white">0.00 m</span></div>
+
+            <div class="flex flex-col"><span class="text-xs text-sky-400">E. Cinética</span><span id="ek-hud" class="font-mono text-white">0.00 J</span></div>
+
+            <div class="flex flex-col"><span class="text-xs text-sky-400">E. Potencial</span><span id="ep-hud" class="font-mono text-white">0.00 J</span></div>
+
+            <div class="flex flex-col"><span class="text-xs text-sky-400">Tiempo</span><span id="t-hud" class="font-mono text-white">0.00 s</span></div>
+
+        </div>
+
+        <div id="simulation-wrapper" class="relative flex-grow flex flex-col items-center justify-center w-full max-w-5xl mx-auto bg-slate-800 rounded-lg border border-slate-700 overflow-hidden">
+
+            <canvas id="simulation-canvas"></canvas>
+
+        </div>
+
+
+
+        <div id="mobile-controls" class="w-full max-w-5xl mx-auto lg:hidden my-4">
+
+             <div class="control-card space-y-3">
+
+                 <div class="flex items-center justify-center gap-3">
+
+                     <button id="play-pause-btn-mobile" class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs rounded-md transition w-24">Arrancar</button>
+
+                     <button id="reset-btn-mobile" class="px-4 py-1.5 bg-green-600 hover:bg-green-700 text-white font-semibold text-xs rounded-md transition">Reiniciar</button>
+
+                     <button id="guide-btn-mobile" class="px-4 py-1.5 bg-sky-600 hover:bg-sky-700 text-white font-semibold text-xs rounded-md transition">Guía</button>
+
+                 </div>
+
+             </div>
+
+        </div>
+
+        
+
+        <div id="formula-panel" class="w-full max-w-5xl mx-auto mt-4 p-4 rounded-lg border border-slate-700 text-sm hidden">
+
+             <div class="text-center mb-4">
+
+                 <h4 class="font-bold text-amber-400">Análisis de Fuerzas: <span id="prediction-text"></span></h4>
+
+             </div>
+
+            
+
+             <div id="y-axis-analysis" class="mb-4 border-b border-slate-700 pb-4">
+
+                 <h4 class="font-bold text-violet-400 mb-2 text-center">Análisis Eje Y (Perpendicular al Plano)</h4>
+
+                 <div id="y-forces" class="text-gray-300 space-y-2 text-center"></div>
+
+             </div>
+
+
+
+             <div id="x-axis-analysis" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                 <div>
+
+                     <h4 class="font-bold text-sky-400 mb-2">Fuerzas Motrices (a favor del mov.)</h4>
+
+                     <div id="motriz-forces" class="text-gray-300 space-y-2"></div>
+
+                 </div>
+
+                 <div>
+
+                     <h4 class="font-bold text-red-400 mb-2">Fuerzas Resistentes (en contra del mov.)</h4>
+
+                     <div id="resist-forces" class="text-gray-300 space-y-2"></div>
+
+                 </div>
+
+             </div>
+
+
+
+             <div class="text-center border-t border-slate-700 pt-4 mt-4">
+
+                 <h4 class="font-bold text-green-400 mb-2">Segunda Ley de Newton (Eje X)</h4>
+
+                 <div id="newton-law" class="text-gray-300"></div>
+
+             </div>
+
+        </div>
+
+
+
+        <div id="graph-panel" class="w-full max-w-5xl mx-auto mt-4 grid grid-cols-2 gap-4 hidden">
+
+        </div>
+
+    </div>
+
+    
+
+    <div class="w-full lg:w-[30%] control-panel p-4 z-10 border-t lg:border-t-0 lg:border-l border-slate-800 lg:h-screen lg:sticky lg:top-0 lg:overflow-y-auto flex flex-col">
+
+        <div class="space-y-4 flex-grow w-full">
+
+            <div class="control-card space-y-3 hidden lg:block">
+
+                <div class="flex items-center justify-center gap-3">
+
+                    <button id="play-pause-btn" class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs rounded-md transition w-24">Arrancar</button>
+
+                    <button id="reset-btn" class="px-4 py-1.5 bg-green-600 hover:bg-green-700 text-white font-semibold text-xs rounded-md transition">Reiniciar</button>
+
+                    <button id="guide-btn" class="px-4 py-1.5 bg-sky-600 hover:bg-sky-700 text-white font-semibold text-xs rounded-md transition">Guía</button>
+
+                </div>
+
+            </div>
+
+
+
+            <div class="control-card space-y-3">
+
+                <h3 class="text-sm font-bold text-sky-400">Parámetros del Sistema</h3>
+
+                <div class="space-y-3 pt-2 border-t border-slate-700">
+
+                    <div><label for="mass-slider" class="text-xs text-gray-400">Masa ($m$): <span id="mass-label" class="font-bold text-white">2.0</span> kg</label><input type="range" id="mass-slider" min="0.1" max="10" step="0.1" value="2.0"></div>
+
+                     <div class="pt-2">
+
+                         <label class="checkbox-label text-sm">
+
+                             <input type="checkbox" id="dimension-mode-checkbox">
+
+                             <span class="checkmark"></span>
+
+                             Medidas
+
+                         </label>
+
+                     </div>
+
+                     <div id="angle-controls" class="space-y-3">
+
+                         <div><label for="angle-slider" class="text-xs text-gray-400">Ángulo ($\theta$): <span id="angle-label" class="font-bold text-white">30</span>°</label><input type="range" id="angle-slider" min="0" max="90" step="1" value="30"></div>
+
+                     </div>
+
+                     <div id="dimension-controls" class="hidden space-y-3">
+
+                         <div><label for="base-slider" class="text-xs text-gray-400">Base ($b$): <span id="base-label" class="font-bold text-white">4.33</span> m</label><input type="range" id="base-slider" min="1" max="500" step="0.1" value="4.33"></div>
+
+                         <div><label for="height-slider" class="text-xs text-gray-400">Altura ($h$): <span id="height-label" class="font-bold text-white">2.50</span> m</label><input type="range" id="height-slider" min="0" max="500" step="0.1" value="2.50"></div>
+
+                     </div>
+
+                </div>
+
+            </div>
+
+
+
+            <div class="control-card space-y-3">
+
+                <h3 class="text-sm font-bold text-sky-400">Fuerzas Externas</h3>
+
+                <div><label for="f-par-slider" class="text-xs text-gray-400">Fuerza Paralela ($F_\parallel$): <span id="f-par-label" class="font-bold text-white">0</span> N</label><input type="range" id="f-par-slider" min="-50" max="50" step="1" value="0"><p class="text-xs text-gray-500 -mt-1">Positiva hacia arriba del plano.</p></div>
+
+                <div><label for="f-horz-slider" class="text-xs text-gray-400">Fuerza Horizontal ($F_h$): <span id="f-horz-label" class="font-bold text-white">0</span> N</label><input type="range" id="f-horz-slider" min="-50" max="50" step="1" value="0"><p class="text-xs text-gray-500 -mt-1">Positiva hacia la derecha.</p></div>
+
+            </div>
+
+            
+
+            <div class="control-card space-y-3">
+
+                <div class="flex justify-between items-center">
+
+                    <h3 class="text-sm font-bold text-sky-400">Rozamiento</h3>
+
+                    <label class="checkbox-label text-sm"><input type="checkbox" id="friction-checkbox"><span class="checkmark"></span></input></label>
+
+                </div>
+
+                <div id="friction-controls" class="space-y-3 pt-2 border-t border-slate-700 hidden">
+
+                    <div><label for="mu-s-slider" class="text-xs text-gray-400">Coef. Estático ($\mu_s$): <span id="mu-s-label" class="font-bold text-white">0.12</span></label><input type="range" id="mu-s-slider" min="0" max="1" step="0.01" value="0.12"></div>
+
+                    <div><label for="mu-k-slider" class="text-xs text-gray-400">Coef. Cinético ($\mu_k$): <span id="mu-k-label" class="font-bold text-white">0.10</span></label><input type="range" id="mu-k-slider" min="0" max="1" step="0.01" value="0.10"></div>
+
+                </div>
+
+            </div>
+
+
+
+            <div class="control-card space-y-3">
+
+                <h3 class="text-sm font-bold text-sky-400">Visualización</h3>
+
+                <div class="space-y-3 pt-2 border-t border-slate-700">
+
+                    <div>
+
+                        <label class="checkbox-label text-sm">
+
+                            <input type="checkbox" id="show-vectors-checkbox">
+
+                            <span class="checkmark"></span>
+
+                            Ver Vectores
+
+                        </label>
+
+                    </div>
+
+                    <div>
+
+                        <label class="checkbox-label text-sm">
+
+                            <input type="checkbox" id="show-graphs-checkbox">
+
+                            <span class="checkmark"></span>
+
+                            Ver Gráficas
+
+                        </label>
+
+                    </div>
+
+                    <div>
+
+                        <label class="checkbox-label text-sm">
+
+                            <input type="checkbox" id="show-ruler-checkbox">
+
+                            <span class="checkmark"></span>
+
+                            Ver Regla
+
+                        </label>
+
+                    </div>
+
+                    <div>
+
+                        <label class="checkbox-label text-sm">
+
+                            <input type="checkbox" id="show-forces-checkbox">
+
+                            <span class="checkmark"></span>
+
+                            Ver Análisis de Fuerzas
+
+                        </label>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            
+
+        </div>
+
+        <footer class="p-2 text-center text-xs text-gray-500 z-20 mt-auto pt-4">Simulación creada por <a href="https://aulaquest.com" target="_blank" rel="noopener noreferrer" class="underline hover:text-indigo-400">Aulaquest</a></footer>
+
+    </div>
+
+    <div id="graph-tooltip"></div>
+
+
+
+    <div id="guide-modal" class="fixed inset-0 z-50 flex items-center justify-center hidden">
+
+        <div id="guide-modal-bg" class="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
+
+        <div id="guide-modal-content" class="relative bg-slate-800 border border-slate-700 rounded-lg shadow-xl w-11/12 max-w-2xl p-6 text-gray-300 transform scale-95 opacity-0 overflow-y-auto">
+
+            <h3 class="text-xl font-bold text-sky-400 mb-4">Guía del Simulador de Plano Inclinado</h3>
+
+            <div class="space-y-4 text-sm">
+
+                <p>Este simulador te permite explorar los principios de la dinámica y la energía en un plano inclinado. A continuación se detallan sus funciones:</p>
+
+                <div>
+
+                    <h4 class="font-semibold text-white mb-1">1. Controles Principales</h4>
+
+                    <ul class="list-disc list-inside space-y-1 pl-2">
+
+                        <li><b class="text-indigo-400">Arrancar/Detener:</b> Inicia o pausa la simulación física.</li>
+
+                        <li><b class="text-green-400">Reiniciar:</b> Devuelve todos los parámetros a sus valores por defecto y limpia las gráficas.</li>
+
+                        <li><b class="text-indigo-400">Arrastrar la Masa:</b> Cuando la simulación está en pausa, puedes hacer clic (o tocar) y arrastrar el bloque a cualquier posición del plano para definir un punto de partida personalizado.</li>
+
+                    </ul>
+
+                </div>
+
+                 <div>
+
+                    <h4 class="font-semibold text-white mb-1">2. Parámetros del Sistema</h4>
+
+                    <ul class="list-disc list-inside space-y-1 pl-2">
+
+                        <li><b class="text-indigo-400">Masa (m):</b> Ajusta la masa del bloque. Verás que su tamaño y los vectores de fuerza (como el peso) cambian visualmente.</li>
+
+                        <li><b class="text-indigo-400">Ángulo ($\theta$) vs. Medidas:</b> Puedes definir el plano de dos formas:
+
+                             <ul class="list-disc list-inside space-y-1 pl-4 mt-1">
+
+                                 <li><b>Por Ángulo:</b> Controlas directamente la inclinación.</li>
+
+                                 <li><b>Por Medidas:</b> Defines la base y altura. Al cambiar una, la otra se escala para mantener el ángulo constante. Esto te permite crear planos de cualquier tamaño.</li>
+
+                             </ul>
+
+                        </li>
+
+                    </ul>
+
+                </div>
+
+                 <div>
+
+                    <h4 class="font-semibold text-white mb-1">3. Fuerzas</h4>
+
+                    <ul class="list-disc list-inside space-y-1 pl-2">
+
+                        <li><b class="text-indigo-400">Fuerzas Externas:</b> Puedes aplicar una fuerza paralela al plano ($F_\parallel$) o una fuerza horizontal ($F_h$). <span class="text-amber-400">Nota:</span> Solo puedes aplicar una de las dos a la vez. Al ajustar una, la otra se reiniciará a cero.</li>
+
+                        <li><b class="text-indigo-400">Rozamiento ($f_r$):</b> Activa esta opción para simular la fricción.</li>
+
+                    </ul>
+
+                </div>
+
+                 <div>
+
+                    <h4 class="font-semibold text-white mb-1">4. Paneles de Datos y Herramientas</h4>
+
+                    <ul class="list-disc list-inside space-y-1 pl-2">
+
+                        <li><b class="text-indigo-400">Panel Superior:</b> Muestra en tiempo real los valores clave como la aceleración, velocidad, altura y las energías.</li>
+
+                        <li><b class="text-indigo-400">Panel de Fórmulas:</b> Te muestra las ecuaciones que se están usando, clasificando las fuerzas en motrices y resistentes.</li>
+
+                        <li><b class="text-indigo-400">Gráficas:</b> Activa el checkbox "Ver Gráficas" para visualizar la evolución de las variables en el tiempo.</li>
+
+                        <li><b class="text-indigo-400">Regla:</b> Activa "Ver Regla" para mostrar una regla medidora. Puedes arrastrar sus extremos para medir distancias en metros sobre el lienzo.</li>
+
+                    </ul>
+
+                </div>
+
+            </div>
+
+            <button id="close-guide-btn" class="absolute top-4 right-4 text-gray-400 hover:text-white transition">
+
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+
+            </button>
+
+        </div>
+
+    </div>
+
+
+
+
+
+    <script>
+
+        document.addEventListener('DOMContentLoaded', () => {
+
+            const dom = {
+
+                canvas: document.getElementById('simulation-canvas'),
+
+                simulationWrapper: document.getElementById('simulation-wrapper'),
+
+                playPauseBtn: document.getElementById('play-pause-btn'),
+
+                resetBtn: document.getElementById('reset-btn'),
+
+                guideBtn: document.getElementById('guide-btn'),
+
+                playPauseBtnMobile: document.getElementById('play-pause-btn-mobile'),
+
+                resetBtnMobile: document.getElementById('reset-btn-mobile'),
+
+                guideBtnMobile: document.getElementById('guide-btn-mobile'),
+
+                aHud: document.getElementById('a-hud'),
+
+                vHud: document.getElementById('v-hud'),
+
+                hHud: document.getElementById('h-hud'),
+
+                ekHud: document.getElementById('ek-hud'),
+
+                epHud: document.getElementById('ep-hud'),
+
+                tHud: document.getElementById('t-hud'),
+
+                massSlider: document.getElementById('mass-slider'),
+
+                massLabel: document.getElementById('mass-label'),
+
+                angleSlider: document.getElementById('angle-slider'),
+
+                angleLabel: document.getElementById('angle-label'),
+
+                dimensionModeCheckbox: document.getElementById('dimension-mode-checkbox'),
+
+                angleControls: document.getElementById('angle-controls'),
+
+                dimensionControls: document.getElementById('dimension-controls'),
+
+                baseSlider: document.getElementById('base-slider'),
+
+                baseLabel: document.getElementById('base-label'),
+
+                heightSlider: document.getElementById('height-slider'),
+
+                heightLabel: document.getElementById('height-label'),
+
+                fParSlider: document.getElementById('f-par-slider'),
+
+                fParLabel: document.getElementById('f-par-label'),
+
+                fHorzSlider: document.getElementById('f-horz-slider'),
+
+                fHorzLabel: document.getElementById('f-horz-label'),
+
+                frictionCheckbox: document.getElementById('friction-checkbox'),
+
+                frictionControls: document.getElementById('friction-controls'),
+
+                muSSlider: document.getElementById('mu-s-slider'),
+
+                muSLabel: document.getElementById('mu-s-label'),
+
+                muKSlider: document.getElementById('mu-k-slider'),
+
+                muKLabel: document.getElementById('mu-k-label'),
+
+                graphPanel: document.getElementById('graph-panel'),
+
+                tooltip: document.getElementById('graph-tooltip'),
+
+                yForces: document.getElementById('y-forces'),
+
+                motrizForces: document.getElementById('motriz-forces'),
+
+                resistForces: document.getElementById('resist-forces'),
+
+                newtonLaw: document.getElementById('newton-law'),
+
+                predictionText: document.getElementById('prediction-text'),
+
+                guideModal: document.getElementById('guide-modal'),
+
+                guideModalBg: document.getElementById('guide-modal-bg'),
+
+                guideModalContent: document.getElementById('guide-modal-content'),
+
+                closeGuideBtn: document.getElementById('close-guide-btn'),
+
+                showVectorsCheckbox: document.getElementById('show-vectors-checkbox'),
+
+                showGraphsCheckbox: document.getElementById('show-graphs-checkbox'),
+
+                showRulerCheckbox: document.getElementById('show-ruler-checkbox'),
+
+                showForcesCheckbox: document.getElementById('show-forces-checkbox'),
+
+                formulaPanel: document.getElementById('formula-panel'),
+
+            };
+
+
+
+            const ctx = dom.canvas.getContext('2d');
+
+            let animationFrameId;
+
+            let lastDragInfo = {}; 
+
+
+
+            const defaultState = {
+
+                m: 2.0,
+
+                theta: 30,
+
+                planeBaseMeters: 4.33,
+
+                planeHeightMeters: 2.5,
+
+                useDimensionMode: false,
+
+                f_par: 0,
+
+                f_horz: 0,
+
+                mu_s: 0.12,
+
+                mu_k: 0.10,
+
+                hasFriction: false,
+
+                showGraphs: false,
+
+                showRuler: false,
+
+                showVectors: false,
+
+                showForces: false,
+
+            };
+
+
+
+            let state = {
+
+                ...JSON.parse(JSON.stringify(defaultState)),
+
+                g: 9.81,
+
+                x: 0, v: 0, a: 0, t: 0,
+
+                N: 0, f: 0, isStatic: false,
+
+                isPlaying: false,
+
+                isDragging: false,
+
+                dt: 1 / 60,
+
+                clouds: [],
+
+                graphs: {
+
+                    pos: { show: true, data: [], yBounds: {min: -10, max: 10} },
+
+                    vel: { show: true, data: [], yBounds: {min: -10, max: 10} },
+
+                    acc: { show: true, data: [], yBounds: {min: -10, max: 10} },
+
+                    energy: { show: true, data: { K: [], P: [], E: [] }, yBounds: {min: 0, max: 100} }
+
+                },
+
+                ruler: {
+
+                    start: { x: 100, y: 150 },
+
+                    end: { x: 300, y: 150 },
+
+                    dragging: null,
+
+                    dragOffset: { x: 0, y: 0 }
+
+                }
+
+            };
+
+            
+
+            function calculateForces() {
+
+                const thetaRad = state.theta * Math.PI / 180;
+
+                const P_perp = state.m * state.g * Math.cos(thetaRad);
+
+                // CORRECCIÓN: La componente perpendicular de Fh siempre suma a N, independientemente de su signo.
+
+                // Usamos Math.abs para asegurar que la contribución sea siempre aditiva.
+
+                const f_h_perp = Math.abs(state.f_horz) * Math.sin(thetaRad);
+
+                state.N = P_perp + f_h_perp;
+
+                if (state.N < 0) state.N = 0;
+
+
+
+                const P_par = -state.m * state.g * Math.sin(thetaRad);
+
+                const F_applied_par = state.f_par + (state.f_horz * Math.cos(thetaRad));
+
+                const F_net_no_friction = P_par + F_applied_par;
+
+
+
+                let f_friction = 0;
+
+                state.isStatic = false;
+
+
+
+                if (state.hasFriction && state.N > 0) {
+
+                    const f_s_max = state.mu_s * state.N;
+
+                    const f_k = state.mu_k * state.N;
+
+
+
+                    if (Math.abs(state.v) < 1e-5 && !state.isDragging) {
+
+                        if (Math.abs(F_net_no_friction) <= f_s_max) {
+
+                            f_friction = -F_net_no_friction;
+
+                            state.a = 0;
+
+                            state.isStatic = true;
+
+                        } else {
+
+                            f_friction = -Math.sign(F_net_no_friction) * f_k;
+
+                        }
+
+                    } else {
+
+                        if (state.v !== 0) {
+
+                           f_friction = -Math.sign(state.v) * f_k;
+
+                        } else {
+
+                           f_friction = -Math.sign(F_net_no_friction) * f_k;
+
+                        }
+
+                    }
+
+                }
+
+
+
+                if (!state.isStatic) {
+
+                   state.a = (F_net_no_friction + f_friction) / state.m;
+
+                }
+
+
+
+                state.f = f_friction;
+
+
+
+                if (state.isDragging) {
+
+                    state.v = 0;
+
+                    state.a = 0;
+
+                }
+
+            }
+
+
+
+            function updateClouds() {
+
+                 if (!state.clouds) state.clouds = [];
+
+                state.clouds.forEach(cloud => {
+
+                    cloud.x += cloud.speed * state.dt;
+
+                    if (cloud.x > dom.canvas.width + cloud.size * 2) {
+
+                        cloud.x = -cloud.size * 2;
+
+                    }
+
+                });
+
+            }
+
+
+
+            function gameLoop() {
+
+                calculateForces();
+
+
+
+                if (state.isPlaying && !state.isDragging) {
+
+                    const planePhysicalLength = Math.hypot(state.planeBaseMeters, state.planeHeightMeters);
+
+                    const lowerBound = -planePhysicalLength / 2.0;
+
+                    const upperBound = planePhysicalLength / 2.0;
+
+
+
+                    if ((state.x >= upperBound && state.a > 0) || (state.x <= lowerBound && state.a < 0)) {
+
+                        state.a = 0;
+
+                        state.v = 0;
+
+                    }
+
+
+
+                    state.v += state.a * state.dt;
+
+                    state.x += state.v * state.dt;
+
+                    state.t += state.dt;
+
+                    
+
+                    const atBoundary = (state.x <= lowerBound || state.x >= upperBound);
+
+                    if (atBoundary) {
+
+                        state.x = Math.max(lowerBound, Math.min(upperBound, state.x));
+
+                        state.v = 0;
+
+                    }
+
+                    
+
+                    updateGraphData();
+
+                    
+
+                    if (atBoundary) {
+
+                        togglePlayPause();
+
+                    }
+
+                }
+
+                
+
+                updateClouds();
+
+                updateHUD();
+
+                draw();
+
+                if (state.showGraphs) drawGraphs();
+
+                
+
+                if (state.isPlaying || state.isDragging || state.ruler.dragging) {
+
+                    animationFrameId = requestAnimationFrame(gameLoop);
+
+                } else {
+
+                    cancelAnimationFrame(animationFrameId);
+
+                }
+
+            }
+
+
+
+            function draw() {
+
+                const planePhysicalLength = Math.hypot(state.planeBaseMeters, state.planeHeightMeters);
+
+                const w = dom.canvas.width;
+
+                const h = dom.canvas.height;
+
+                const groundLevel = h * 0.9;
+
+
+
+                ctx.save();
+
+                ctx.clearRect(0, 0, w, h);
+
+
+
+                const skyGradient = ctx.createLinearGradient(0, 0, 0, groundLevel);
+
+                skyGradient.addColorStop(0, '#87CEEB');
+
+                skyGradient.addColorStop(1, '#B0E0E6');
+
+                ctx.fillStyle = skyGradient;
+
+                ctx.fillRect(0, 0, w, h);
+
+                
+
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+
+                if(state.clouds) {
+
+                    state.clouds.forEach(cloud => {
+
+                        ctx.beginPath();
+
+                        ctx.arc(cloud.x, cloud.y, cloud.size, 0, Math.PI * 2);
+
+                        ctx.arc(cloud.x + cloud.size * 0.8, cloud.y, cloud.size * 0.8, 0, Math.PI * 2);
+
+                        ctx.arc(cloud.x - cloud.size * 0.7, cloud.y, cloud.size * 0.7, 0, Math.PI * 2);
+
+                        ctx.fill();
+
+                    });
+
+                }
+
+                
+
+                ctx.fillStyle = '#228B22';
+
+                ctx.fillRect(0, groundLevel, w, h - groundLevel + 1);
+
+
+
+                const maxPlaneHeight = h * 0.8;
+
+                const maxPlaneWidth = w * 0.9;
+
+                
+
+                let planePixelWidth, planePixelHeight;
+
+                
+
+                if (state.theta < 0.1) {
+
+                    // Caso para plano horizontal
+
+                    planePixelWidth = maxPlaneWidth;
+
+                    planePixelHeight = 0;
+
+                } else {
+
+                    // Caso para plano inclinado, calcular dimensiones para que quepa
+
+                    const aspectRatio = state.planeHeightMeters / state.planeBaseMeters;
+
+                    planePixelWidth = maxPlaneWidth;
+
+                    planePixelHeight = planePixelWidth * aspectRatio;
+
+
+
+                    if (planePixelHeight > maxPlaneHeight) {
+
+                        planePixelHeight = maxPlaneHeight;
+
+                        planePixelWidth = planePixelHeight / aspectRatio;
+
+                    }
+
+                }
+
+                
+
+                const originX = (w - planePixelWidth) / 2;
+
+                const originY = groundLevel;
+
+                const thetaRad = Math.atan2(state.planeHeightMeters, state.planeBaseMeters);
+
+                
+
+                // Dibuja el plano o la superficie horizontal
+
+                if (state.theta > 0.1) { // Plano inclinado
+
+                    if (planePixelHeight > 0) {
+
+                        ctx.fillStyle = '#696969';
+
+                        ctx.beginPath();
+
+                        ctx.moveTo(originX, originY);
+
+                        ctx.lineTo(originX + planePixelWidth, originY);
+
+                        ctx.lineTo(originX + planePixelWidth, originY - planePixelHeight);
+
+                        ctx.closePath();
+
+                        ctx.fill();
+
+                    }
+
+
+
+                    ctx.strokeStyle = '#36454F';
+
+                    ctx.lineWidth = 4;
+
+                    ctx.beginPath();
+
+                    ctx.moveTo(originX, originY);
+
+                    ctx.lineTo(originX + planePixelWidth, originY - planePixelHeight);
+
+                    ctx.stroke();
+
+                } else { // Plano horizontal (ángulo cero)
+
+                    ctx.strokeStyle = '#36454F';
+
+                    ctx.lineWidth = 4;
+
+                    ctx.beginPath();
+
+                    ctx.moveTo(originX, originY);
+
+                    ctx.lineTo(originX + planePixelWidth, originY);
+
+                    ctx.stroke();
+
+                }
+
+
+
+                const planePixelLength = Math.hypot(planePixelWidth, planePixelHeight);
+
+                const pixelsPerMeter = planePixelLength / (planePhysicalLength || 1);
+
+
+
+                const blockScale = 0.8 + Math.log10(state.m + 1) * 0.5;
+
+                const blockWidth = 40 * blockScale;
+
+                const blockHeight = 25 * blockScale;
+
+                
+
+                const blockPosOnPlane = (planePixelLength / 2) + state.x * pixelsPerMeter;
+
+                
+
+                const surfacePointX = originX + blockPosOnPlane * Math.cos(thetaRad);
+
+                const surfacePointY = originY - blockPosOnPlane * Math.sin(thetaRad);
+
+                
+
+                ctx.save();
+
+                ctx.translate(surfacePointX, surfacePointY);
+
+                ctx.rotate(-thetaRad);
+
+                
+
+                const blockGrad = ctx.createLinearGradient(0, -blockHeight, 0, 0);
+
+                blockGrad.addColorStop(0, '#818cf8');
+
+                blockGrad.addColorStop(1, '#4f46e5');
+
+                ctx.fillStyle = blockGrad;
+
+                ctx.shadowColor = "rgba(0,0,0,0.5)";
+
+                ctx.shadowBlur = 10;
+
+                ctx.fillRect(-blockWidth / 2, -blockHeight, blockWidth, blockHeight);
+
+                ctx.shadowColor = "transparent"; 
+
+                ctx.strokeStyle = "#c7d2fe";
+
+                ctx.lineWidth = 1;
+
+                ctx.strokeRect(-blockWidth / 2, -blockHeight, blockWidth, blockHeight);
+
+                
+
+                if (state.showVectors) {
+
+                    drawVectors(ctx, thetaRad, blockHeight);
+
+                }
+
+
+
+                ctx.restore();
+
+
+
+                 lastDragInfo = {
+
+                     blockScreenX: surfacePointX, blockScreenY: surfacePointY,
+
+                     blockWidth, blockHeight, thetaRad,
+
+                     planeOriginX: originX, planeOriginY: originY,
+
+                     planePixelLength, planePhysicalLength, pixelsPerMeter
+
+                 };
+
+
+
+                // Solo dibuja el arco del ángulo si es significativo
+
+                if (state.theta > 0.1 && planePixelHeight > 0) {
+
+                    ctx.strokeStyle = "#111827";
+
+                    ctx.lineWidth = 1.5;
+
+                    ctx.beginPath();
+
+                    ctx.arc(originX, originY, 30, 0, -thetaRad, true);
+
+                    ctx.stroke();
+
+                    ctx.fillStyle = "#111827";
+
+                    ctx.font = "bold 12px Inter";
+
+                    ctx.fillText(`θ=${state.theta.toFixed(1)}°`, originX + 35, originY - 15);
+
+                }
+
+                
+
+                if (state.showRuler) {
+
+                    drawRuler(ctx, pixelsPerMeter);
+
+                }
+
+
+
+                ctx.restore();
+
+            }
+
+            
+
+            function drawVectors(ctx, thetaRad, blockH) {
+
+                const center = { x: 0, y: -blockH / 2 };
+
+                const vectorScale = 4 + Math.log10(state.m + 1);
+
+
+
+                // Dibuja los ejes del sistema de referencia del bloque (+Y perpendicular, +X paralelo)
+
+                const axisLength = 80;
+
+                ctx.save();
+
+                ctx.globalAlpha = 0.5;
+
+                // Eje Y positivo (perpendicular al plano, hacia afuera)
+
+                drawVector(ctx, center, 0, axisLength, '#cbd5e1', 'y');
+
+                // Eje X positivo (paralelo al plano, hacia arriba)
+
+                drawVector(ctx, center, 90 * Math.PI / 180, axisLength, '#cbd5e1', 'x'); 
+
+                ctx.restore();
+
+
+
+                const P = state.m * state.g;
+
+                const P_x_val = P * Math.sin(thetaRad);
+
+                const P_y_val = P * Math.cos(thetaRad);
+
+
+
+                // Dibuja el Vector Peso (P) - Vertical hacia abajo
+
+                // CORRECCIÓN: Para que sea vertical en la pantalla, su ángulo debe compensar la rotación del bloque.
+
+                // El ángulo para "abajo" en la pantalla es PI (180 grados).
+
+                drawVector(ctx, center, Math.PI + thetaRad, P * vectorScale, "#f59e0b", "P");
+
+
+
+                // Dibuja componentes del Peso si el plano está inclinado
+
+                if (state.theta > 0.1) {
+
+                    // Px: Componente paralela, apunta hacia ABAJO del plano (-X)
+
+                    drawVector(ctx, center, -90 * Math.PI / 180, P_x_val * vectorScale, "#fde047", "Px", true); 
+
+                    // Py: Componente perpendicular, apunta HACIA el plano (-Y)
+
+                    drawVector(ctx, center, 180 * Math.PI / 180, P_y_val * vectorScale, "#fde047", "Py", true);
+
+                    
+
+                    // Dibuja el paralelogramo para mostrar la suma de componentes
+
+                     const getTipCoords = (angle, magnitude) => ({
+
+                        x: magnitude * Math.sin(angle),
+
+                        y: -magnitude * Math.cos(angle)
+
+                    });
+
+
+
+                    // Usar el ángulo corregido para P en el paralelogramo
+
+                    const tip_P = getTipCoords(Math.PI + thetaRad, P * vectorScale);
+
+                    const tip_Px = getTipCoords(-90 * Math.PI / 180, P_x_val * vectorScale);
+
+                    const tip_Py = getTipCoords(180 * Math.PI / 180, P_y_val * vectorScale);
+
+                    
+
+                    ctx.save();
+
+                    ctx.translate(center.x, center.y);
+
+                    ctx.strokeStyle = "#f59e0b";
+
+                    ctx.lineWidth = 1.5;
+
+                    ctx.setLineDash([3, 4]);
+
+                    ctx.globalAlpha = 0.8;
+
+                    ctx.beginPath();
+
+                    ctx.moveTo(tip_Px.x, tip_Px.y);
+
+                    ctx.lineTo(tip_P.x, tip_P.y);
+
+                    ctx.moveTo(tip_Py.x, tip_Py.y);
+
+                    ctx.lineTo(tip_P.x, tip_P.y);
+
+                    ctx.stroke();
+
+                    ctx.restore();
+
+                }
+
+
+
+                // Dibuja Fuerza Normal (N) - Perpendicular al plano, hacia afuera (+Y)
+
+                if (state.N > 0) drawVector(ctx, center, 0, state.N * vectorScale, "#4ade80", "N");
+
+
+
+                // Dibuja Fuerza de Rozamiento (fr)
+
+                if (state.hasFriction && Math.abs(state.f) > 1e-3) {
+
+                    // CORRECCIÓN: La dirección del rozamiento se opone al movimiento o a la tendencia.
+
+                    // La variable state.f ya contiene el signo correcto para la fuerza de rozamiento:
+
+                    // state.f > 0 significa que la fuerza apunta hacia arriba del plano (+X).
+
+                    // state.f < 0 significa que la fuerza apunta hacia abajo del plano (-X).
+
+                    // Esta lógica es correcta y se opone al movimiento/tendencia.
+
+                    let frictionDirectionAngle = state.f > 0 ? 90 * Math.PI / 180 : -90 * Math.PI / 180;
+
+                    drawVector(ctx, center, frictionDirectionAngle, Math.abs(state.f) * vectorScale, "#f87171", "fr");
+
+                }
+
+
+
+                // Dibuja Fuerza Paralela (F||)
+
+                if (Math.abs(state.f_par) > 1e-3) {
+
+                    // f_par > 0 es up-plane (+X, derecha), f_par < 0 is down-plane (-X, izquierda)
+
+                    let fParDirectionAngle = state.f_par > 0 ? 90 * Math.PI / 180 : -90 * Math.PI / 180;
+
+                    drawVector(ctx, center, fParDirectionAngle, Math.abs(state.f_par) * vectorScale, "#60a5fa", "F∥");
+
+                }
+
+                
+
+                // Dibuja Fuerza Horizontal (Fh)
+
+                if (Math.abs(state.f_horz) > 1e-3) {
+
+                    // CORRECCIÓN FINAL: Invertir la lógica. Positivo -> Derecha. Negativo -> Izquierda.
+
+                    const angle_Fh_in_block = state.f_horz > 0 ? (thetaRad + Math.PI / 2) : (thetaRad - Math.PI / 2);
+
+                    drawVector(ctx, center, angle_Fh_in_block, Math.abs(state.f_horz) * vectorScale, "#a78bfa", "Fh");
+
+                }
+
+            }
+
+            
+
+            function drawVector(ctx, origin, angle, magnitude, color, label, dashed = false) {
+
+                 ctx.save();
+
+                 ctx.translate(origin.x, origin.y);
+
+                 ctx.rotate(angle);
+
+                 ctx.strokeStyle = color;
+
+                 ctx.fillStyle = color;
+
+                 ctx.lineWidth = 3; 
+
+                 ctx.beginPath();
+
+                 if(dashed) ctx.setLineDash([4, 4]);
+
+                 ctx.moveTo(0, 0);
+
+                 ctx.lineTo(0, -magnitude);
+
+                 ctx.stroke();
+
+                 ctx.beginPath();
+
+                 ctx.moveTo(0, -magnitude);
+
+                 ctx.lineTo(-5, -magnitude + 10); 
+
+                 ctx.lineTo(5, -magnitude + 10);
+
+                 ctx.closePath();
+
+                 ctx.fill();
+
+                 ctx.font = "bold 13px Inter";
+
+                 ctx.textAlign = "left";
+
+                 ctx.textBaseline = "middle";
+
+                 
+
+                 // CORRECCIÓN: Añadir borde al texto para mejor legibilidad
+
+                 ctx.strokeStyle = 'rgba(0,0,0,0.8)';
+
+                 ctx.lineWidth = 3;
+
+                 ctx.lineJoin = 'round';
+
+                 ctx.strokeText(label, 10, -magnitude / 2);
+
+
+
+                 ctx.shadowColor = "black";
+
+                 ctx.shadowBlur = 4;
+
+                 ctx.fillText(label, 10, -magnitude / 2);
+
+                 ctx.restore();
+
+            }
+
+
+
+            function drawRuler(ctx, pixelsPerMeter) {
+
+                const { start, end } = state.ruler;
+
+                const handleRadius = 8;
+
+                
+
+                ctx.save();
+
+                
+
+                ctx.strokeStyle = 'rgba(251, 191, 36, 0.8)';
+
+                ctx.lineWidth = 3;
+
+                ctx.beginPath();
+
+                ctx.moveTo(start.x, start.y);
+
+                ctx.lineTo(end.x, end.y);
+
+                ctx.stroke();
+
+
+
+                const dx = end.x - start.x;
+
+                const dy = end.y - start.y;
+
+                const pixelDist = Math.hypot(dx, dy);
+
+                if (pixelDist > 0 && pixelsPerMeter > 0) {
+
+                    const ux = dx / pixelDist;
+
+                    const uy = dy / pixelDist;
+
+                    const px = -uy;
+
+                    const py = ux;
+
+
+
+                    ctx.strokeStyle = 'rgba(251, 191, 36, 0.9)';
+
+                    ctx.lineWidth = 2;
+
+
+
+                    for (let d = 0; d <= pixelDist; d += pixelsPerMeter) {
+
+                        const currentMeter = Math.round(d / pixelsPerMeter);
+
+                        const isFiveMeterMark = currentMeter % 5 === 0 && currentMeter !== 0;
+
+                        const tickLength = isFiveMeterMark ? 10 : 5;
+
+
+
+                        const pointX = start.x + d * ux;
+
+                        const pointY = start.y + d * uy;
+
+
+
+                        ctx.beginPath();
+
+                        ctx.moveTo(pointX - px * tickLength, pointY - py * tickLength);
+
+                        ctx.lineTo(pointX + px * tickLength, pointY + py * tickLength);
+
+                        ctx.stroke();
+
+                    }
+
+                }
+
+                
+
+                ctx.fillStyle = 'rgba(251, 191, 36, 1)';
+
+                ctx.beginPath();
+
+                ctx.arc(start.x, start.y, handleRadius, 0, 2 * Math.PI);
+
+                ctx.fill();
+
+                ctx.beginPath();
+
+                ctx.arc(end.x, end.y, handleRadius, 0, 2 * Math.PI);
+
+                ctx.fill();
+
+                
+
+                const meterDist = pixelDist / (pixelsPerMeter || 1);
+
+                
+
+                const midX = start.x + dx / 2;
+
+                const midY = start.y + dy / 2;
+
+                
+
+                const text = `${meterDist.toFixed(2)} m`;
+
+                ctx.font = 'bold 14px Inter';
+
+                const textMetrics = ctx.measureText(text);
+
+                const textWidth = textMetrics.width;
+
+                const textHeight = 14; 
+
+                
+
+                ctx.fillStyle = 'rgba(15, 23, 42, 0.7)';
+
+                ctx.fillRect(midX - textWidth / 2 - 5, midY - textHeight / 2 - 12, textWidth + 10, textHeight + 10);
+
+                
+
+                ctx.fillStyle = '#facc15';
+
+                ctx.textAlign = 'center';
+
+                ctx.textBaseline = 'middle';
+
+                ctx.fillText(text, midX, midY - 5);
+
+                
+
+                ctx.restore();
+
+            }
+
+
+
+            function updateHUD(){
+
+                const thetaRad = state.theta * Math.PI / 180;
+
+                const planePhysicalLength = Math.hypot(state.planeBaseMeters, state.planeHeightMeters);
+
+                const distanceFromBottom = planePhysicalLength / 2 + state.x;
+
+                const verticalHeight = distanceFromBottom * Math.sin(thetaRad);
+
+                const Ek = 0.5 * state.m * state.v * state.v;
+
+                const Ep = state.m * state.g * verticalHeight;
+
+                
+
+                dom.aHud.textContent = `${state.a.toFixed(2)} m/s²`;
+
+                dom.vHud.textContent = `${state.v.toFixed(2)} m/s`;
+
+                dom.hHud.textContent = `${verticalHeight.toFixed(2)} m`;
+
+                dom.ekHud.textContent = `${Ek.toFixed(2)} J`;
+
+                dom.epHud.textContent = `${Ep.toFixed(2)} J`;
+
+                dom.tHud.textContent = `${state.t.toFixed(2)} s`;
+
+            }
+
+
+
+            function setupGraph(id, title) {
+
+                const container = document.createElement('div');
+
+                container.id = `${id}-graph-container`;
+
+                container.className = "bg-slate-900/70 p-3 rounded-lg z-20 border border-slate-700 shadow-lg";
+
+                container.innerHTML = `<div class="flex justify-between items-center mb-2 flex-wrap"><h4 class="text-sm font-bold text-sky-400">${title}</h4></div><canvas id="${id}-graph-canvas" class="w-full h-32 rounded bg-slate-800/20"></canvas>`;
+
+                dom.graphPanel.appendChild(container);
+
+                const canvas = document.getElementById(`${id}-graph-canvas`);
+
+                canvas.width = canvas.clientWidth;
+
+                canvas.height = canvas.clientHeight;
+
+                 canvas.addEventListener('mousemove', (e) => handleGraphMouseMove(e, id));
+
+                 canvas.addEventListener('mouseout', () => dom.tooltip.style.display = 'none');
+
+                return canvas.getContext('2d');
+
+            }
+
+
+
+            let graphContexts = {};
+
+            function setupAllGraphs() {
+
+                dom.graphPanel.innerHTML = ''; 
+
+                graphContexts = {
+
+                    pos: setupGraph('pos', 'Altura (m) vs Tiempo (s)'),
+
+                    vel: setupGraph('vel', 'Velocidad (m/s) vs Tiempo (s)'),
+
+                    acc: setupGraph('acc', 'Aceleración (m/s²) vs Tiempo (s)'),
+
+                    energy: setupGraph('energy', 'Energía (J) vs Tiempo (s)')
+
+                };
+
+            }
+
+            
+
+            function drawSingleGraph(ctx, data, color, yBounds) {
+
+                if (!ctx || !ctx.canvas.width || !ctx.canvas.height) return;
+
+                const w = ctx.canvas.width;
+
+                const h = ctx.canvas.height;
+
+                ctx.clearRect(0, 0, w, h);
+
+
+
+                if (!data || data.length < 1) { 
+
+                    ctx.fillStyle = 'rgba(156, 163, 175, 0.5)';
+
+                    ctx.font = '12px Inter';
+
+                    ctx.textAlign = 'center';
+
+                    ctx.textBaseline = 'middle';
+
+                    ctx.fillText('Configura y arranca', w / 2, h / 2);
+
+                    return;
+
+                }
+
+
+
+                const padding = 30;
+
+                const xMax = data.length > 1 ? data[data.length - 1].t : data[0].t + 1;
+
+                const xMin = data[0].t;
+
+                
+
+                let {min: yMin, max: yMax} = yBounds;
+
+                if (Math.abs(yMax - yMin) < 1e-6) { yMax += 0.5; yMin -=0.5; }
+
+
+
+                const xScale = (w - padding * 2) / (xMax - xMin || 1);
+
+                const yScale = (h - padding * 2) / (yMax - yMin || 1);
+
+                
+
+                ctx.graphMetrics = {xScale, yScale, xMin, yMin, padding, w, h};
+
+
+
+                const toCanvasX = (t) => padding + (t - xMin) * xScale;
+
+                const toCanvasY = (y) => h - padding - (y - yMin) * yScale;
+
+
+
+                ctx.strokeStyle = '#475569';
+
+                ctx.lineWidth = 1;
+
+                ctx.beginPath();
+
+                ctx.moveTo(padding, padding);
+
+                ctx.lineTo(padding, h - padding);
+
+                ctx.lineTo(w - padding, h - padding);
+
+                ctx.stroke();
+
+
+
+                if (yMin < 0.01 && yMax > -0.01) {
+
+                    ctx.strokeStyle = 'rgba(71, 85, 105, 0.5)';
+
+                    ctx.beginPath();
+
+                    ctx.moveTo(padding, toCanvasY(0));
+
+                    ctx.lineTo(w - padding, toCanvasY(0));
+
+                    ctx.stroke();
+
+                }
+
+
+
+                ctx.strokeStyle = color;
+
+                ctx.lineWidth = 2;
+
+                ctx.beginPath();
+
+                ctx.moveTo(toCanvasX(data[0].t), toCanvasY(data[0].y));
+
+                for (let i = 1; i < data.length; i++) {
+
+                    ctx.lineTo(toCanvasX(data[i].t), toCanvasY(data[i].y));
+
+                }
+
+                ctx.stroke();
+
+
+
+                ctx.fillStyle = '#94a3b8';
+
+                ctx.font = '10px Inter';
+
+                ctx.textAlign = 'right';
+
+                ctx.textBaseline = 'middle';
+
+                ctx.fillText(yMax.toFixed(1), padding - 5, padding);
+
+                ctx.fillText(yMin.toFixed(1), padding - 5, h - padding);
+
+
+
+                ctx.textAlign = 'center';
+
+                ctx.textBaseline = 'top';
+
+                ctx.fillText(xMax.toFixed(1) + 's', w - padding, h - padding + 5);
+
+            }
+
+
+
+            function drawMultiLineGraph(ctx, datasets, colors, labels, yBounds) {
+
+                if (!ctx || !ctx.canvas.width || !ctx.canvas.height) return;
+
+                const w = ctx.canvas.width;
+
+                const h = ctx.canvas.height;
+
+                ctx.clearRect(0, 0, w, h);
+
+
+
+                const allDataPoints = Object.values(datasets).flatMap(d => d);
+
+                if (allDataPoints.length < 1) {
+
+                    ctx.fillStyle = 'rgba(156, 163, 175, 0.5)';
+
+                    ctx.font = '12px Inter';
+
+                    ctx.textAlign = 'center';
+
+                    ctx.textBaseline = 'middle';
+
+                    ctx.fillText('Configura y arranca', w / 2, h / 2);
+
+                    return;
+
+                }
+
+
+
+                const padding = 30;
+
+                const xMax = allDataPoints.length > 1 ? allDataPoints[allDataPoints.length - 1].t : allDataPoints[0].t + 1;
+
+                const xMin = allDataPoints[0].t;
+
+                let {min: yMin, max: yMax} = yBounds;
+
+
+
+                if (Math.abs(yMax - yMin) < 1e-6) { yMax += 5; yMin -= 5; }
+
+                
+
+                const xScale = (w - padding * 2) / (xMax - xMin || 1);
+
+                const yScale = (h - padding * 2) / (yMax - yMin || 1);
+
+
+
+                ctx.graphMetrics = {xScale, yScale, xMin, yMin, padding, w, h};
+
+
+
+                const toCanvasX = (t) => padding + (t - xMin) * xScale;
+
+                const toCanvasY = (y) => h - padding - (y - yMin) * yScale;
+
+
+
+                ctx.strokeStyle = '#475569';
+
+                ctx.lineWidth = 1;
+
+                ctx.beginPath();
+
+                ctx.moveTo(padding, padding); ctx.lineTo(padding, h - padding); ctx.lineTo(w - padding, h - padding);
+
+                ctx.stroke();
+
+
+
+                Object.keys(datasets).forEach((key) => {
+
+                    const data = datasets[key];
+
+                    if (data.length < 1) return;
+
+                    ctx.strokeStyle = colors[key];
+
+                    ctx.lineWidth = 2;
+
+                    ctx.beginPath();
+
+                    ctx.moveTo(toCanvasX(data[0].t), toCanvasY(data[0].y));
+
+                    for (let i = 1; i < data.length; i++) {
+
+                        ctx.lineTo(toCanvasX(data[i].t), toCanvasY(data[i].y));
+
+                    }
+
+                    ctx.stroke();
+
+                });
+
+
+
+                ctx.fillStyle = '#94a3b8';
+
+                ctx.font = '10px Inter';
+
+                ctx.textAlign = 'right';
+
+                ctx.textBaseline = 'middle';
+
+                ctx.fillText(yMax.toFixed(1), padding - 5, padding);
+
+                ctx.fillText(yMin.toFixed(1), padding - 5, h - padding);
+
+                ctx.textAlign = 'center';
+
+                ctx.textBaseline = 'top';
+
+                ctx.fillText(xMax.toFixed(1) + 's', w - padding, h - padding + 5);
+
+
+
+                ctx.font = '10px Inter';
+
+                ctx.textAlign = 'left';
+
+                let legendX = padding + 10;
+
+                Object.keys(labels).forEach(key => {
+
+                    ctx.fillStyle = colors[key];
+
+                    ctx.fillText(`■ ${labels[key]}`, legendX, padding + 10);
+
+                    legendX += ctx.measureText(`■ ${labels[key]}`).width + 15;
+
+                });
+
+            }
+
+
+
+            function drawGraphs() {
+
+                if(!state.showGraphs) return;
+
+                drawSingleGraph(graphContexts.pos, state.graphs.pos.data, '#818cf8', state.graphs.pos.yBounds);
+
+                drawSingleGraph(graphContexts.vel, state.graphs.vel.data, '#60a5fa', state.graphs.vel.yBounds);
+
+                drawSingleGraph(graphContexts.acc, state.graphs.acc.data, '#f87171', state.graphs.acc.yBounds);
+
+                drawMultiLineGraph(graphContexts.energy, 
+
+                    state.graphs.energy.data,
+
+                    { K: '#60a5fa', P: '#f59e0b', E: '#4ade80'},
+
+                    { K: 'K', P: 'P', E: 'E_total'},
+
+                    state.graphs.energy.yBounds
+
+                );
+
+            }
+
+
+
+            function updateGraphData() {
+
+                if(state.t > 300) return;
+
+                const dataPointLimit = 500;
+
+                
+
+                const thetaRad = state.theta * Math.PI / 180;
+
+                const planePhysicalLength = Math.hypot(state.planeBaseMeters, state.planeHeightMeters);
+
+                const distanceFromBottom = planePhysicalLength / 2 + state.x;
+
+                const verticalHeight = distanceFromBottom * Math.sin(thetaRad);
+
+
+
+                const K = 0.5 * state.m * state.v * state.v;
+
+                const P = state.m * state.g * verticalHeight;
+
+                const E = K + P;
+
+                
+
+                state.graphs.pos.data.push({t: state.t, y: verticalHeight});
+
+                if (state.graphs.pos.data.length > dataPointLimit) state.graphs.pos.data.shift();
+
+                
+
+                state.graphs.vel.data.push({t: state.t, y: state.v});
+
+                if (state.graphs.vel.data.length > dataPointLimit) state.graphs.vel.data.shift();
+
+                
+
+                state.graphs.acc.data.push({t: state.t, y: state.a});
+
+                if (state.graphs.acc.data.length > dataPointLimit) state.graphs.acc.data.shift();
+
+                
+
+                state.graphs.energy.data.K.push({t: state.t, y: K});
+
+                state.graphs.energy.data.P.push({t: state.t, y: P});
+
+                state.graphs.energy.data.E.push({t: state.t, y: E});
+
+                
+
+                if (state.graphs.energy.data.K.length > dataPointLimit) {
+
+                    state.graphs.energy.data.K.shift();
+
+                    state.graphs.energy.data.P.shift();
+
+                    state.graphs.energy.data.E.shift();
+
+                }
+
+            }
+
+            
+
+            function updateControlsFromState() {
+
+                dom.massSlider.value = state.m; dom.massLabel.textContent = state.m.toFixed(1);
+
+                dom.angleSlider.value = state.theta; dom.angleLabel.textContent = state.theta.toFixed(1);
+
+                dom.baseSlider.value = state.planeBaseMeters; dom.baseLabel.textContent = state.planeBaseMeters.toFixed(2);
+
+                dom.heightSlider.value = state.planeHeightMeters; dom.heightLabel.textContent = state.planeHeightMeters.toFixed(2);
+
+                dom.dimensionModeCheckbox.checked = state.useDimensionMode;
+
+                dom.angleControls.classList.toggle('hidden', state.useDimensionMode);
+
+                dom.dimensionControls.classList.toggle('hidden', !state.useDimensionMode);
+
+                dom.fParSlider.value = state.f_par; dom.fParLabel.textContent = state.f_par;
+
+                dom.fHorzSlider.value = state.f_horz; dom.fHorzLabel.textContent = state.f_horz;
+
+                dom.frictionCheckbox.checked = state.hasFriction;
+
+                dom.frictionControls.classList.toggle('hidden', !state.hasFriction);
+
+                dom.muSSlider.value = state.mu_s; dom.muSLabel.textContent = state.mu_s.toFixed(2);
+
+                dom.muKSlider.value = state.mu_k; dom.muKLabel.textContent = state.mu_k.toFixed(2);
+
+                dom.showGraphsCheckbox.checked = state.showGraphs;
+
+                dom.showRulerCheckbox.checked = state.showRuler;
+
+                dom.showVectorsCheckbox.checked = state.showVectors;
+
+                dom.showForcesCheckbox.checked = state.showForces;
+
+            }
+
+
+
+             function calculateGraphBounds() {
+
+                 const planeLength = Math.hypot(state.planeBaseMeters, state.planeHeightMeters);
+
+                 const maxHeight = state.planeHeightMeters;
+
+                 calculateForces();
+
+                 const acc = state.a;
+
+                 state.graphs.pos.yBounds = { min: 0, max: maxHeight > 0 ? maxHeight : 1 };
+
+                 const maxWork = Math.abs(state.f_par) * planeLength + Math.abs(state.f_horz * Math.cos(state.theta * Math.PI/180)) * planeLength;
+
+                 const maxTheoreticalVel = Math.sqrt((2 * (state.m * state.g * maxHeight + maxWork)) / state.m);
+
+                 state.graphs.vel.yBounds = { min: -maxTheoreticalVel, max: maxTheoreticalVel };
+
+                 state.graphs.acc.yBounds = { min: Math.min(0, acc, -9.8), max: Math.max(0, acc, 9.8) };
+
+                 const maxEnergy = state.m * state.g * maxHeight + maxWork;
+
+                 state.graphs.energy.yBounds = { min: 0, max: maxEnergy > 0 ? maxEnergy : 10 };
+
+             }
+
+
+
+            function resetToDefaults() {
+
+                 if (state.isPlaying) togglePlayPause();
+
+                 cancelAnimationFrame(animationFrameId);
+
+                 const oldClouds = state.clouds;
+
+                 state = {...JSON.parse(JSON.stringify(defaultState)), ...{g: 9.81, x: 0, v: 0, a: 0, t: 0, N: 0, f: 0, isStatic: false, isPlaying: false, isDragging: false, dt: 1/60, clouds: oldClouds, graphs: { pos: { show: true, data: [] }, vel: { show: true, data: [] }, acc: { show: true, data: [] }, energy: { show: true, data: { K:[],P:[],E:[] } } }, ruler: { start: { x: 100, y: 150 }, end: { x: 300, y: 150 }, dragging: null, dragOffset: { x: 0, y: 0 } } } };
+
+                 dom.graphPanel.classList.add('hidden');
+
+                 dom.formulaPanel.classList.add('hidden');
+
+                 updateControlsFromState();
+
+                 onParamChange();
+
+            }
+
+            
+
+            let lastResizeWidth = 0;
+
+            function resizeCanvas() {
+
+                const newWidth = dom.simulationWrapper.clientWidth;
+
+                dom.canvas.width = newWidth;
+
+                dom.canvas.height = newWidth / (window.innerWidth < 1024 ? 1.5 : 1.8);
+
+                if(state.showGraphs) {
+
+                    requestAnimationFrame(() => {
+
+                        setupAllGraphs();
+
+                        drawGraphs();
+
+                    });
+
+                }
+
+            }
+
+
+
+            function initBackground() {
+
+                 state.clouds = [];
+
+                const numClouds = 5;
+
+                for (let i = 0; i < numClouds; i++) {
+
+                    state.clouds.push({
+
+                        x: Math.random() * dom.canvas.width,
+
+                        y: Math.random() * dom.canvas.height * 0.2 + 20,
+
+                        size: Math.random() * 20 + 20,
+
+                        speed: Math.random() * 5 + 2
+
+                    });
+
+                }
+
+            }
+
+
+
+            function handleCanvasMouseDown(e) {
+
+                e.preventDefault();
+
+                if (tryStartRulerDrag(e)) return;
+
+                if (tryStartBlockDrag(e)) return;
+
+            }
+
+
+
+            function tryStartBlockDrag(e) {
+
+                if (state.isPlaying) return false;
+
+                const coords = e.touches ? e.touches[0] : e;
+
+                const rect = dom.canvas.getBoundingClientRect();
+
+                let mouseX = coords.clientX - rect.left;
+
+                let mouseY = coords.clientY - rect.top;
+
+                const info = lastDragInfo;
+
+                if (!info.blockScreenX) return false;
+
+                const dx = mouseX - info.blockScreenX;
+
+                const dy = mouseY - info.blockScreenY;
+
+                const rotatedMouseX = dx * Math.cos(info.thetaRad) + dy * Math.sin(info.thetaRad);
+
+                const rotatedMouseY = -dx * Math.sin(info.thetaRad) + dy * Math.cos(info.thetaRad);
+
+
+
+                if (Math.abs(rotatedMouseX) < info.blockWidth / 2 && rotatedMouseY > -info.blockHeight && rotatedMouseY < 0) {
+
+                    state.isDragging = true;
+
+                    dom.canvas.style.cursor = 'grabbing';
+
+                    handleBlockDrag(coords);
+
+                    window.addEventListener('mousemove', handleBlockDragMove);
+
+                    window.addEventListener('mouseup', handleBlockDragEnd);
+
+                    window.addEventListener('touchmove', handleBlockDragMove, { passive: false });
+
+                    window.addEventListener('touchend', handleBlockDragEnd);
+
+                    requestAnimationFrame(gameLoop);
+
+                    return true;
+
+                }
+
+                return false;
+
+            }
+
+
+
+            function handleBlockDragMove(e) {
+
+                if (!state.isDragging) return;
+
+                e.preventDefault();
+
+                handleBlockDrag(e.touches ? e.touches[0] : e);
+
+            }
+
+
+
+            function handleBlockDragEnd() {
+
+                state.isDragging = false;
+
+                dom.canvas.style.cursor = 'grab';
+
+                window.removeEventListener('mousemove', handleBlockDragMove);
+
+                window.removeEventListener('mouseup', handleBlockDragEnd);
+
+                window.removeEventListener('touchmove', handleBlockDragMove);
+
+                window.removeEventListener('touchend', handleBlockDragEnd);
+
+            }
+
+
+
+            function handleBlockDrag(coords) {
+
+                const rect = dom.canvas.getBoundingClientRect();
+
+                let mouseX = coords.clientX - rect.left;
+
+                let mouseY = coords.clientY - rect.top;
+
+                const info = lastDragInfo;
+
+                if(!info.planeOriginX) return;
+
+                const relMouseX = mouseX - info.planeOriginX;
+
+                const relMouseY = mouseY - info.planeOriginY;
+
+                let distAlongPlane = relMouseX * Math.cos(info.thetaRad) - relMouseY * Math.sin(info.thetaRad);
+
+                let newX = (distAlongPlane - info.planePixelLength / 2) / (info.pixelsPerMeter || 1);
+
+                const lowerBound = -info.planePhysicalLength / 2.0;
+
+                const upperBound = info.planePhysicalLength / 2.0;
+
+                state.x = Math.max(lowerBound, Math.min(upperBound, newX));
+
+                onParamChange();
+
+            }
+
+            
+
+            function tryStartRulerDrag(e) {
+
+                if (!state.showRuler) return false;
+
+                const coords = e.touches ? e.touches[0] : e;
+
+                const rect = dom.canvas.getBoundingClientRect();
+
+                const mouseX = coords.clientX - rect.left;
+
+                const mouseY = coords.clientY - rect.top;
+
+                const handleRadius = 15;
+
+
+
+                const distToStart = Math.hypot(mouseX - state.ruler.start.x, mouseY - state.ruler.start.y);
+
+                const distToEnd = Math.hypot(mouseX - state.ruler.end.x, mouseY - state.ruler.end.y);
+
+
+
+                let draggingPart = null;
+
+                if (distToStart < handleRadius) draggingPart = 'start';
+
+                else if (distToEnd < handleRadius) draggingPart = 'end';
+
+                
+
+                if (draggingPart) {
+
+                    state.ruler.dragging = draggingPart;
+
+                    window.addEventListener('mousemove', handleRulerDragMove);
+
+                    window.addEventListener('mouseup', handleRulerDragEnd);
+
+                    window.addEventListener('touchmove', handleRulerDragMove, { passive: false });
+
+                    window.addEventListener('touchend', handleRulerDragEnd);
+
+                    requestAnimationFrame(gameLoop);
+
+                    return true;
+
+                }
+
+                return false;
+
+            }
+
+
+
+            function handleRulerDragMove(e) {
+
+                if (!state.ruler.dragging) return;
+
+                e.preventDefault();
+
+                const coords = e.touches ? e.touches[0] : e;
+
+                const rect = dom.canvas.getBoundingClientRect();
+
+                const mouseX = coords.clientX - rect.left;
+
+                const mouseY = coords.clientY - rect.top;
+
+                state.ruler[state.ruler.dragging].x = mouseX;
+
+                state.ruler[state.ruler.dragging].y = mouseY;
+
+            }
+
+
+
+            function handleRulerDragEnd() {
+
+                state.ruler.dragging = null;
+
+                window.removeEventListener('mousemove', handleRulerDragMove);
+
+                window.removeEventListener('mouseup', handleRulerDragEnd);
+
+                window.removeEventListener('touchmove', handleRulerDragMove);
+
+                window.removeEventListener('touchend', handleRulerDragEnd);
+
+            }
+
+
+
+            function handleGraphMouseMove(e, key) {
+
+                if (!state.showGraphs) return;
+
+                const canvas = e.target;
+
+                const ctx = graphContexts[key];
+
+                if (!ctx || !ctx.graphMetrics) return;
+
+
+
+                const metrics = ctx.graphMetrics;
+
+                const rect = canvas.getBoundingClientRect();
+
+                const mouseX = e.clientX - rect.left;
+
+
+
+                if (mouseX < metrics.padding || mouseX > metrics.w - metrics.padding) {
+
+                    dom.tooltip.style.display = 'none';
+
+                    return;
+
+                }
+
+
+
+                const time = (mouseX - metrics.padding) / metrics.xScale + metrics.xMin;
+
+                
+
+                let datasets = key === 'energy' ? state.graphs[key].data : {[key]: state.graphs[key].data};
+
+                if (!Object.values(datasets).some(d => d.length > 0)) return;
+
+
+
+                const primaryData = datasets[Object.keys(datasets)[0]];
+
+                
+
+                let closestIndex = 0;
+
+                let minDiff = Infinity;
+
+                for(let i=0; i < primaryData.length; i++) {
+
+                    const diff = Math.abs(primaryData[i].t - time);
+
+                    if (diff < minDiff) {
+
+                        minDiff = diff;
+
+                        closestIndex = i;
+
+                    }
+
+                }
+
+
+
+                let tooltipText = `t: ${primaryData[closestIndex].t.toFixed(2)}s\n`;
+
+                if (key === 'energy') {
+
+                    tooltipText += `K: ${datasets.K[closestIndex].y.toFixed(2)}J\n`;
+
+                    tooltipText += `P: ${datasets.P[closestIndex].y.toFixed(2)}J\n`;
+
+                    tooltipText += `E: ${datasets.E[closestIndex].y.toFixed(2)}J`;
+
+                } else if (key === 'pos'){
+
+                    tooltipText += `h: ${datasets.pos[closestIndex].y.toFixed(2)} m`;
+
+                } else if (key === 'vel'){
+
+                    tooltipText += `v: ${datasets.vel[closestIndex].y.toFixed(2)} m/s`;
+
+                } else if (key === 'acc'){
+
+                    tooltipText += `a: ${datasets.acc[closestIndex].y.toFixed(2)} m/s²`;
+
+                }
+
+
+
+                dom.tooltip.style.display = 'block';
+
+                dom.tooltip.style.left = `${e.clientX + 15}px`;
+
+                dom.tooltip.style.top = `${e.clientY}px`;
+
+                dom.tooltip.innerText = tooltipText;
+
+            }
+
+            
+
+            function togglePlayPause() {
+
+                state.isPlaying = !state.isPlaying;
+
+                const text = state.isPlaying ? 'Detener' : 'Arrancar';
+
+                dom.playPauseBtn.textContent = text;
+
+                dom.playPauseBtnMobile.textContent = text;
+
+                if(state.isPlaying) {
+
+                    cancelAnimationFrame(animationFrameId);
+
+                    gameLoop();
+
+                } else {
+
+                     cancelAnimationFrame(animationFrameId);
+
+                }
+
+            }
+
+
+
+            function updateFormulaPanel() {
+
+                calculateForces(); 
+
+                const thetaRad = state.theta * Math.PI / 180;
+
+                
+
+                // CORRECCIÓN: Usar Math.abs para la fórmula de Fh_perp para que coincida con el cálculo de N
+
+                const F_h_perp_val = Math.abs(state.f_horz) * Math.sin(thetaRad);
+
+                let y_forces_html = `<p>$\\sum F_y = N - P_y`;
+
+                if (Math.abs(state.f_horz) > 1e-3) y_forces_html += ` - F_{h,y}`;
+
+                y_forces_html += ` = 0$</p>`;
+
+                y_forces_html += `<p>$N = m g \\cos(\\theta)`;
+
+                if (Math.abs(state.f_horz) > 1e-3) y_forces_html += ` + |F_h| \\sin(\\theta)`;
+
+                y_forces_html += ` = ${state.N.toFixed(2)}\\ N$</p>`;
+
+                dom.yForces.innerHTML = y_forces_html;
+
+                
+
+                const P_par_abs = state.m * state.g * Math.sin(thetaRad);
+
+                const F_h_par_val = state.f_horz * Math.cos(thetaRad);
+
+                const F_net_no_friction = -P_par_abs + state.f_par + F_h_par_val;
+
+                
+
+                let motriz_html = [];
+
+                let resist_html = [];
+
+                let motriz_sum = 0;
+
+                let resist_sum = 0;
+
+
+
+                const tendency_is_up = F_net_no_friction > 0;
+
+
+
+                if (tendency_is_up) {
+
+                    if (state.f_par > 0) { motriz_html.push(`<p>$F_\\parallel = ${state.f_par.toFixed(2)}\\ N$</p>`); motriz_sum += state.f_par; }
+
+                    if (F_h_par_val > 0) { motriz_html.push(`<p>$F_{h,x} = F_h \\cos(\\theta) = ${F_h_par_val.toFixed(2)}\\ N$</p>`); motriz_sum += F_h_par_val; }
+
+                    if (P_par_abs > 0) { resist_html.push(`<p>$P_x = m g \\sin(\\theta) = ${P_par_abs.toFixed(2)}\\ N$</p>`); resist_sum += P_par_abs; }
+
+                    if (state.f_par < 0) { resist_html.push(`<p>$F_\\parallel = ${state.f_par.toFixed(2)}\\ N$</p>`); resist_sum += Math.abs(state.f_par); }
+
+                    if (F_h_par_val < 0) { resist_html.push(`<p>$F_{h,x} = F_h \\cos(\\theta) = ${F_h_par_val.toFixed(2)}\\ N$</p>`); resist_sum += Math.abs(F_h_par_val); }
+
+                } else { 
+
+                    if (P_par_abs > 0) { motriz_html.push(`<p>$P_x = m g \\sin(\\theta) = ${P_par_abs.toFixed(2)}\\ N$</p>`); motriz_sum += P_par_abs; }
+
+                    if (state.f_par < 0) { motriz_html.push(`<p>$F_\\parallel = ${Math.abs(state.f_par).toFixed(2)}\\ N$</p>`); motriz_sum += Math.abs(state.f_par); }
+
+                    if (F_h_par_val < 0) { motriz_html.push(`<p>$F_{h,x} = |F_h \\cos(\\theta)| = ${Math.abs(F_h_par_val).toFixed(2)}\\ N$</p>`); motriz_sum += Math.abs(F_h_par_val); }
+
+                    if (state.f_par > 0) { resist_html.push(`<p>$F_\\parallel = ${state.f_par.toFixed(2)}\\ N$</p>`); resist_sum += state.f_par; }
+
+                    if (F_h_par_val > 0) { resist_html.push(`<p>$F_{h,x} = F_h \\cos(\\theta) = ${F_h_par_val.toFixed(2)}\\ N$</p>`); resist_sum += F_h_par_val; }
+
+                }
+
+
+
+                if (state.hasFriction && state.N > 0 && Math.abs(state.f) > 1e-3) {
+
+                    const f_s_max = state.mu_s * state.N;
+
+                    const f_k = state.mu_k * state.N;
+
+                    resist_html.push(`<hr class="border-slate-600 my-1">`);
+
+                    
+
+                    if (state.isStatic) {
+
+                         resist_html.push(`<p>$f_r = ${Math.abs(state.f).toFixed(2)}\\ N$ (estática)</p>`);
+
+                         resist_html.push(`<p>$f_{s,max} = \\mu_s N = ${f_s_max.toFixed(2)}\\ N$</p>`);
+
+                    } else {
+
+                         resist_html.push(`<p>$f_r = \\mu_k N = ${f_k.toFixed(2)}\\ N$</p>`);
+
+                    }
+
+                    resist_sum += Math.abs(state.f);
+
+                }
+
+
+
+                dom.motrizForces.innerHTML = motriz_html.length > 0 ? motriz_html.join('') : '<p>$0\\ N$</p>';
+
+                dom.resistForces.innerHTML = resist_html.length > 0 ? resist_html.join('') : '<p>$0\\ N$</p>';
+
+                
+
+                dom.newtonLaw.innerHTML = `$\\sum F_{motriz} - \\sum F_{resist} = m \\cdot a$ <br> $${motriz_sum.toFixed(2)} - ${resist_sum.toFixed(2)} = ${state.m} \\cdot ${state.a.toFixed(2)}$`;
+
+
+
+                let prediction = '';
+
+                if (state.isStatic) {
+
+                    prediction = "REPOSO (FRICCIÓN ESTÁTICA)";
+
+                } else if (Math.abs(state.a) < 1e-3 && Math.abs(state.v) > 1e-3) {
+
+                    prediction = "VELOCIDAD CONSTANTE";
+
+                } else if (state.a > 1e-3) {
+
+                    prediction = "ACELERA HACIA ARRIBA";
+
+                } else if (state.a < -1e-3) {
+
+                    prediction = "ACELERA HACIA ABAJO";
+
+                } else {
+
+                    prediction = "REPOSO";
+
+                }
+
+                dom.predictionText.textContent = prediction;
+
+
+
+                if(window.MathJax && MathJax.typesetPromise) {
+
+                     MathJax.typesetPromise([dom.yForces, dom.motrizForces, dom.resistForces, dom.newtonLaw]);
+
+                }
+
+            }
+
+
+
+            function updateControlStates() {
+
+                const isAngleZero = state.theta < 0.1;
+
+
+
+                // Desactivar F_horz si el ángulo es cero
+
+                dom.fHorzSlider.disabled = isAngleZero;
+
+                if (dom.fHorzSlider.disabled && state.f_horz !== 0) {
+
+                    state.f_horz = 0;
+
+                    dom.fHorzSlider.value = 0;
+
+                    dom.fHorzLabel.textContent = '0';
+
+                }
+
+
+
+                // Desactivar Altura (h) si el ángulo es cero Y estamos en modo medidas
+
+                dom.heightSlider.disabled = isAngleZero && state.useDimensionMode;
+
+            }
+
+
+
+            function onParamChange() {
+
+                updateControlStates();
+
+                calculateGraphBounds();
+
+                Object.keys(state.graphs).forEach(key => state.graphs[key].data = key === 'energy' ? {K: [], P: [], E: []} : []);
+
+                updateGraphData();
+
+                updateFormulaPanel();
+
+                if(state.showGraphs) drawGraphs();
+
+                if (!state.isPlaying && !state.isDragging && !state.ruler.dragging) {
+
+                    requestAnimationFrame(gameLoop);
+
+                }
+
+            }
+
+
+
+            function init() {
+
+                resizeCanvas();
+
+                initBackground();
+
+                updateControlsFromState();
+
+                onParamChange();
+
+                
+
+                const openGuide = () => {
+
+                    dom.guideModal.classList.remove('hidden');
+
+                    setTimeout(() => {
+
+                        dom.guideModalBg.classList.remove('opacity-0');
+
+                        dom.guideModalContent.classList.remove('scale-95', 'opacity-0');
+
+                    }, 10);
+
+                };
+
+                const closeGuide = () => {
+
+                     dom.guideModalBg.classList.add('opacity-0');
+
+                     dom.guideModalContent.classList.add('scale-95', 'opacity-0');
+
+                     setTimeout(() => dom.guideModal.classList.add('hidden'), 300);
+
+                };
+
+
+
+                [dom.guideBtn, dom.guideBtnMobile].forEach(btn => btn.addEventListener('click', openGuide));
+
+                [dom.closeGuideBtn, dom.guideModalBg].forEach(el => el.addEventListener('click', closeGuide));
+
+
+
+                [dom.playPauseBtn, dom.playPauseBtnMobile].forEach(btn => btn.addEventListener('click', togglePlayPause));
+
+                [dom.resetBtn, dom.resetBtnMobile].forEach(btn => btn.addEventListener('click', resetToDefaults));
+
+
+
+                dom.canvas.addEventListener('mousedown', handleCanvasMouseDown);
+
+                dom.canvas.addEventListener('touchstart', handleCanvasMouseDown, { passive: false });
+
+                dom.canvas.addEventListener('mouseover', () => { if(!state.isPlaying && !state.ruler.dragging) dom.canvas.style.cursor = 'grab'; });
+
+                dom.canvas.addEventListener('mouseout', () => { dom.canvas.style.cursor = 'default'; });
+
+
+
+                const sliders = [dom.massSlider, dom.fParSlider, dom.fHorzSlider, dom.muSSlider, dom.muKSlider, dom.angleSlider, dom.baseSlider, dom.heightSlider];
+
+                sliders.forEach(slider => slider.addEventListener('input', (e) => {
+
+                    switch(e.target.id) {
+
+                        case 'mass-slider': state.m = parseFloat(e.target.value); break;
+
+                        case 'f-par-slider': state.f_par = parseFloat(e.target.value); if(Math.abs(state.f_par) > 0) state.f_horz = 0; break;
+
+                        case 'f-horz-slider': state.f_horz = parseFloat(e.target.value); if(Math.abs(state.f_horz) > 0) state.f_par = 0; break;
+
+                        case 'mu-s-slider': state.mu_s = parseFloat(e.target.value); break;
+
+                        case 'mu-k-slider': state.mu_k = parseFloat(e.target.value); break;
+
+                        case 'angle-slider':
+
+                            state.theta = parseFloat(e.target.value);
+
+                            state.planeHeightMeters = state.planeBaseMeters * Math.tan(state.theta * Math.PI / 180);
+
+                            break;
+
+                        case 'base-slider':
+
+                             state.planeBaseMeters = parseFloat(e.target.value);
+
+                             state.planeHeightMeters = state.planeBaseMeters * Math.tan(state.theta * Math.PI/180);
+
+                             break;
+
+                        case 'height-slider':
+
+                            state.planeHeightMeters = parseFloat(e.target.value);
+
+                            const tanTheta = Math.tan(state.theta * Math.PI / 180);
+
+                            if(Math.abs(tanTheta) > 1e-6) state.planeBaseMeters = state.planeHeightMeters / tanTheta;
+
+                            break;
+
+                    }
+
+                    updateControlsFromState(); 
+
+                    onParamChange();
+
+                }));
+
+
+
+                dom.dimensionModeCheckbox.addEventListener('change', e => {
+
+                    state.useDimensionMode = e.target.checked;
+
+                    if (state.useDimensionMode) state.planeHeightMeters = state.planeBaseMeters * Math.tan(state.theta * Math.PI / 180);
+
+                    updateControlsFromState(); onParamChange();
+
+                });
+
+                
+
+                dom.frictionCheckbox.addEventListener('change', e => {
+
+                    state.hasFriction = e.target.checked;
+
+                    dom.frictionControls.classList.toggle('hidden', !state.hasFriction);
+
+                    onParamChange();
+
+                });
+
+
+
+                dom.showGraphsCheckbox.addEventListener('change', e => {
+
+                    state.showGraphs = e.target.checked;
+
+                    dom.graphPanel.classList.toggle('hidden', !state.showGraphs);
+
+                    if (state.showGraphs) {
+
+                        requestAnimationFrame(() => {
+
+                           setupAllGraphs();
+
+                           calculateGraphBounds();
+
+                           drawGraphs();
+
+                        });
+
+                    }
+
+                });
+
+
+
+                dom.showRulerCheckbox.addEventListener('change', e => {
+
+                    state.showRuler = e.target.checked;
+
+                    onParamChange();
+
+                });
+
+
+
+                dom.showVectorsCheckbox.addEventListener('change', e => {
+
+                    state.showVectors = e.target.checked;
+
+                    onParamChange();
+
+                });
+
+
+
+                dom.showForcesCheckbox.addEventListener('change', e => {
+
+                    state.showForces = e.target.checked;
+
+                    dom.formulaPanel.classList.toggle('hidden', !state.showForces);
+
+                });
+
+                
+
+                window.addEventListener('resize', () => {
+
+                    const newWidth = dom.simulationWrapper.clientWidth;
+
+                    if (Math.abs(newWidth - lastResizeWidth) > 5) {
+
+                        lastResizeWidth = newWidth;
+
+                        resizeCanvas();
+
+                        onParamChange();
+
+                    }
+
+                });
+
+            }
+
+
+
+            init();
+
+        });
+
+    </script>
+
 </body>
-</html>
 
+</html>

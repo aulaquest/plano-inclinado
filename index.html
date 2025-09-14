@@ -137,20 +137,20 @@
         
         <div id="formula-panel" class="w-full max-w-5xl mx-auto mt-4 p-4 rounded-lg border border-slate-700 text-sm">
              <div class="text-center mb-4">
-                 <h4 class="font-bold text-amber-400">Predicción de Movimiento: <span id="prediction-text"></span></h4>
+                 <h4 class="font-bold text-amber-400">Análisis de Fuerzas: <span id="prediction-text"></span></h4>
             </div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4 border-t border-slate-700 pt-4">
                 <div>
                     <h4 class="font-bold text-sky-400 mb-2">Fuerzas Motrices</h4>
-                    <div id="motriz-forces" class="text-gray-300"></div>
+                    <div id="motriz-forces" class="text-gray-300 space-y-2"></div>
                 </div>
                 <div>
                     <h4 class="font-bold text-red-400 mb-2">Fuerzas Resistentes</h4>
-                    <div id="resist-forces" class="text-gray-300"></div>
+                    <div id="resist-forces" class="text-gray-300 space-y-2"></div>
                 </div>
             </div>
             <div class="text-center border-t border-slate-700 pt-4">
-                 <h4 class="font-bold text-green-400 mb-2">$\sum F = m \cdot a$</h4>
+                 <h4 class="font-bold text-green-400 mb-2">Segunda Ley de Newton</h4>
                  <div id="newton-law" class="text-gray-300"></div>
             </div>
         </div>
@@ -212,6 +212,11 @@
             <div class="control-card space-y-3">
                 <h3 class="text-sm font-bold text-sky-400">Visualización</h3>
                 <div class="space-y-2 pt-2 border-t border-slate-700">
+                    <label class="checkbox-label text-sm">
+                        <input type="checkbox" id="show-vectors-checkbox">
+                        <span class="checkmark"></span>
+                        Ver Vectores
+                    </label>
                     <label class="checkbox-label text-sm">
                         <input type="checkbox" id="show-graphs-checkbox">
                         <span class="checkmark"></span>
@@ -330,6 +335,7 @@
                 guideModalBg: document.getElementById('guide-modal-bg'),
                 guideModalContent: document.getElementById('guide-modal-content'),
                 closeGuideBtn: document.getElementById('close-guide-btn'),
+                showVectorsCheckbox: document.getElementById('show-vectors-checkbox'),
                 showGraphsCheckbox: document.getElementById('show-graphs-checkbox'),
                 showRulerCheckbox: document.getElementById('show-ruler-checkbox'),
             };
@@ -352,13 +358,14 @@
                 hasFriction: false,
                 showGraphs: false,
                 showRuler: false,
+                showVectors: false,
             };
 
             let state = {
                 ...JSON.parse(JSON.stringify(defaultState)),
                 g: 9.81,
                 x: 0, v: 0, a: 0, t: 0,
-                N: 0, f: 0,
+                N: 0, f: 0, isStatic: false,
                 isPlaying: false,
                 isDragging: false,
                 dt: 1 / 60,
@@ -372,56 +379,64 @@
                 ruler: {
                     start: { x: 100, y: 150 },
                     end: { x: 300, y: 150 },
-                    dragging: null, // 'start', 'end', 'body', or null
+                    dragging: null, // 'start', 'end', or null
                     dragOffset: { x: 0, y: 0 }
                 }
             };
             
-            // --- Physics Calculations ---
+            // --- Physics Calculations (Refactored) ---
             function calculateForces() {
                 const thetaRad = state.theta * Math.PI / 180;
-                const sinT = Math.sin(thetaRad);
-                const cosT = Math.cos(thetaRad);
-
-                const f_h_par = state.f_horz * cosT;
-                const f_h_perp = state.f_horz * sinT;
-
-                state.N = state.m * state.g * cosT + f_h_perp;
-                if (state.N < 0) state.N = 0; 
                 
-                const tendency = getMotionTendency(); // 1 for DOWN, -1 for UP
-                const P_par = state.m * state.g * sinT;
+                // Define positive direction as UP the inclined plane
                 
-                const motrizForce = (tendency === 1) ? (P_par + (state.f_par < 0 ? -state.f_par : 0) + (state.f_horz < 0 ? -f_h_par : 0)) : ( (state.f_par > 0 ? state.f_par : 0) + (state.f_horz > 0 ? f_h_par : 0) );
-                const resistForce = (tendency === 1) ? ( (state.f_par > 0 ? state.f_par : 0) + (state.f_horz > 0 ? f_h_par : 0) ) : (P_par + (state.f_par < 0 ? -state.f_par : 0) + (state.f_horz < 0 ? -f_h_par : 0) );
+                // 1. Forces perpendicular to the plane to find Normal force (N)
+                const f_h_perp = state.f_horz * Math.sin(thetaRad);
+                state.N = state.m * state.g * Math.cos(thetaRad) + f_h_perp;
+                if (state.N < 0) state.N = 0;
+
+                // 2. Forces parallel to the plane
+                const P_par = -state.m * state.g * Math.sin(thetaRad); // Negative, as it acts down the plane
+                const F_applied_par = state.f_par + (state.f_horz * Math.cos(thetaRad));
+                
+                const F_net_no_friction = P_par + F_applied_par;
 
                 let f_friction = 0;
+                state.isStatic = false;
+
                 if (state.hasFriction && state.N > 0) {
                     const f_s_max = state.mu_s * state.N;
                     const f_k = state.mu_k * state.N;
-                    
-                    if (Math.abs(state.v) < 1e-5 && !state.isDragging) { 
-                        if (motrizForce <= f_s_max + resistForce) {
-                            f_friction = -(motrizForce - resistForce);
+
+                    if (Math.abs(state.v) < 1e-5 && !state.isDragging) { // Static case
+                        if (Math.abs(F_net_no_friction) <= f_s_max) {
+                            f_friction = -F_net_no_friction; // Static friction perfectly opposes the net force
                             state.a = 0;
-                        } else {
-                            f_friction = -f_k;
-                            state.a = (motrizForce - resistForce + f_friction) / state.m;
+                            state.isStatic = true;
+                        } else { // Static friction is overcome, motion starts
+                            f_friction = -Math.sign(F_net_no_friction) * f_k;
                         }
-                    } else if (Math.abs(state.v) > 1e-5) { 
-                        f_friction = -f_k;
-                        state.a = (motrizForce - resistForce + f_friction) / state.m;
+                    } else { // Kinetic case (already moving)
+                        if (state.v !== 0) {
+                           f_friction = -Math.sign(state.v) * f_k;
+                        } else {
+                           // It's starting to move, so friction opposes the net force that started it
+                           f_friction = -Math.sign(F_net_no_friction) * f_k;
+                        }
                     }
-                } else {
-                     state.a = (motrizForce - resistForce) / state.m;
                 }
 
-                state.f = f_friction * tendency;
+                // 3. Calculate final acceleration if not held by static friction
+                if (!state.isStatic) {
+                   state.a = (F_net_no_friction + f_friction) / state.m;
+                }
 
-                 if(state.isDragging) {
-                     state.v = 0;
-                     state.a = 0;
-                 }
+                state.f = f_friction; // Store friction for display
+
+                if (state.isDragging) {
+                    state.v = 0;
+                    state.a = 0;
+                }
             }
 
             function updateClouds() {
@@ -436,32 +451,37 @@
 
             // --- Simulation Loop ---
             function gameLoop() {
-                const planePhysicalLength = Math.hypot(state.planeBaseMeters, state.planeHeightMeters);
-
                 if (state.isPlaying && !state.isDragging) {
                     calculateForces();
-                    state.v += state.a * state.dt;
-                    state.x -= state.v * getMotionTendency(); 
-                    state.t += state.dt;
-
+                    
+                    const planePhysicalLength = Math.hypot(state.planeBaseMeters, state.planeHeightMeters);
                     const lowerBound = -planePhysicalLength / 2.0;
                     const upperBound = planePhysicalLength / 2.0;
+
+                    // Prevent "sticking" to walls if accelerating into them
+                    if ((state.x >= upperBound && state.a > 0) || (state.x <= lowerBound && state.a < 0)) {
+                        state.a = 0;
+                        state.v = 0;
+                    }
+
+                    state.v += state.a * state.dt;
+                    state.x += state.v * state.dt;
+                    state.t += state.dt;
                     
+                    // Clamp position and stop if it hits a boundary
                     if (state.x <= lowerBound || state.x >= upperBound) {
                         state.x = Math.max(lowerBound, Math.min(upperBound, state.x));
                         state.v = 0;
-                        updateGraphData();
-                        togglePlayPause();
-                    } else {
-                        updateGraphData();
                     }
+                    updateGraphData();
                 } else {
+                    // Always calculate forces even when paused for UI updates
                     calculateForces();
                 }
                 
                 updateClouds();
                 updateHUD();
-                draw(planePhysicalLength);
+                draw(); // Draw doesn't need planePhysicalLength anymore
                 if (state.showGraphs) drawGraphs();
                 
                 if (state.isPlaying || state.isDragging || state.ruler.dragging) {
@@ -472,7 +492,8 @@
             }
 
             // --- Drawing ---
-            function draw(planePhysicalLength) {
+            function draw() {
+                const planePhysicalLength = Math.hypot(state.planeBaseMeters, state.planeHeightMeters);
                 const w = dom.canvas.width;
                 const h = dom.canvas.height;
                 const groundLevel = h * 0.9;
@@ -562,6 +583,10 @@
                 ctx.lineWidth = 1;
                 ctx.strokeRect(-blockWidth / 2, -blockHeight, blockWidth, blockHeight);
                 
+                if (state.showVectors) {
+                    drawVectors(ctx, thetaRad, blockHeight);
+                }
+
                 ctx.restore();
 
                  lastDragInfo = {
@@ -589,6 +614,56 @@
                 ctx.restore();
             }
             
+            function drawVectors(ctx, thetaRad, blockH) {
+                const center = { x: 0, y: -blockH/2 };
+                const vectorScale = 3 + Math.log10(state.m + 1); // Vectors scale with mass
+                const P = state.m * state.g;
+                drawVector(ctx, center, (Math.PI / 2) + thetaRad, P * vectorScale, "#f59e0b", "P");
+                
+                if (state.theta > 0.1) {
+                    const P_par = P * Math.sin(thetaRad);
+                    const P_perp = P * Math.cos(thetaRad);
+                    drawVector(ctx, center, 90 * Math.PI/180, P_par * vectorScale, "#fde047", "P_\\parallel", true);
+                    drawVector(ctx, center, 180 * Math.PI/180, P_perp * vectorScale, "#fde047", "P_\\perp", true);
+                }
+                
+                if(state.N > 0) drawVector(ctx, center, 0, state.N * vectorScale, "#4ade80", "N");
+                
+                if (state.hasFriction && Math.abs(state.f) > 1e-3) {
+                     // state.f is signed: positive UP, negative DOWN
+                     // Angle for UP is -90 deg, angle for DOWN is 90 deg
+                     let frictionDirectionAngle = state.f > 0 ? -90 * Math.PI/180 : 90 * Math.PI/180;
+                     drawVector(ctx, center, frictionDirectionAngle, Math.abs(state.f) * vectorScale, "#f87171", "f_r");
+                }
+
+
+                if(Math.abs(state.f_par) > 1e-3) drawVector(ctx, center, state.f_par > 0 ? -90 * Math.PI/180 : 90 * Math.PI/180, Math.abs(state.f_par) * vectorScale, "#60a5fa", "F_\\parallel");
+                if(Math.abs(state.f_horz) > 1e-3) drawVector(ctx, center, Math.PI + thetaRad, Math.abs(state.f_horz) * vectorScale, "#a78bfa", "F_h");
+            }
+            
+            function drawVector(ctx, origin, angle, magnitude, color, label, dashed = false) {
+                 ctx.save();
+                 ctx.translate(origin.x, origin.y);
+                 ctx.rotate(angle);
+                 ctx.strokeStyle = color;
+                 ctx.fillStyle = color;
+                 ctx.lineWidth = 2;
+                 ctx.beginPath();
+                 if(dashed) ctx.setLineDash([5, 5]);
+                 ctx.moveTo(0, 0);
+                 ctx.lineTo(0, -magnitude);
+                 ctx.stroke();
+                 ctx.beginPath();
+                 ctx.moveTo(0, -magnitude);
+                 ctx.lineTo(-4, -magnitude + 8);
+                 ctx.lineTo(4, -magnitude + 8);
+                 ctx.closePath();
+                 ctx.fill();
+                 ctx.font = "12px Inter";
+                 ctx.fillText(label, 8, -magnitude/2);
+                 ctx.restore();
+            }
+
             function drawRuler(ctx, pixelsPerMeter) {
                 const { start, end } = state.ruler;
                 const handleRadius = 8;
@@ -602,6 +677,34 @@
                 ctx.moveTo(start.x, start.y);
                 ctx.lineTo(end.x, end.y);
                 ctx.stroke();
+
+                // --- Draw ruler ticks ---
+                const dx = end.x - start.x;
+                const dy = end.y - start.y;
+                const pixelDist = Math.hypot(dx, dy);
+                if (pixelDist > 0 && pixelsPerMeter > 0) {
+                    const ux = dx / pixelDist; // Unit vector x
+                    const uy = dy / pixelDist; // Unit vector y
+                    const px = -uy; // Perpendicular vector x
+                    const py = ux;  // Perpendicular vector y
+
+                    ctx.strokeStyle = 'rgba(251, 191, 36, 0.9)';
+                    ctx.lineWidth = 2;
+
+                    for (let d = 0; d <= pixelDist; d += pixelsPerMeter) {
+                        const currentMeter = Math.round(d / pixelsPerMeter);
+                        const isFiveMeterMark = currentMeter % 5 === 0 && currentMeter !== 0;
+                        const tickLength = isFiveMeterMark ? 10 : 5;
+
+                        const pointX = start.x + d * ux;
+                        const pointY = start.y + d * uy;
+
+                        ctx.beginPath();
+                        ctx.moveTo(pointX - px * tickLength, pointY - py * tickLength);
+                        ctx.lineTo(pointX + px * tickLength, pointY + py * tickLength);
+                        ctx.stroke();
+                    }
+                }
             
                 // Draw handles
                 ctx.fillStyle = 'rgba(251, 191, 36, 1)';
@@ -612,10 +715,6 @@
                 ctx.arc(end.x, end.y, handleRadius, 0, 2 * Math.PI);
                 ctx.fill();
             
-                // Calculate and draw distance
-                const dx = end.x - start.x;
-                const dy = end.y - start.y;
-                const pixelDist = Math.hypot(dx, dy);
                 const meterDist = pixelDist / (pixelsPerMeter || 1);
             
                 const midX = start.x + dx / 2;
@@ -630,7 +729,7 @@
                 ctx.fillStyle = 'rgba(15, 23, 42, 0.7)';
                 ctx.fillRect(midX - textWidth / 2 - 5, midY - textHeight / 2 - 12, textWidth + 10, textHeight + 10);
             
-                ctx.fillStyle = '#fbb_f24';
+                ctx.fillStyle = '#facc15';
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
                 ctx.fillText(text, midX, midY - 5);
@@ -681,7 +780,7 @@
             }
             
             function drawSingleGraph(ctx, data, color, yBounds) {
-                if (!ctx) return;
+                if (!ctx || !ctx.canvas.width || !ctx.canvas.height) return;
                 const w = ctx.canvas.width;
                 const h = ctx.canvas.height;
                 ctx.clearRect(0, 0, w, h);
@@ -748,7 +847,7 @@
             }
 
             function drawMultiLineGraph(ctx, datasets, colors, labels, yBounds) {
-                if (!ctx) return;
+                if (!ctx || !ctx.canvas.width || !ctx.canvas.height) return;
                 const w = ctx.canvas.width;
                 const h = ctx.canvas.height;
                 ctx.clearRect(0, 0, w, h);
@@ -843,27 +942,18 @@
                 const P = state.m * state.g * verticalHeight;
                 const E = K + P;
                 
-                const dataPoint = {
-                    pos: {t: state.t, y: verticalHeight},
-                    vel: {t: state.t, y: state.v},
-                    acc: {t: state.t, y: state.a},
-                    energyK: {t: state.t, y: K},
-                    energyP: {t: state.t, y: P},
-                    energyE: {t: state.t, y: E}
-                };
-                
-                state.graphs.pos.data.push(dataPoint.pos);
+                state.graphs.pos.data.push({t: state.t, y: verticalHeight});
                 if (state.graphs.pos.data.length > dataPointLimit) state.graphs.pos.data.shift();
                 
-                state.graphs.vel.data.push(dataPoint.vel);
+                state.graphs.vel.data.push({t: state.t, y: state.v});
                 if (state.graphs.vel.data.length > dataPointLimit) state.graphs.vel.data.shift();
                 
-                state.graphs.acc.data.push(dataPoint.acc);
+                state.graphs.acc.data.push({t: state.t, y: state.a});
                 if (state.graphs.acc.data.length > dataPointLimit) state.graphs.acc.data.shift();
                 
-                state.graphs.energy.data.K.push(dataPoint.energyK);
-                state.graphs.energy.data.P.push(dataPoint.energyP);
-                state.graphs.energy.data.E.push(dataPoint.energyE);
+                state.graphs.energy.data.K.push({t: state.t, y: K});
+                state.graphs.energy.data.P.push({t: state.t, y: P});
+                state.graphs.energy.data.E.push({t: state.t, y: E});
                 
                 if (state.graphs.energy.data.K.length > dataPointLimit) {
                     state.graphs.energy.data.K.shift();
@@ -888,6 +978,7 @@
                 dom.muKSlider.value = state.mu_k; dom.muKLabel.textContent = state.mu_k.toFixed(2);
                 dom.showGraphsCheckbox.checked = state.showGraphs;
                 dom.showRulerCheckbox.checked = state.showRuler;
+                dom.showVectorsCheckbox.checked = state.showVectors;
             }
 
              function calculateGraphBounds() {
@@ -899,7 +990,7 @@
                 const maxWork = Math.abs(state.f_par) * planeLength + Math.abs(state.f_horz * Math.cos(state.theta * Math.PI/180)) * planeLength;
                 const maxTheoreticalVel = Math.sqrt((2 * (state.m * state.g * maxHeight + maxWork)) / state.m);
                 state.graphs.vel.yBounds = { min: -maxTheoreticalVel, max: maxTheoreticalVel };
-                state.graphs.acc.yBounds = { min: Math.min(0, acc), max: Math.max(0, acc) };
+                state.graphs.acc.yBounds = { min: Math.min(0, acc, -9.8), max: Math.max(0, acc, 9.8) };
                 const maxEnergy = state.m * state.g * maxHeight + maxWork;
                 state.graphs.energy.yBounds = { min: 0, max: maxEnergy > 0 ? maxEnergy : 10 };
             }
@@ -908,12 +999,10 @@
                  if (state.isPlaying) togglePlayPause();
                  cancelAnimationFrame(animationFrameId);
                  const oldClouds = state.clouds;
-                 state = {...JSON.parse(JSON.stringify(defaultState)), ...{g: 9.81, x: 0, v: 0, a: 0, t: 0, N: 0, f: 0, isPlaying: false, isDragging: false, dt: 1/60, clouds: oldClouds, graphs: { pos: { show: true, data: [] }, vel: { show: true, data: [] }, acc: { show: true, data: [] }, energy: { show: true, data: { K:[],P:[],E:[] } } }, ruler: { start: { x: 100, y: 150 }, end: { x: 300, y: 150 }, dragging: null, dragOffset: { x: 0, y: 0 } } } };
+                 state = {...JSON.parse(JSON.stringify(defaultState)), ...{g: 9.81, x: 0, v: 0, a: 0, t: 0, N: 0, f: 0, isStatic: false, isPlaying: false, isDragging: false, dt: 1/60, clouds: oldClouds, graphs: { pos: { show: true, data: [] }, vel: { show: true, data: [] }, acc: { show: true, data: [] }, energy: { show: true, data: { K:[],P:[],E:[] } } }, ruler: { start: { x: 100, y: 150 }, end: { x: 300, y: 150 }, dragging: null, dragOffset: { x: 0, y: 0 } } } };
                  dom.graphPanel.classList.add('hidden');
                  updateControlsFromState();
-                 setupAllGraphs();
                  onParamChange();
-                 gameLoop();
             }
             
             let lastResizeWidth = 0;
@@ -1115,48 +1204,81 @@
                      cancelAnimationFrame(animationFrameId);
                 }
             }
-            
-             function getMotionTendency() {
-                 const thetaRad = state.theta * Math.PI / 180;
-                 return (state.m * state.g * Math.sin(thetaRad)) - state.f_par - (state.f_horz * Math.cos(thetaRad)) >= 0 ? 1 : -1;
-             }
 
-             function updateFormulaPanel() {
-                 const { theta, f_par, f_horz, hasFriction } = state;
-                 let motriz = [], resist = [];
-                 const p_par_str = "m g \\sin(\\theta)", f_par_str = "F_\\parallel", f_horz_par_str = "F_h \\cos(\\theta)", fr_str = "f_r";
-                 const tendency = getMotionTendency();
+            function updateFormulaPanel() {
+                calculateForces(); 
+                const thetaRad = state.theta * Math.PI / 180;
+                
+                const P_par_abs = state.m * state.g * Math.sin(thetaRad);
+                const F_applied_par_val = state.f_par + (state.f_horz * Math.cos(thetaRad));
+                const F_net_no_friction = -P_par_abs + F_applied_par_val;
+                
+                let motriz_html = [];
+                let resist_html = [];
+                let motriz_sum = 0;
+                let resist_sum = 0;
 
-                 if (tendency === 1) {
-                     if (theta > 0) motriz.push(p_par_str);
-                     if (f_par < 0) motriz.push(`|${f_par_str}|`);
-                     if (f_horz < 0) motriz.push(`|${f_horz_par_str}|`);
-                     if (f_par > 0) resist.push(f_par_str);
-                     if (f_horz > 0) resist.push(f_horz_par_str);
-                     if (hasFriction) resist.push(fr_str);
-                 } else {
-                     if (f_par > 0) motriz.push(f_par_str);
-                     if (f_horz > 0) motriz.push(f_horz_par_str);
-                     if (theta > 0) resist.push(p_par_str);
-                     if (f_par < 0) resist.push(`|${f_par_str}|`);
-                     if (f_horz < 0) resist.push(`|${f_horz_par_str}|`);
-                     if (hasFriction) resist.push(fr_str);
-                 }
-                 
-                 const motriz_sum_str = motriz.length > 0 ? motriz.join(' + ') : '0';
-                 const resist_sum_str = resist.length > 0 ? `(${resist.join(' + ')})` : '0';
+                const tendency_is_up = F_net_no_friction > 0;
 
-                 dom.motrizForces.innerHTML = `$${motriz_sum_str}$`;
-                 dom.resistForces.innerHTML = `$${resist_sum_str}$`;
-                 dom.newtonLaw.innerHTML = `$${motriz_sum_str} - ${resist_sum_str} = m \\cdot a$`;
-                 
-                 calculateForces();
-                 dom.predictionText.textContent = (Math.abs(state.a) < 1e-6 && hasFriction) ? "REPOSO" : (tendency === 1 ? "BAJA" : "SUBE");
+                if (tendency_is_up) {
+                    if (Math.abs(F_applied_par_val) > 1e-3) {
+                        motriz_html.push(`<p>$F_{app} = ${F_applied_par_val.toFixed(2)}\\ N$</p>`);
+                        motriz_sum += F_applied_par_val;
+                    }
+                    if (P_par_abs > 0) {
+                        resist_html.push(`<p>$P_{\\parallel} = m g \\sin(\\theta) = ${P_par_abs.toFixed(2)}\\ N$</p>`);
+                        resist_sum += P_par_abs;
+                    }
+                } else { // Tendency is DOWN or ZERO
+                    if (P_par_abs > 0) {
+                        motriz_html.push(`<p>$P_{\\parallel} = m g \\sin(\\theta) = ${P_par_abs.toFixed(2)}\\ N$</p>`);
+                        motriz_sum += P_par_abs;
+                    }
+                     if (Math.abs(F_applied_par_val) > 1e-3) {
+                        resist_html.push(`<p>$F_{app} = ${F_applied_par_val.toFixed(2)}\\ N$</p>`);
+                        resist_sum += -F_applied_par_val;
+                    }
+                }
 
-                 if(window.MathJax && MathJax.typeset) {
+                if (state.hasFriction && state.N > 0) {
+                    const f_s_max = state.mu_s * state.N;
+                    const f_k = state.mu_k * state.N;
+                    resist_html.push(`<hr class="border-slate-600 my-1">`);
+                    resist_html.push(`<p>$N = ${state.N.toFixed(2)}\\ N$</p>`);
+
+                    if (state.isStatic) {
+                         resist_html.push(`<p>$f_r \\le f_{s,max}$</p>`);
+                         resist_html.push(`<p>$f_{s,max} = \\mu_s N = ${f_s_max.toFixed(2)}\\ N$</p>`);
+                    } else {
+                         resist_html.push(`<p>$f_r = \\mu_k N = ${f_k.toFixed(2)}\\ N$</p>`);
+                    }
+                    resist_sum += Math.abs(state.f);
+                }
+
+                dom.motrizForces.innerHTML = motriz_html.length > 0 ? motriz_html.join('') : '<p>$0\\ N$</p>';
+                dom.resistForces.innerHTML = resist_html.length > 0 ? resist_html.join('') : '<p>$0\\ N$</p>';
+                
+                dom.newtonLaw.innerHTML = `$\\sum F_{motriz} - \\sum F_{resist} = m \\cdot a$ <br> $${motriz_sum.toFixed(2)} - ${resist_sum.toFixed(2)} = ${state.m} \\cdot ${state.a.toFixed(2)}$`;
+
+                let prediction = '';
+                if (state.isStatic) {
+                    prediction = "REPOSO (FRICCIÓN ESTÁTICA)";
+                } else if (Math.abs(state.a) < 1e-3 && Math.abs(state.v) > 1e-3) {
+                    prediction = "VELOCIDAD CONSTANTE";
+                } else if (state.a > 1e-3) {
+                    prediction = "ACELERA HACIA ARRIBA";
+                } else if (state.a < -1e-3) {
+                    prediction = "ACELERA HACIA ABAJO";
+                } else {
+                    prediction = "REPOSO";
+                }
+                dom.predictionText.textContent = prediction;
+
+                if(window.MathJax && MathJax.typeset) {
                      setTimeout(() => MathJax.typeset([dom.motrizForces, dom.resistForces, dom.newtonLaw]), 0);
-                 }
-             }
+                }
+            }
+
 
             function onParamChange() {
                 calculateGraphBounds();
@@ -1164,7 +1286,6 @@
                 updateGraphData();
                 updateFormulaPanel();
                 if(state.showGraphs) drawGraphs();
-                // Force a single redraw if the simulation is paused
                 if (!state.isPlaying && !state.isDragging && !state.ruler.dragging) {
                     requestAnimationFrame(gameLoop);
                 }
@@ -1175,7 +1296,6 @@
                 initBackground();
                 updateControlsFromState();
                 onParamChange();
-                gameLoop();
                 
                 const openGuide = () => {
                     dom.guideModal.classList.remove('hidden');
@@ -1198,31 +1318,35 @@
 
                 dom.canvas.addEventListener('mousedown', handleCanvasMouseDown);
                 dom.canvas.addEventListener('touchstart', handleCanvasMouseDown, { passive: false });
-                dom.canvas.addEventListener('mouseover', () => { if(!state.isPlaying) dom.canvas.style.cursor = 'grab'; });
+                dom.canvas.addEventListener('mouseover', () => { if(!state.isPlaying && !state.ruler.dragging) dom.canvas.style.cursor = 'grab'; });
                 dom.canvas.addEventListener('mouseout', () => { dom.canvas.style.cursor = 'default'; });
 
-                dom.massSlider.addEventListener('input', (e) => { state.m = parseFloat(e.target.value); updateControlsFromState(); onParamChange();});
-                dom.fParSlider.addEventListener('input', (e) => { state.f_par = parseFloat(e.target.value); if(Math.abs(state.f_par) > 0) state.f_horz = 0; updateControlsFromState(); onParamChange();});
-                dom.fHorzSlider.addEventListener('input', (e) => { state.f_horz = parseFloat(e.target.value); if(Math.abs(state.f_horz) > 0) state.f_par = 0; updateControlsFromState(); onParamChange();});
-                dom.muSSlider.addEventListener('input', (e) => { state.mu_s = parseFloat(e.target.value); updateControlsFromState(); onParamChange();});
-                dom.muKSlider.addEventListener('input', (e) => { state.mu_k = parseFloat(e.target.value); updateControlsFromState(); onParamChange();});
-                
-                dom.angleSlider.addEventListener('input', (e) => {
-                    state.theta = parseFloat(e.target.value);
-                    state.planeHeightMeters = state.planeBaseMeters * Math.tan(state.theta * Math.PI / 180);
-                    updateControlsFromState(); onParamChange();
-                });
-                dom.baseSlider.addEventListener('input', (e) => {
-                    state.planeBaseMeters = parseFloat(e.target.value);
-                    state.planeHeightMeters = state.planeBaseMeters * Math.tan(state.theta * Math.PI/180);
-                    updateControlsFromState(); onParamChange();
-                });
-                 dom.heightSlider.addEventListener('input', (e) => {
-                    state.planeHeightMeters = parseFloat(e.target.value);
-                    const tanTheta = Math.tan(state.theta * Math.PI / 180);
-                    if(Math.abs(tanTheta) > 1e-6) state.planeBaseMeters = state.planeHeightMeters / tanTheta;
-                    updateControlsFromState(); onParamChange();
-                });
+                // Event Listeners
+                const sliders = [dom.massSlider, dom.fParSlider, dom.fHorzSlider, dom.muSSlider, dom.muKSlider, dom.angleSlider, dom.baseSlider, dom.heightSlider];
+                sliders.forEach(slider => slider.addEventListener('input', (e) => {
+                    switch(e.target.id) {
+                        case 'mass-slider': state.m = parseFloat(e.target.value); break;
+                        case 'f-par-slider': state.f_par = parseFloat(e.target.value); if(Math.abs(state.f_par) > 0) state.f_horz = 0; break;
+                        case 'f-horz-slider': state.f_horz = parseFloat(e.target.value); if(Math.abs(state.f_horz) > 0) state.f_par = 0; break;
+                        case 'mu-s-slider': state.mu_s = parseFloat(e.target.value); break;
+                        case 'mu-k-slider': state.mu_k = parseFloat(e.target.value); break;
+                        case 'angle-slider':
+                            state.theta = parseFloat(e.target.value);
+                            state.planeHeightMeters = state.planeBaseMeters * Math.tan(state.theta * Math.PI / 180);
+                            break;
+                        case 'base-slider':
+                             state.planeBaseMeters = parseFloat(e.target.value);
+                             state.planeHeightMeters = state.planeBaseMeters * Math.tan(state.theta * Math.PI/180);
+                             break;
+                        case 'height-slider':
+                            state.planeHeightMeters = parseFloat(e.target.value);
+                            const tanTheta = Math.tan(state.theta * Math.PI / 180);
+                            if(Math.abs(tanTheta) > 1e-6) state.planeBaseMeters = state.planeHeightMeters / tanTheta;
+                            break;
+                    }
+                    updateControlsFromState(); 
+                    onParamChange();
+                }));
 
                 dom.dimensionModeCheckbox.addEventListener('change', e => {
                     state.useDimensionMode = e.target.checked;
@@ -1240,19 +1364,27 @@
                     state.showGraphs = e.target.checked;
                     dom.graphPanel.classList.toggle('hidden', !state.showGraphs);
                     if (state.showGraphs) {
-                        resizeCanvas(); // This also calls setupAllGraphs
-                        drawGraphs();
+                        requestAnimationFrame(() => {
+                           setupAllGraphs();
+                           calculateGraphBounds();
+                           drawGraphs();
+                        });
                     }
                 });
 
                 dom.showRulerCheckbox.addEventListener('change', e => {
                     state.showRuler = e.target.checked;
-                    if (!state.isPlaying) requestAnimationFrame(gameLoop); // Redraw
+                    onParamChange();
+                });
+
+                dom.showVectorsCheckbox.addEventListener('change', e => {
+                    state.showVectors = e.target.checked;
+                    onParamChange();
                 });
                 
                 window.addEventListener('resize', () => {
                     resizeCanvas();
-                    if(!state.isPlaying) requestAnimationFrame(gameLoop);
+                    onParamChange();
                 });
             }
 
@@ -1261,5 +1393,4 @@
     </script>
 </body>
 </html>
-
 

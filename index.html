@@ -6,7 +6,7 @@
     <title>Simulador de Plano Inclinado con Rozamiento y Fuerzas</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic" crossorigin>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script>
       window.MathJax = {
@@ -56,7 +56,7 @@
             border-color: #475569;
             cursor: not-allowed;
         }
-       
+        
         /* HUD adjustments */
         #info-hud {
             padding: 0.5rem 1rem;
@@ -127,16 +127,19 @@
 
         <div id="mobile-controls" class="w-full max-w-5xl mx-auto lg:hidden my-4">
              <div class="control-card space-y-3">
-                <div class="flex items-center justify-center gap-3">
-                    <button id="play-pause-btn-mobile" class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs rounded-md transition w-24">Arrancar</button>
-                    <button id="reset-btn-mobile" class="px-4 py-1.5 bg-green-600 hover:bg-green-700 text-white font-semibold text-xs rounded-md transition">Reiniciar</button>
-                    <button id="guide-btn-mobile" class="px-4 py-1.5 bg-sky-600 hover:bg-sky-700 text-white font-semibold text-xs rounded-md transition">Guía</button>
-                </div>
+                 <div class="flex items-center justify-center gap-3">
+                     <button id="play-pause-btn-mobile" class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs rounded-md transition w-24">Arrancar</button>
+                     <button id="reset-btn-mobile" class="px-4 py-1.5 bg-green-600 hover:bg-green-700 text-white font-semibold text-xs rounded-md transition">Reiniciar</button>
+                     <button id="guide-btn-mobile" class="px-4 py-1.5 bg-sky-600 hover:bg-sky-700 text-white font-semibold text-xs rounded-md transition">Guía</button>
+                 </div>
             </div>
         </div>
         
         <div id="formula-panel" class="w-full max-w-5xl mx-auto mt-4 p-4 rounded-lg border border-slate-700 text-sm">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+             <div class="text-center mb-4">
+                 <h4 class="font-bold text-amber-400">Predicción de Movimiento: <span id="prediction-text"></span></h4>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4 border-t border-slate-700 pt-4">
                 <div>
                     <h4 class="font-bold text-sky-400 mb-2">Fuerzas Motrices</h4>
                     <div id="motriz-forces" class="text-gray-300"></div>
@@ -147,12 +150,12 @@
                 </div>
             </div>
             <div class="text-center border-t border-slate-700 pt-4">
-                 <h4 class="font-bold text-green-400 mb-2">$\\Sigma F = m \\cdot a$</h4>
+                 <h4 class="font-bold text-green-400 mb-2">$\sum F = m \cdot a$</h4>
                  <div id="newton-law" class="text-gray-300"></div>
             </div>
         </div>
 
-        <div id="graph-panel" class="w-full max-w-5xl mx-auto mt-4 grid grid-cols-2 gap-4">
+        <div id="graph-panel" class="w-full max-w-5xl mx-auto mt-4 grid grid-cols-2 gap-4 hidden">
             <!-- Gráficas se añadirán aquí dinámicamente -->
         </div>
     </div>
@@ -173,14 +176,14 @@
                 <div class="space-y-3 pt-2 border-t border-slate-700">
                     <div><label for="mass-slider" class="text-xs text-gray-400">Masa ($m$): <span id="mass-label" class="font-bold text-white">2.0</span> kg</label><input type="range" id="mass-slider" min="0.1" max="10" step="0.1" value="2.0"></div>
                      <div class="pt-2">
-                        <label class="checkbox-label text-sm">
-                            <input type="checkbox" id="dimension-mode-checkbox">
-                            <span class="checkmark"></span>
-                            Medidas
-                        </label>
-                    </div>
+                         <label class="checkbox-label text-sm">
+                             <input type="checkbox" id="dimension-mode-checkbox">
+                             <span class="checkmark"></span>
+                             Medidas
+                         </label>
+                     </div>
                      <div id="angle-controls" class="space-y-3">
-                        <div><label for="angle-slider" class="text-xs text-gray-400">Ángulo ($\theta$): <span id="angle-label" class="font-bold text-white">30</span>°</label><input type="range" id="angle-slider" min="0" max="90" step="1" value="30"></div>
+                         <div><label for="angle-slider" class="text-xs text-gray-400">Ángulo ($\theta$): <span id="angle-label" class="font-bold text-white">30</span>°</label><input type="range" id="angle-slider" min="0" max="90" step="1" value="30"></div>
                     </div>
                     <div id="dimension-controls" class="hidden space-y-3">
                         <div><label for="base-slider" class="text-xs text-gray-400">Base ($b$): <span id="base-label" class="font-bold text-white">4.33</span> m</label><input type="range" id="base-slider" min="1" max="500" step="0.1" value="4.33"></div>
@@ -203,6 +206,22 @@
                 <div id="friction-controls" class="space-y-3 pt-2 border-t border-slate-700 hidden">
                     <div><label for="mu-s-slider" class="text-xs text-gray-400">Coef. Estático ($\mu_s$): <span id="mu-s-label" class="font-bold text-white">0.12</span></label><input type="range" id="mu-s-slider" min="0" max="1" step="0.01" value="0.12"></div>
                     <div><label for="mu-k-slider" class="text-xs text-gray-400">Coef. Cinético ($\mu_k$): <span id="mu-k-label" class="font-bold text-white">0.10</span></label><input type="range" id="mu-k-slider" min="0" max="1" step="0.01" value="0.10"></div>
+                </div>
+            </div>
+
+            <div class="control-card space-y-3">
+                <h3 class="text-sm font-bold text-sky-400">Visualización</h3>
+                <div class="space-y-2 pt-2 border-t border-slate-700">
+                    <label class="checkbox-label text-sm">
+                        <input type="checkbox" id="show-graphs-checkbox">
+                        <span class="checkmark"></span>
+                        Ver Gráficas
+                    </label>
+                    <label class="checkbox-label text-sm">
+                        <input type="checkbox" id="show-ruler-checkbox">
+                        <span class="checkmark"></span>
+                        Ver Regla
+                    </label>
                 </div>
             </div>
             
@@ -242,16 +261,16 @@
                     <h4 class="font-semibold text-white mb-1">3. Fuerzas</h4>
                     <ul class="list-disc list-inside space-y-1 pl-2">
                         <li><b class="text-indigo-400">Fuerzas Externas:</b> Puedes aplicar una fuerza paralela al plano ($F_\parallel$) o una fuerza horizontal ($F_h$). <span class="text-amber-400">Nota:</span> Solo puedes aplicar una de las dos a la vez. Al ajustar una, la otra se reiniciará a cero.</li>
-                        <li><b class="text-indigo-400">Rozamiento ($f_r$):</b> Activa esta opción para simular la fricción. Puedes ajustar los coeficientes estático ($\mu_s$) y cinético ($\mu_k$). El vector de rozamiento siempre se opondrá al movimiento o a la tendencia de movimiento.</li>
-                        <li><b class="text-indigo-400">Vectores:</b> Todos los vectores de fuerza (Peso $P$, Normal $N$, etc.) se dibujan a escala y en la dirección correcta para ayudarte a visualizar el diagrama de cuerpo libre. La fuerza horizontal ($F_h$) se descompone en sus componentes paralela y perpendicular al plano.</li>
+                        <li><b class="text-indigo-400">Rozamiento ($f_r$):</b> Activa esta opción para simular la fricción.</li>
                     </ul>
                 </div>
                  <div>
-                    <h4 class="font-semibold text-white mb-1">4. Paneles de Datos</h4>
+                    <h4 class="font-semibold text-white mb-1">4. Paneles de Datos y Herramientas</h4>
                     <ul class="list-disc list-inside space-y-1 pl-2">
-                        <li><b class="text-indigo-400">Panel Superior:</b> Muestra en tiempo real los valores clave como la aceleración, velocidad, altura y las energías cinética y potencial.</li>
-                        <li><b class="text-indigo-400">Panel de Fórmulas:</b> Este panel te muestra las ecuaciones que se están usando. Clasifica las fuerzas en motrices y resistentes, y te presenta la 2ª Ley de Newton aplicada al sistema actual. Las fórmulas cambian dinámicamente según los parámetros que elijas.</li>
-                        <li><b class="text-indigo-400">Gráficas:</b> Visualizan la evolución de la altura, velocidad, aceleración y energía a lo largo del tiempo. Pasa el ratón sobre ellas para ver los valores exactos en cualquier punto.</li>
+                        <li><b class="text-indigo-400">Panel Superior:</b> Muestra en tiempo real los valores clave como la aceleración, velocidad, altura y las energías.</li>
+                        <li><b class="text-indigo-400">Panel de Fórmulas:</b> Te muestra las ecuaciones que se están usando, clasificando las fuerzas en motrices y resistentes.</li>
+                        <li><b class="text-indigo-400">Gráficas:</b> Activa el checkbox "Ver Gráficas" para visualizar la evolución de las variables en el tiempo.</li>
+                        <li><b class="text-indigo-400">Regla:</b> Activa "Ver Regla" para mostrar una regla medidora. Puedes arrastrar sus extremos para medir distancias en metros sobre el lienzo.</li>
                     </ul>
                 </div>
             </div>
@@ -306,10 +325,13 @@
                 motrizForces: document.getElementById('motriz-forces'),
                 resistForces: document.getElementById('resist-forces'),
                 newtonLaw: document.getElementById('newton-law'),
+                predictionText: document.getElementById('prediction-text'),
                 guideModal: document.getElementById('guide-modal'),
                 guideModalBg: document.getElementById('guide-modal-bg'),
                 guideModalContent: document.getElementById('guide-modal-content'),
                 closeGuideBtn: document.getElementById('close-guide-btn'),
+                showGraphsCheckbox: document.getElementById('show-graphs-checkbox'),
+                showRulerCheckbox: document.getElementById('show-ruler-checkbox'),
             };
 
             const ctx = dom.canvas.getContext('2d');
@@ -327,8 +349,9 @@
                 f_horz: 0,
                 mu_s: 0.12,
                 mu_k: 0.10,
-                hasFriction: false, // Default friction is OFF now
-                showVectors: true,
+                hasFriction: false,
+                showGraphs: false,
+                showRuler: false,
             };
 
             let state = {
@@ -345,6 +368,12 @@
                     vel: { show: true, data: [], yBounds: {min: -10, max: 10} },
                     acc: { show: true, data: [], yBounds: {min: -10, max: 10} },
                     energy: { show: true, data: { K: [], P: [], E: [] }, yBounds: {min: 0, max: 100} }
+                },
+                ruler: {
+                    start: { x: 100, y: 150 },
+                    end: { x: 300, y: 150 },
+                    dragging: null, // 'start', 'end', 'body', or null
+                    dragOffset: { x: 0, y: 0 }
                 }
             };
             
@@ -360,12 +389,11 @@
                 state.N = state.m * state.g * cosT + f_h_perp;
                 if (state.N < 0) state.N = 0; 
                 
-                // CONVENTION: Positive is DOWN the plane
+                const tendency = getMotionTendency(); // 1 for DOWN, -1 for UP
                 const P_par = state.m * state.g * sinT;
-                const F_par_effective = -state.f_par; // Negative because positive f_par is UP
-                const F_h_par_effective = -state.f_horz * cosT; // Negative because positive f_horz is to the RIGHT (up the plane)
-
-                const f_tend = P_par + F_par_effective + F_h_par_effective;
+                
+                const motrizForce = (tendency === 1) ? (P_par + (state.f_par < 0 ? -state.f_par : 0) + (state.f_horz < 0 ? -f_h_par : 0)) : ( (state.f_par > 0 ? state.f_par : 0) + (state.f_horz > 0 ? f_h_par : 0) );
+                const resistForce = (tendency === 1) ? ( (state.f_par > 0 ? state.f_par : 0) + (state.f_horz > 0 ? f_h_par : 0) ) : (P_par + (state.f_par < 0 ? -state.f_par : 0) + (state.f_horz < 0 ? -f_h_par : 0) );
 
                 let f_friction = 0;
                 if (state.hasFriction && state.N > 0) {
@@ -373,26 +401,27 @@
                     const f_k = state.mu_k * state.N;
                     
                     if (Math.abs(state.v) < 1e-5 && !state.isDragging) { 
-                        if (Math.abs(f_tend) <= f_s_max) {
-                            f_friction = -f_tend;
+                        if (motrizForce <= f_s_max + resistForce) {
+                            f_friction = -(motrizForce - resistForce);
                             state.a = 0;
                         } else {
-                            f_friction = -Math.sign(f_tend) * f_k;
+                            f_friction = -f_k;
+                            state.a = (motrizForce - resistForce + f_friction) / state.m;
                         }
                     } else if (Math.abs(state.v) > 1e-5) { 
-                        f_friction = -Math.sign(state.v) * f_k;
+                        f_friction = -f_k;
+                        state.a = (motrizForce - resistForce + f_friction) / state.m;
                     }
+                } else {
+                     state.a = (motrizForce - resistForce) / state.m;
                 }
-                state.f = f_friction;
 
-                if (!(Math.abs(state.v) < 1e-5 && Math.abs(f_tend) <= state.mu_s * state.N && state.hasFriction) || state.isDragging) {
-                    const f_net = f_tend + f_friction;
-                    state.a = f_net / state.m;
-                }
+                state.f = f_friction * tendency;
+
                  if(state.isDragging) {
-                    state.v = 0;
-                    state.a = 0;
-                }
+                     state.v = 0;
+                     state.a = 0;
+                 }
             }
 
             function updateClouds() {
@@ -412,21 +441,20 @@
                 if (state.isPlaying && !state.isDragging) {
                     calculateForces();
                     state.v += state.a * state.dt;
-                    state.x -= state.v * state.dt; // Position UP is negative velocity
+                    state.x -= state.v * getMotionTendency(); 
                     state.t += state.dt;
 
                     const lowerBound = -planePhysicalLength / 2.0;
                     const upperBound = planePhysicalLength / 2.0;
                     
                     if (state.x <= lowerBound || state.x >= upperBound) {
-                        state.x = Math.max(lowerBound, Math.min(upperBound, state.x)); // Clamp position
+                        state.x = Math.max(lowerBound, Math.min(upperBound, state.x));
                         state.v = 0;
-                        updateGraphData(); // Final update with corrected values
+                        updateGraphData();
                         togglePlayPause();
                     } else {
-                        updateGraphData(); // Update graphs during normal play
+                        updateGraphData();
                     }
-                   
                 } else {
                     calculateForces();
                 }
@@ -434,9 +462,9 @@
                 updateClouds();
                 updateHUD();
                 draw(planePhysicalLength);
-                drawGraphs();
+                if (state.showGraphs) drawGraphs();
                 
-                if (state.isPlaying) {
+                if (state.isPlaying || state.isDragging || state.ruler.dragging) {
                     animationFrameId = requestAnimationFrame(gameLoop);
                 } else {
                     cancelAnimationFrame(animationFrameId);
@@ -452,7 +480,6 @@
                 ctx.save();
                 ctx.clearRect(0, 0, w, h);
 
-                // Sky and clouds
                 const skyGradient = ctx.createLinearGradient(0, 0, 0, groundLevel);
                 skyGradient.addColorStop(0, '#87CEEB');
                 skyGradient.addColorStop(1, '#B0E0E6');
@@ -470,7 +497,6 @@
                     });
                 }
                 
-                // Ground line
                 ctx.fillStyle = '#228B22';
                 ctx.fillRect(0, groundLevel, w, h - groundLevel + 1);
 
@@ -491,9 +517,8 @@
                 const originY = groundLevel;
                 const thetaRad = Math.atan2(state.planeHeightMeters, state.planeBaseMeters);
                 
-                // Draw Plane
                 if (planePixelHeight > 0) {
-                    ctx.fillStyle = '#696969'; // Dim Gray
+                    ctx.fillStyle = '#696969';
                     ctx.beginPath();
                     ctx.moveTo(originX, originY);
                     ctx.lineTo(originX + planePixelWidth, originY);
@@ -502,15 +527,13 @@
                     ctx.fill();
                 }
 
-                // Draw hypotenuse / horizontal line
-                 ctx.strokeStyle = '#36454F'; // Charcoal
+                 ctx.strokeStyle = '#36454F';
                  ctx.lineWidth = 4;
                  ctx.beginPath();
                  ctx.moveTo(originX, originY);
                  ctx.lineTo(originX + planePixelWidth, originY - planePixelHeight);
                  ctx.stroke();
 
-                // --- DIBUJO DEL BLOQUE ---
                 const planePixelLength = Math.hypot(planePixelWidth, planePixelHeight);
                 const pixelsPerMeter = planePixelLength / (planePhysicalLength || 1);
 
@@ -539,19 +562,15 @@
                 ctx.lineWidth = 1;
                 ctx.strokeRect(-blockWidth / 2, -blockHeight, blockWidth, blockHeight);
                 
-                if (state.showVectors) {
-                    drawVectors(ctx, thetaRad, blockHeight);
-                }
                 ctx.restore();
 
                  lastDragInfo = {
-                    blockScreenX: surfacePointX, blockScreenY: surfacePointY,
-                    blockWidth, blockHeight, thetaRad,
-                    planeOriginX: originX, planeOriginY: originY,
-                    planePixelLength, planePhysicalLength, pixelsPerMeter
+                     blockScreenX: surfacePointX, blockScreenY: surfacePointY,
+                     blockWidth, blockHeight, thetaRad,
+                     planeOriginX: originX, planeOriginY: originY,
+                     planePixelLength, planePhysicalLength, pixelsPerMeter
                  };
 
-                // Draw Angle Arc
                 if (planePixelHeight > 0) {
                     ctx.strokeStyle = "#111827";
                     ctx.lineWidth = 1.5;
@@ -563,63 +582,60 @@
                     ctx.fillText(`θ=${state.theta.toFixed(1)}°`, originX + 35, originY - 15);
                 }
                 
+                if (state.showRuler) {
+                    drawRuler(ctx, pixelsPerMeter);
+                }
+
                 ctx.restore();
             }
-
-            function drawVectors(ctx, thetaRad, blockH) {
-                const center = { x: 0, y: -blockH/2 };
-                const vectorScale = 3 + Math.log10(state.m + 1); // Vectors scale with mass
-                const P = state.m * state.g;
-                drawVector(ctx, center, (Math.PI / 2) + thetaRad, P * vectorScale, "#f59e0b", "P");
-                
-                if (state.theta > 0.1) {
-                    const P_par = P * Math.sin(thetaRad);
-                    const P_perp = P * Math.cos(thetaRad);
-                    drawVector(ctx, center, 90 * Math.PI/180, P_par * vectorScale, "#fde047", "P_\\parallel", true);
-                    drawVector(ctx, center, 180 * Math.PI/180, P_perp * vectorScale, "#fde047", "P_\\perp", true);
-                }
-                
-                if(state.N > 0) drawVector(ctx, center, 0, state.N * vectorScale, "#4ade80", "N");
-                
-                // Friction vector logic
-                const f_tend_internal = -state.f_par - (state.f_horz * Math.cos(thetaRad)) + (state.m * state.g * Math.sin(thetaRad));
-
-                if (state.hasFriction && Math.abs(state.f) > 1e-3) {
-                    let frictionDirectionAngle = 0;
-                     if (Math.abs(state.v) > 1e-5) { // Moving
-                        frictionDirectionAngle = state.v > 0 ? -90 * Math.PI/180 : 90 * Math.PI/180; // UP if v is positive (DOWN)
-                    } else { // Static
-                        frictionDirectionAngle = f_tend_internal > 0 ? -90 * Math.PI/180 : 90 * Math.PI/180; // UP if tendency is DOWN
-                    }
-                     drawVector(ctx, center, frictionDirectionAngle, Math.abs(state.f) * vectorScale, "#f87171", "f_r");
-                }
-
-
-                if(Math.abs(state.f_par) > 1e-3) drawVector(ctx, center, state.f_par > 0 ? -90 * Math.PI/180 : 90 * Math.PI/180, Math.abs(state.f_par) * vectorScale, "#60a5fa", "F_\\parallel");
-                if(Math.abs(state.f_horz) > 1e-3) drawVector(ctx, center, Math.PI + thetaRad, Math.abs(state.f_horz) * vectorScale, "#a78bfa", "F_h");
-            }
             
-            function drawVector(ctx, origin, angle, magnitude, color, label, dashed = false) {
-                 ctx.save();
-                 ctx.translate(origin.x, origin.y);
-                 ctx.rotate(angle);
-                 ctx.strokeStyle = color;
-                 ctx.fillStyle = color;
-                 ctx.lineWidth = 2;
-                 ctx.beginPath();
-                 if(dashed) ctx.setLineDash([5, 5]);
-                 ctx.moveTo(0, 0);
-                 ctx.lineTo(0, -magnitude);
-                 ctx.stroke();
-                 ctx.beginPath();
-                 ctx.moveTo(0, -magnitude);
-                 ctx.lineTo(-4, -magnitude + 8);
-                 ctx.lineTo(4, -magnitude + 8);
-                 ctx.closePath();
-                 ctx.fill();
-                 ctx.font = "12px Inter";
-                 ctx.fillText(label, 8, -magnitude/2);
-                 ctx.restore();
+            function drawRuler(ctx, pixelsPerMeter) {
+                const { start, end } = state.ruler;
+                const handleRadius = 8;
+            
+                ctx.save();
+            
+                // Draw line
+                ctx.strokeStyle = 'rgba(251, 191, 36, 0.8)';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.moveTo(start.x, start.y);
+                ctx.lineTo(end.x, end.y);
+                ctx.stroke();
+            
+                // Draw handles
+                ctx.fillStyle = 'rgba(251, 191, 36, 1)';
+                ctx.beginPath();
+                ctx.arc(start.x, start.y, handleRadius, 0, 2 * Math.PI);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(end.x, end.y, handleRadius, 0, 2 * Math.PI);
+                ctx.fill();
+            
+                // Calculate and draw distance
+                const dx = end.x - start.x;
+                const dy = end.y - start.y;
+                const pixelDist = Math.hypot(dx, dy);
+                const meterDist = pixelDist / (pixelsPerMeter || 1);
+            
+                const midX = start.x + dx / 2;
+                const midY = start.y + dy / 2;
+            
+                const text = `${meterDist.toFixed(2)} m`;
+                ctx.font = 'bold 14px Inter';
+                const textMetrics = ctx.measureText(text);
+                const textWidth = textMetrics.width;
+                const textHeight = 14; 
+            
+                ctx.fillStyle = 'rgba(15, 23, 42, 0.7)';
+                ctx.fillRect(midX - textWidth / 2 - 5, midY - textHeight / 2 - 12, textWidth + 10, textHeight + 10);
+            
+                ctx.fillStyle = '#fbb_f24';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(text, midX, midY - 5);
+            
+                ctx.restore();
             }
 
             // --- UI & Graphs ---
@@ -631,13 +647,8 @@
                 const Ek = 0.5 * state.m * state.v * state.v;
                 const Ep = state.m * state.g * verticalHeight;
                 
-                // Apply sign convention for display
-                const tendency = getMotionTendency();
-                const displayA = state.a * tendency;
-                const displayV = state.v * tendency;
-
-                dom.aHud.textContent = `${displayA.toFixed(2)} m/s²`;
-                dom.vHud.textContent = `${displayV.toFixed(2)} m/s`;
+                dom.aHud.textContent = `${state.a.toFixed(2)} m/s²`;
+                dom.vHud.textContent = `${state.v.toFixed(2)} m/s`;
                 dom.hHud.textContent = `${verticalHeight.toFixed(2)} m`;
                 dom.ekHud.textContent = `${Ek.toFixed(2)} J`;
                 dom.epHud.textContent = `${Ep.toFixed(2)} J`;
@@ -694,7 +705,7 @@
                 const xScale = (w - padding * 2) / (xMax - xMin || 1);
                 const yScale = (h - padding * 2) / (yMax - yMin || 1);
                 
-                ctx.graphMetrics = {xScale, yScale, xMin, yMin, padding, w, h}; // Store for tooltip
+                ctx.graphMetrics = {xScale, yScale, xMin, yMin, padding, w, h};
 
                 const toCanvasX = (t) => padding + (t - xMin) * xScale;
                 const toCanvasY = (y) => h - padding - (y - yMin) * yScale;
@@ -767,14 +778,12 @@
                 const toCanvasX = (t) => padding + (t - xMin) * xScale;
                 const toCanvasY = (y) => h - padding - (y - yMin) * yScale;
 
-                // Axes
                 ctx.strokeStyle = '#475569';
                 ctx.lineWidth = 1;
                 ctx.beginPath();
                 ctx.moveTo(padding, padding); ctx.lineTo(padding, h - padding); ctx.lineTo(w - padding, h - padding);
                 ctx.stroke();
 
-                // Lines
                 Object.keys(datasets).forEach((key) => {
                     const data = datasets[key];
                     if (data.length < 1) return;
@@ -788,7 +797,6 @@
                     ctx.stroke();
                 });
 
-                // Labels
                 ctx.fillStyle = '#94a3b8';
                 ctx.font = '10px Inter';
                 ctx.textAlign = 'right';
@@ -799,7 +807,6 @@
                 ctx.textBaseline = 'top';
                 ctx.fillText(xMax.toFixed(1) + 's', w - padding, h - padding + 5);
 
-                // Legend
                 ctx.font = '10px Inter';
                 ctx.textAlign = 'left';
                 let legendX = padding + 10;
@@ -811,6 +818,7 @@
             }
 
             function drawGraphs() {
+                if(!state.showGraphs) return;
                 drawSingleGraph(graphContexts.pos, state.graphs.pos.data, '#818cf8', state.graphs.pos.yBounds);
                 drawSingleGraph(graphContexts.vel, state.graphs.vel.data, '#60a5fa', state.graphs.vel.yBounds);
                 drawSingleGraph(graphContexts.acc, state.graphs.acc.data, '#f87171', state.graphs.acc.yBounds);
@@ -831,30 +839,37 @@
                 const distanceFromBottom = planePhysicalLength / 2 + state.x;
                 const verticalHeight = distanceFromBottom * Math.sin(thetaRad);
 
-                const tendency = getMotionTendency();
-                const displayV = state.v * tendency;
-                const displayA = state.a * tendency;
-
-                state.graphs.pos.data.push({t: state.t, y: verticalHeight});
-                if (state.graphs.pos.data.length > dataPointLimit) state.graphs.pos.data.shift();
-                
-                state.graphs.vel.data.push({t: state.t, y: displayV});
-                if (state.graphs.vel.data.length > dataPointLimit) state.graphs.vel.data.shift();
-                
-                state.graphs.acc.data.push({t: state.t, y: displayA});
-                if (state.graphs.acc.data.length > dataPointLimit) state.graphs.acc.data.shift();
-                
                 const K = 0.5 * state.m * state.v * state.v;
                 const P = state.m * state.g * verticalHeight;
                 const E = K + P;
-
-                state.graphs.energy.data.K.push({t: state.t, y: K});
-                state.graphs.energy.data.P.push({t: state.t, y: P});
-                state.graphs.energy.data.E.push({t: state.t, y: E});
                 
-                if (state.graphs.energy.data.K.length > dataPointLimit) state.graphs.energy.data.K.shift();
-                if (state.graphs.energy.data.P.length > dataPointLimit) state.graphs.energy.data.P.shift();
-                if (state.graphs.energy.data.E.length > dataPointLimit) state.graphs.energy.data.E.shift();
+                const dataPoint = {
+                    pos: {t: state.t, y: verticalHeight},
+                    vel: {t: state.t, y: state.v},
+                    acc: {t: state.t, y: state.a},
+                    energyK: {t: state.t, y: K},
+                    energyP: {t: state.t, y: P},
+                    energyE: {t: state.t, y: E}
+                };
+                
+                state.graphs.pos.data.push(dataPoint.pos);
+                if (state.graphs.pos.data.length > dataPointLimit) state.graphs.pos.data.shift();
+                
+                state.graphs.vel.data.push(dataPoint.vel);
+                if (state.graphs.vel.data.length > dataPointLimit) state.graphs.vel.data.shift();
+                
+                state.graphs.acc.data.push(dataPoint.acc);
+                if (state.graphs.acc.data.length > dataPointLimit) state.graphs.acc.data.shift();
+                
+                state.graphs.energy.data.K.push(dataPoint.energyK);
+                state.graphs.energy.data.P.push(dataPoint.energyP);
+                state.graphs.energy.data.E.push(dataPoint.energyE);
+                
+                if (state.graphs.energy.data.K.length > dataPointLimit) {
+                    state.graphs.energy.data.K.shift();
+                    state.graphs.energy.data.P.shift();
+                    state.graphs.energy.data.E.shift();
+                }
             }
             
             function updateControlsFromState() {
@@ -871,54 +886,47 @@
                 dom.frictionControls.classList.toggle('hidden', !state.hasFriction);
                 dom.muSSlider.value = state.mu_s; dom.muSLabel.textContent = state.mu_s.toFixed(2);
                 dom.muKSlider.value = state.mu_k; dom.muKLabel.textContent = state.mu_k.toFixed(2);
+                dom.showGraphsCheckbox.checked = state.showGraphs;
+                dom.showRulerCheckbox.checked = state.showRuler;
             }
 
              function calculateGraphBounds() {
                 const planeLength = Math.hypot(state.planeBaseMeters, state.planeHeightMeters);
                 const maxHeight = state.planeHeightMeters;
-                
-                calculateForces(); // Calculate a, N, etc. with current params
+                calculateForces();
                 const acc = state.a;
-
-                // Height (Position) Graph: from 0 to max height
                 state.graphs.pos.yBounds = { min: 0, max: maxHeight > 0 ? maxHeight : 1 };
-
-                // Velocity Graph: from theoretical min to max, including 0
                 const maxWork = Math.abs(state.f_par) * planeLength + Math.abs(state.f_horz * Math.cos(state.theta * Math.PI/180)) * planeLength;
                 const maxTheoreticalVel = Math.sqrt((2 * (state.m * state.g * maxHeight + maxWork)) / state.m);
-                state.graphs.vel.yBounds = { min: 0, max: maxTheoreticalVel };
-
-                // Acceleration Graph: range includes 0 and the current acceleration
-                state.graphs.acc.yBounds = { min: 0, max: Math.abs(acc) };
-
-                // Energy Graph: from 0 to max potential energy + work
+                state.graphs.vel.yBounds = { min: -maxTheoreticalVel, max: maxTheoreticalVel };
+                state.graphs.acc.yBounds = { min: Math.min(0, acc), max: Math.max(0, acc) };
                 const maxEnergy = state.m * state.g * maxHeight + maxWork;
                 state.graphs.energy.yBounds = { min: 0, max: maxEnergy > 0 ? maxEnergy : 10 };
             }
 
             function resetToDefaults() {
-                 if (state.isPlaying) {
-                     togglePlayPause();
-                 }
+                 if (state.isPlaying) togglePlayPause();
                  cancelAnimationFrame(animationFrameId);
-                 state = {...JSON.parse(JSON.stringify(defaultState)), ...{g: 9.81, x: 0, v: 0, a: 0, t: 0, N: 0, f: 0, isPlaying: false, isDragging: false, dt: 1/60, clouds: state.clouds, graphs: { pos: { show: true, data: [] }, vel: { show: true, data: [] }, acc: { show: true, data: [] }, energy: { show: true, data: { K:[],P:[],E:[] } } } } };
+                 const oldClouds = state.clouds;
+                 state = {...JSON.parse(JSON.stringify(defaultState)), ...{g: 9.81, x: 0, v: 0, a: 0, t: 0, N: 0, f: 0, isPlaying: false, isDragging: false, dt: 1/60, clouds: oldClouds, graphs: { pos: { show: true, data: [] }, vel: { show: true, data: [] }, acc: { show: true, data: [] }, energy: { show: true, data: { K:[],P:[],E:[] } } }, ruler: { start: { x: 100, y: 150 }, end: { x: 300, y: 150 }, dragging: null, dragOffset: { x: 0, y: 0 } } } };
+                 dom.graphPanel.classList.add('hidden');
                  updateControlsFromState();
                  setupAllGraphs();
                  onParamChange();
-                 gameLoop(); // Restart the loop
+                 gameLoop();
             }
+            
             let lastResizeWidth = 0;
             function resizeCanvas() {
                 const newWidth = dom.simulationWrapper.clientWidth;
                 if(Math.abs(newWidth - lastResizeWidth) < 5) return;
                 lastResizeWidth = newWidth;
                 dom.canvas.width = newWidth;
-                dom.canvas.height = newWidth / (window.innerWidth < 1024 ? 1.5 : 1.8); // Taller on mobile
-                setupAllGraphs();
+                dom.canvas.height = newWidth / (window.innerWidth < 1024 ? 1.5 : 1.8);
+                if(state.showGraphs) setupAllGraphs();
             }
 
             function initBackground() {
-                // Clouds
                  state.clouds = [];
                 const numClouds = 5;
                 for (let i = 0; i < numClouds; i++) {
@@ -931,67 +939,121 @@
                 }
             }
 
-             // --- DRAGGING LOGIC ---
-             function handleDragStart(e) {
-                if (state.isPlaying) return;
+            // --- Main Drag Logic ---
+            function handleCanvasMouseDown(e) {
                 e.preventDefault();
+                if (tryStartRulerDrag(e)) return;
+                if (tryStartBlockDrag(e)) return;
+            }
+
+            function tryStartBlockDrag(e) {
+                if (state.isPlaying) return false;
                 const coords = e.touches ? e.touches[0] : e;
-                
                 const rect = dom.canvas.getBoundingClientRect();
                 let mouseX = coords.clientX - rect.left;
                 let mouseY = coords.clientY - rect.top;
-
                 const info = lastDragInfo;
-                if (!info.blockScreenX) return;
-
+                if (!info.blockScreenX) return false;
                 const dx = mouseX - info.blockScreenX;
                 const dy = mouseY - info.blockScreenY;
-
                 const rotatedMouseX = dx * Math.cos(info.thetaRad) + dy * Math.sin(info.thetaRad);
                 const rotatedMouseY = -dx * Math.sin(info.thetaRad) + dy * Math.cos(info.thetaRad);
 
                 if (Math.abs(rotatedMouseX) < info.blockWidth / 2 && rotatedMouseY > -info.blockHeight && rotatedMouseY < 0) {
                     state.isDragging = true;
                     dom.canvas.style.cursor = 'grabbing';
-                    handleDrag(coords);
+                    handleBlockDrag(coords);
+                    window.addEventListener('mousemove', handleBlockDragMove);
+                    window.addEventListener('mouseup', handleBlockDragEnd);
+                    window.addEventListener('touchmove', handleBlockDragMove, { passive: false });
+                    window.addEventListener('touchend', handleBlockDragEnd);
+                    requestAnimationFrame(gameLoop);
+                    return true;
                 }
-             }
+                return false;
+            }
 
-             function handleDragMove(e) {
-                 if (!state.isDragging) return;
-                 e.preventDefault();
-                 const coords = e.touches ? e.touches[0] : e;
-                 handleDrag(coords);
-             }
+            function handleBlockDragMove(e) {
+                if (!state.isDragging) return;
+                e.preventDefault();
+                handleBlockDrag(e.touches ? e.touches[0] : e);
+            }
 
-             function handleDragEnd(e) {
-                 state.isDragging = false;
-                 dom.canvas.style.cursor = 'grab';
-             }
+            function handleBlockDragEnd() {
+                state.isDragging = false;
+                dom.canvas.style.cursor = 'grab';
+                window.removeEventListener('mousemove', handleBlockDragMove);
+                window.removeEventListener('mouseup', handleBlockDragEnd);
+                window.removeEventListener('touchmove', handleBlockDragMove);
+                window.removeEventListener('touchend', handleBlockDragEnd);
+            }
 
-             function handleDrag(coords) {
+            function handleBlockDrag(coords) {
                 const rect = dom.canvas.getBoundingClientRect();
                 let mouseX = coords.clientX - rect.left;
                 let mouseY = coords.clientY - rect.top;
-                
                 const info = lastDragInfo;
                 if(!info.planeOriginX) return;
                 const relMouseX = mouseX - info.planeOriginX;
                 const relMouseY = mouseY - info.planeOriginY;
-
-                let distAlongPlane = relMouseX * Math.cos(info.thetaRad) + relMouseY * -Math.sin(info.thetaRad);
-                
+                let distAlongPlane = relMouseX * Math.cos(info.thetaRad) - relMouseY * Math.sin(info.thetaRad);
                 let newX = (distAlongPlane - info.planePixelLength / 2) / (info.pixelsPerMeter || 1);
-
                 const lowerBound = -info.planePhysicalLength / 2.0;
                 const upperBound = info.planePhysicalLength / 2.0;
                 state.x = Math.max(lowerBound, Math.min(upperBound, newX));
-                onParamChange(); // Update graphs while dragging
-             }
+                onParamChange();
+            }
+            
+            // --- Ruler Drag Logic ---
+            function tryStartRulerDrag(e) {
+                if (!state.showRuler) return false;
+                const coords = e.touches ? e.touches[0] : e;
+                const rect = dom.canvas.getBoundingClientRect();
+                const mouseX = coords.clientX - rect.left;
+                const mouseY = coords.clientY - rect.top;
+                const handleRadius = 15; // Larger touch area
 
+                const distToStart = Math.hypot(mouseX - state.ruler.start.x, mouseY - state.ruler.start.y);
+                const distToEnd = Math.hypot(mouseX - state.ruler.end.x, mouseY - state.ruler.end.y);
+
+                let draggingPart = null;
+                if (distToStart < handleRadius) draggingPart = 'start';
+                else if (distToEnd < handleRadius) draggingPart = 'end';
+                
+                if (draggingPart) {
+                    state.ruler.dragging = draggingPart;
+                    window.addEventListener('mousemove', handleRulerDragMove);
+                    window.addEventListener('mouseup', handleRulerDragEnd);
+                    window.addEventListener('touchmove', handleRulerDragMove, { passive: false });
+                    window.addEventListener('touchend', handleRulerDragEnd);
+                    requestAnimationFrame(gameLoop);
+                    return true;
+                }
+                return false;
+            }
+
+            function handleRulerDragMove(e) {
+                if (!state.ruler.dragging) return;
+                e.preventDefault();
+                const coords = e.touches ? e.touches[0] : e;
+                const rect = dom.canvas.getBoundingClientRect();
+                const mouseX = coords.clientX - rect.left;
+                const mouseY = coords.clientY - rect.top;
+                state.ruler[state.ruler.dragging].x = mouseX;
+                state.ruler[state.ruler.dragging].y = mouseY;
+            }
+
+            function handleRulerDragEnd() {
+                state.ruler.dragging = null;
+                window.removeEventListener('mousemove', handleRulerDragMove);
+                window.removeEventListener('mouseup', handleRulerDragEnd);
+                window.removeEventListener('touchmove', handleRulerDragMove);
+                window.removeEventListener('touchend', handleRulerDragEnd);
+            }
 
             // --- Tooltip Logic ---
             function handleGraphMouseMove(e, key) {
+                if (!state.showGraphs) return;
                 const canvas = e.target;
                 const ctx = graphContexts[key];
                 if (!ctx || !ctx.graphMetrics) return;
@@ -1007,13 +1069,7 @@
 
                 const time = (mouseX - metrics.padding) / metrics.xScale + metrics.xMin;
                 
-                let datasets = {};
-                if (key === 'energy') {
-                    datasets = state.graphs[key].data;
-                } else {
-                    datasets[key] = state.graphs[key].data;
-                }
-
+                let datasets = key === 'energy' ? state.graphs[key].data : {[key]: state.graphs[key].data};
                 if (!Object.values(datasets).some(d => d.length > 0)) return;
 
                 const primaryData = datasets[Object.keys(datasets)[0]];
@@ -1053,7 +1109,7 @@
                 dom.playPauseBtn.textContent = text;
                 dom.playPauseBtnMobile.textContent = text;
                 if(state.isPlaying) {
-                    cancelAnimationFrame(animationFrameId); // Prevent multiple loops
+                    cancelAnimationFrame(animationFrameId);
                     gameLoop();
                 } else {
                      cancelAnimationFrame(animationFrameId);
@@ -1061,81 +1117,62 @@
             }
             
              function getMotionTendency() {
-                const thetaRad = state.theta * Math.PI / 180;
-                const tendencyForce = (state.m * state.g * Math.sin(thetaRad)) - state.f_par - (state.f_horz * Math.cos(thetaRad));
-                return tendencyForce >= 0 ? 1 : -1; // 1 for DOWN, -1 for UP
+                 const thetaRad = state.theta * Math.PI / 180;
+                 return (state.m * state.g * Math.sin(thetaRad)) - state.f_par - (state.f_horz * Math.cos(thetaRad)) >= 0 ? 1 : -1;
              }
 
              function updateFormulaPanel() {
-                const theta = state.theta;
-                const f_par = state.f_par;
-                const f_horz = state.f_horz;
-                const hasFriction = state.hasFriction;
-                
-                let motriz = [];
-                let resist = [];
+                 const { theta, f_par, f_horz, hasFriction } = state;
+                 let motriz = [], resist = [];
+                 const p_par_str = "m g \\sin(\\theta)", f_par_str = "F_\\parallel", f_horz_par_str = "F_h \\cos(\\theta)", fr_str = "f_r";
+                 const tendency = getMotionTendency();
 
-                const p_par_str = "m g \\sin(\\theta)";
-                const f_par_str = "F_\\parallel";
-                const f_horz_par_str = "F_h \\cos(\\theta)";
-                const fr_str = "f_r";
-                
-                const tendency = getMotionTendency(); // 1 for DOWN, -1 for UP
+                 if (tendency === 1) {
+                     if (theta > 0) motriz.push(p_par_str);
+                     if (f_par < 0) motriz.push(`|${f_par_str}|`);
+                     if (f_horz < 0) motriz.push(`|${f_horz_par_str}|`);
+                     if (f_par > 0) resist.push(f_par_str);
+                     if (f_horz > 0) resist.push(f_horz_par_str);
+                     if (hasFriction) resist.push(fr_str);
+                 } else {
+                     if (f_par > 0) motriz.push(f_par_str);
+                     if (f_horz > 0) motriz.push(f_horz_par_str);
+                     if (theta > 0) resist.push(p_par_str);
+                     if (f_par < 0) resist.push(`|${f_par_str}|`);
+                     if (f_horz < 0) resist.push(`|${f_horz_par_str}|`);
+                     if (hasFriction) resist.push(fr_str);
+                 }
+                 
+                 const motriz_sum_str = motriz.length > 0 ? motriz.join(' + ') : '0';
+                 const resist_sum_str = resist.length > 0 ? `(${resist.join(' + ')})` : '0';
 
-                if (tendency === 1) { // Tendency is DOWN
-                    if (theta > 0) motriz.push(p_par_str);
-                    if (f_par < 0) motriz.push(`|${f_par_str}|`);
-                    if (f_horz < 0) motriz.push(`|${f_horz_par_str}|`);
+                 dom.motrizForces.innerHTML = `$${motriz_sum_str}$`;
+                 dom.resistForces.innerHTML = `$${resist_sum_str}$`;
+                 dom.newtonLaw.innerHTML = `$${motriz_sum_str} - ${resist_sum_str} = m \\cdot a$`;
+                 
+                 calculateForces();
+                 dom.predictionText.textContent = (Math.abs(state.a) < 1e-6 && hasFriction) ? "REPOSO" : (tendency === 1 ? "BAJA" : "SUBE");
 
-                    if (f_par > 0) resist.push(f_par_str);
-                    if (f_horz > 0) resist.push(f_horz_par_str);
-                    if (hasFriction) resist.push(fr_str);
-                } else { // Tendency is UP
-                    if (f_par > 0) motriz.push(f_par_str);
-                    if (f_horz > 0) motriz.push(f_horz_par_str);
-                    
-                    if (theta > 0) resist.push(p_par_str);
-                    if (f_par < 0) resist.push(`|${f_par_str}|`);
-                    if (f_horz < 0) resist.push(`|${f_horz_par_str}|`);
-                    if (hasFriction) resist.push(fr_str);
-                }
-
-                const motriz_sum_str = motriz.length > 0 ? motriz.join(' + ') : '0';
-                const resist_sum_str = resist.length > 0 ? `(${resist.join(' + ')})` : '0';
-
-                dom.motrizForces.innerHTML = `$${motriz_sum_str}$`;
-                dom.resistForces.innerHTML = `$${resist_sum_str}$`;
-                dom.newtonLaw.innerHTML = `$${motriz_sum_str} - ${resist_sum_str} = m \\cdot a$`;
-
-                if(window.MathJax && MathJax.typeset) {
-                    setTimeout(() => MathJax.typeset([dom.motrizForces, dom.resistForces, dom.newtonLaw]), 0);
-                }
-            }
-
+                 if(window.MathJax && MathJax.typeset) {
+                     setTimeout(() => MathJax.typeset([dom.motrizForces, dom.resistForces, dom.newtonLaw]), 0);
+                 }
+             }
 
             function onParamChange() {
                 calculateGraphBounds();
-                // Reset data and add initial point
-                Object.keys(state.graphs).forEach(key => {
-                    if (key === 'energy') {
-                        state.graphs[key].data = {K: [], P: [], E: []};
-                    } else {
-                        state.graphs[key].data = [];
-                    }
-                });
+                Object.keys(state.graphs).forEach(key => state.graphs[key].data = key === 'energy' ? {K: [], P: [], E: []} : []);
                 updateGraphData();
                 updateFormulaPanel();
-                drawGraphs();
+                if(state.showGraphs) drawGraphs();
             }
 
             function init() {
                 resizeCanvas();
                 initBackground();
-                setupAllGraphs();
                 updateControlsFromState();
                 onParamChange();
+                gameLoop();
                 
-                // Guide Modal Events
                 const openGuide = () => {
                     dom.guideModal.classList.remove('hidden');
                     setTimeout(() => {
@@ -1149,71 +1186,44 @@
                      setTimeout(() => dom.guideModal.classList.add('hidden'), 300);
                 };
 
-                dom.guideBtn.addEventListener('click', openGuide);
-                dom.guideBtnMobile.addEventListener('click', openGuide);
-                dom.closeGuideBtn.addEventListener('click', closeGuide);
-                dom.guideModalBg.addEventListener('click', closeGuide);
+                [dom.guideBtn, dom.guideBtnMobile].forEach(btn => btn.addEventListener('click', openGuide));
+                [dom.closeGuideBtn, dom.guideModalBg].forEach(el => el.addEventListener('click', closeGuide));
 
+                [dom.playPauseBtn, dom.playPauseBtnMobile].forEach(btn => btn.addEventListener('click', togglePlayPause));
+                [dom.resetBtn, dom.resetBtnMobile].forEach(btn => btn.addEventListener('click', resetToDefaults));
 
-                dom.playPauseBtn.addEventListener('click', togglePlayPause);
-                dom.playPauseBtnMobile.addEventListener('click', togglePlayPause);
-                dom.resetBtn.addEventListener('click', resetToDefaults);
-                dom.resetBtnMobile.addEventListener('click', resetToDefaults);
-
-                // Dragging for mouse and touch
-                dom.canvas.addEventListener('mousedown', handleDragStart);
-                window.addEventListener('mousemove', handleDragMove);
-                window.addEventListener('mouseup', handleDragEnd);
-                dom.canvas.addEventListener('touchstart', handleDragStart, { passive: false });
-                window.addEventListener('touchmove', handleDragMove, { passive: false });
-                window.addEventListener('touchend', handleDragEnd);
-
+                dom.canvas.addEventListener('mousedown', handleCanvasMouseDown);
+                dom.canvas.addEventListener('touchstart', handleCanvasMouseDown, { passive: false });
                 dom.canvas.addEventListener('mouseover', () => { if(!state.isPlaying) dom.canvas.style.cursor = 'grab'; });
                 dom.canvas.addEventListener('mouseout', () => { dom.canvas.style.cursor = 'default'; });
 
-
-                const allSliders = [dom.massSlider, dom.angleSlider, dom.baseSlider, dom.heightSlider, dom.fParSlider, dom.fHorzSlider, dom.muSSlider, dom.muKSlider];
-                allSliders.forEach(slider => slider.addEventListener('input', (e) => {
-                     // Update state from all sliders
-                    state.m = parseFloat(dom.massSlider.value);
-                    state.f_par = parseFloat(dom.fParSlider.value);
-                    state.f_horz = parseFloat(dom.fHorzSlider.value);
-                    state.mu_s = parseFloat(dom.muSSlider.value);
-                    state.mu_k = parseFloat(dom.muKSlider.value);
-                    
-                    // Mutually exclusive forces
-                    if (e.target === dom.fParSlider && Math.abs(state.f_par) > 0) {
-                        state.f_horz = 0;
-                    }
-                    if (e.target === dom.fHorzSlider && Math.abs(state.f_horz) > 0) {
-                        state.f_par = 0;
-                    }
-
-                    // Angle/Dimension logic
-                    if (state.useDimensionMode) {
-                        state.planeBaseMeters = parseFloat(dom.baseSlider.value);
-                        state.planeHeightMeters = parseFloat(dom.heightSlider.value);
-                         if (state.planeBaseMeters > 0) {
-                            state.theta = Math.atan2(state.planeHeightMeters, state.planeBaseMeters) * 180 / Math.PI;
-                        } else {
-                            state.theta = 90;
-                        }
-                    } else {
-                        state.theta = parseFloat(dom.angleSlider.value);
-                        state.planeHeightMeters = state.planeBaseMeters * Math.tan(state.theta * Math.PI / 180);
-                    }
-
-                    updateControlsFromState();
-                    onParamChange();
-                }));
+                dom.massSlider.addEventListener('input', (e) => { state.m = parseFloat(e.target.value); updateControlsFromState(); onParamChange();});
+                dom.fParSlider.addEventListener('input', (e) => { state.f_par = parseFloat(e.target.value); if(Math.abs(state.f_par) > 0) state.f_horz = 0; updateControlsFromState(); onParamChange();});
+                dom.fHorzSlider.addEventListener('input', (e) => { state.f_horz = parseFloat(e.target.value); if(Math.abs(state.f_horz) > 0) state.f_par = 0; updateControlsFromState(); onParamChange();});
+                dom.muSSlider.addEventListener('input', (e) => { state.mu_s = parseFloat(e.target.value); updateControlsFromState(); onParamChange();});
+                dom.muKSlider.addEventListener('input', (e) => { state.mu_k = parseFloat(e.target.value); updateControlsFromState(); onParamChange();});
                 
+                dom.angleSlider.addEventListener('input', (e) => {
+                    state.theta = parseFloat(e.target.value);
+                    state.planeHeightMeters = state.planeBaseMeters * Math.tan(state.theta * Math.PI / 180);
+                    updateControlsFromState(); onParamChange();
+                });
+                dom.baseSlider.addEventListener('input', (e) => {
+                    state.planeBaseMeters = parseFloat(e.target.value);
+                    state.planeHeightMeters = state.planeBaseMeters * Math.tan(state.theta * Math.PI/180);
+                    updateControlsFromState(); onParamChange();
+                });
+                 dom.heightSlider.addEventListener('input', (e) => {
+                    state.planeHeightMeters = parseFloat(e.target.value);
+                    const tanTheta = Math.tan(state.theta * Math.PI / 180);
+                    if(Math.abs(tanTheta) > 1e-6) state.planeBaseMeters = state.planeHeightMeters / tanTheta;
+                    updateControlsFromState(); onParamChange();
+                });
+
                 dom.dimensionModeCheckbox.addEventListener('change', e => {
                     state.useDimensionMode = e.target.checked;
-                    if (state.useDimensionMode) {
-                        state.planeHeightMeters = state.planeBaseMeters * Math.tan(state.theta * Math.PI / 180);
-                    }
-                    updateControlsFromState();
-                    onParamChange();
+                    if (state.useDimensionMode) state.planeHeightMeters = state.planeBaseMeters * Math.tan(state.theta * Math.PI / 180);
+                    updateControlsFromState(); onParamChange();
                 });
                 
                 dom.frictionCheckbox.addEventListener('change', e => {
@@ -1221,9 +1231,25 @@
                     dom.frictionControls.classList.toggle('hidden', !state.hasFriction);
                     onParamChange();
                 });
+
+                dom.showGraphsCheckbox.addEventListener('change', e => {
+                    state.showGraphs = e.target.checked;
+                    dom.graphPanel.classList.toggle('hidden', !state.showGraphs);
+                    if (state.showGraphs) {
+                        resizeCanvas(); // This also calls setupAllGraphs
+                        drawGraphs();
+                    }
+                });
+
+                dom.showRulerCheckbox.addEventListener('change', e => {
+                    state.showRuler = e.target.checked;
+                    if (!state.isPlaying) requestAnimationFrame(gameLoop); // Redraw
+                });
                 
-                 window.addEventListener('resize', resizeCanvas);
-                 gameLoop();
+                window.addEventListener('resize', () => {
+                    resizeCanvas();
+                    if(!state.isPlaying) requestAnimationFrame(gameLoop);
+                });
             }
 
             init();

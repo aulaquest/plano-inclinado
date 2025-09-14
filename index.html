@@ -32,7 +32,7 @@
         .control-panel::-webkit-scrollbar-track { background: transparent; }
         .control-panel::-webkit-scrollbar-thumb { background: #4f46e5; border-radius: 3px; }
         
-        .checkbox-label { position: relative; cursor: pointer; user-select: none; padding-left: 30px; }
+        .checkbox-label { position: relative; cursor: pointer; user-select: none; padding-left: 30px; display: block; }
         .checkbox-label input { position: absolute; opacity: 0; cursor: pointer; height: 0; width: 0; }
         .checkmark { position: absolute; top: 2px; left: 0; height: 20px; width: 20px; background-color: #334155; border: 1px solid #475569; border-radius: 4px; transition: background-color: 0.2s; }
         .checkbox-label:hover input ~ .checkmark { background-color: #475569; }
@@ -130,34 +130,34 @@
                      <button id="reset-btn-mobile" class="px-4 py-1.5 bg-green-600 hover:bg-green-700 text-white font-semibold text-xs rounded-md transition">Reiniciar</button>
                      <button id="guide-btn-mobile" class="px-4 py-1.5 bg-sky-600 hover:bg-sky-700 text-white font-semibold text-xs rounded-md transition">Guía</button>
                  </div>
-             </div>
+            </div>
         </div>
         
         <div id="formula-panel" class="w-full max-w-5xl mx-auto mt-4 p-4 rounded-lg border border-slate-700 text-sm hidden">
              <div class="text-center mb-4">
                  <h4 class="font-bold text-amber-400">Análisis de Fuerzas: <span id="prediction-text"></span></h4>
-             </div>
+            </div>
             
-             <div id="y-axis-analysis" class="mb-4 border-b border-slate-700 pb-4">
+            <div id="y-axis-analysis" class="mb-4 border-b border-slate-700 pb-4">
                  <h4 class="font-bold text-violet-400 mb-2 text-center">Análisis Eje Y (Perpendicular al Plano)</h4>
                  <div id="y-forces" class="text-gray-300 space-y-2 text-center"></div>
-             </div>
+            </div>
 
-             <div id="x-axis-analysis" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                 <div>
-                     <h4 class="font-bold text-sky-400 mb-2">Fuerzas Motrices (a favor del mov.)</h4>
-                     <div id="motriz-forces" class="text-gray-300 space-y-2"></div>
-                 </div>
-                 <div>
-                     <h4 class="font-bold text-red-400 mb-2">Fuerzas Resistentes (en contra del mov.)</h4>
-                     <div id="resist-forces" class="text-gray-300 space-y-2"></div>
-                 </div>
-             </div>
+            <div id="x-axis-analysis" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <h4 class="font-bold text-sky-400 mb-2">Fuerzas Motrices (a favor del mov.)</h4>
+                    <div id="motriz-forces" class="text-gray-300 space-y-2"></div>
+                </div>
+                <div>
+                    <h4 class="font-bold text-red-400 mb-2">Fuerzas Resistentes (en contra del mov.)</h4>
+                    <div id="resist-forces" class="text-gray-300 space-y-2"></div>
+                </div>
+            </div>
 
-             <div class="text-center border-t border-slate-700 pt-4 mt-4">
+            <div class="text-center border-t border-slate-700 pt-4 mt-4">
                  <h4 class="font-bold text-green-400 mb-2">Segunda Ley de Newton (Eje X)</h4>
                  <div id="newton-law" class="text-gray-300"></div>
-             </div>
+            </div>
         </div>
 
         <div id="graph-panel" class="w-full max-w-5xl mx-auto mt-4 grid grid-cols-2 gap-4 hidden">
@@ -187,18 +187,18 @@
                      </div>
                      <div id="angle-controls" class="space-y-3">
                          <div><label for="angle-slider" class="text-xs text-gray-400">Ángulo ($\theta$): <span id="angle-label" class="font-bold text-white">30</span>°</label><input type="range" id="angle-slider" min="0" max="90" step="1" value="30"></div>
-                     </div>
-                     <div id="dimension-controls" class="hidden space-y-3">
-                         <div><label for="base-slider" class="text-xs text-gray-400">Base ($b$): <span id="base-label" class="font-bold text-white">4.33</span> m</label><input type="range" id="base-slider" min="1" max="500" step="0.1" value="4.33"></div>
-                         <div><label for="height-slider" class="text-xs text-gray-400">Altura ($h$): <span id="height-label" class="font-bold text-white">2.50</span> m</label><input type="range" id="height-slider" min="0" max="500" step="0.1" value="2.50"></div>
-                     </div>
+                    </div>
+                    <div id="dimension-controls" class="hidden space-y-3">
+                        <div><label for="base-slider" class="text-xs text-gray-400">Base ($b$): <span id="base-label" class="font-bold text-white">4.33</span> m</label><input type="range" id="base-slider" min="1" max="500" step="0.1" value="4.33"></div>
+                        <div><label for="height-slider" class="text-xs text-gray-400">Altura ($h$): <span id="height-label" class="font-bold text-white">2.50</span> m</label><input type="range" id="height-slider" min="0" max="500" step="0.1" value="2.50"></div>
+                    </div>
                 </div>
             </div>
 
             <div class="control-card space-y-3">
-                <h3 class="text-sm font-bold text-sky-400">Fuerzas Externas</h3>
-                <div><label for="f-par-slider" class="text-xs text-gray-400">Fuerza Paralela ($F_\parallel$): <span id="f-par-label" class="font-bold text-white">0</span> N</label><input type="range" id="f-par-slider" min="-50" max="50" step="1" value="0"><p class="text-xs text-gray-500 -mt-1">Positiva hacia arriba del plano.</p></div>
-                <div><label for="f-horz-slider" class="text-xs text-gray-400">Fuerza Horizontal ($F_h$): <span id="f-horz-label" class="font-bold text-white">0</span> N</label><input type="range" id="f-horz-slider" min="-50" max="50" step="1" value="0"><p class="text-xs text-gray-500 -mt-1">Positiva hacia la derecha.</p></div>
+                 <h3 class="text-sm font-bold text-sky-400">Fuerzas Externas</h3>
+                 <div><label for="f-par-slider" class="text-xs text-gray-400">Fuerza Paralela ($F_\parallel$): <span id="f-par-label" class="font-bold text-white">0</span> N</label><input type="range" id="f-par-slider" min="-50" max="50" step="1" value="0"><p class="text-xs text-gray-500 -mt-1">Positiva hacia arriba del plano.</p></div>
+                 <div><label for="f-horz-slider" class="text-xs text-gray-400">Fuerza Horizontal ($F_h$): <span id="f-horz-label" class="font-bold text-white">0</span> N</label><input type="range" id="f-horz-slider" min="-50" max="50" step="1" value="0"><p class="text-xs text-gray-500 -mt-1">Positiva hacia la derecha.</p></div>
             </div>
             
             <div class="control-card space-y-3">
@@ -214,35 +214,27 @@
 
             <div class="control-card space-y-3">
                 <h3 class="text-sm font-bold text-sky-400">Visualización</h3>
-                <div class="space-y-3 pt-2 border-t border-slate-700">
-                    <div>
-                        <label class="checkbox-label text-sm">
-                            <input type="checkbox" id="show-vectors-checkbox">
-                            <span class="checkmark"></span>
-                            Ver Vectores
-                        </label>
-                    </div>
-                    <div>
-                        <label class="checkbox-label text-sm">
-                            <input type="checkbox" id="show-graphs-checkbox">
-                            <span class="checkmark"></span>
-                            Ver Gráficas
-                        </label>
-                    </div>
-                    <div>
-                        <label class="checkbox-label text-sm">
-                            <input type="checkbox" id="show-ruler-checkbox">
-                            <span class="checkmark"></span>
-                            Ver Regla
-                        </label>
-                    </div>
-                    <div>
-                        <label class="checkbox-label text-sm">
-                            <input type="checkbox" id="show-forces-checkbox">
-                            <span class="checkmark"></span>
-                            Ver Análisis de Fuerzas
-                        </label>
-                    </div>
+                <div class="space-y-2 pt-2 border-t border-slate-700">
+                    <label class="checkbox-label text-sm">
+                        <input type="checkbox" id="show-vectors-checkbox">
+                        <span class="checkmark"></span>
+                        Ver Vectores
+                    </label>
+                    <label class="checkbox-label text-sm">
+                        <input type="checkbox" id="show-graphs-checkbox">
+                        <span class="checkmark"></span>
+                        Ver Gráficas
+                    </label>
+                    <label class="checkbox-label text-sm">
+                        <input type="checkbox" id="show-ruler-checkbox">
+                        <span class="checkmark"></span>
+                        Ver Regla
+                    </label>
+                    <label class="checkbox-label text-sm">
+                        <input type="checkbox" id="show-analysis-checkbox">
+                        <span class="checkmark"></span>
+                        Ver Análisis de Fuerzas
+                    </label>
                 </div>
             </div>
             
@@ -339,6 +331,7 @@
                 muSLabel: document.getElementById('mu-s-label'),
                 muKSlider: document.getElementById('mu-k-slider'),
                 muKLabel: document.getElementById('mu-k-label'),
+                formulaPanel: document.getElementById('formula-panel'),
                 graphPanel: document.getElementById('graph-panel'),
                 tooltip: document.getElementById('graph-tooltip'),
                 yForces: document.getElementById('y-forces'),
@@ -353,8 +346,7 @@
                 showVectorsCheckbox: document.getElementById('show-vectors-checkbox'),
                 showGraphsCheckbox: document.getElementById('show-graphs-checkbox'),
                 showRulerCheckbox: document.getElementById('show-ruler-checkbox'),
-                showForcesCheckbox: document.getElementById('show-forces-checkbox'),
-                formulaPanel: document.getElementById('formula-panel'),
+                showAnalysisCheckbox: document.getElementById('show-analysis-checkbox'),
             };
 
             const ctx = dom.canvas.getContext('2d');
@@ -375,7 +367,7 @@
                 showGraphs: false,
                 showRuler: false,
                 showVectors: false,
-                showForces: false,
+                showAnalysis: false,
             };
 
             let state = {
@@ -401,11 +393,10 @@
                 }
             };
             
-            function calculateForces() {
+            // isForDisplayOnly: si es true, no pone a=0 al arrastrar.
+            function calculateForces(isForDisplayOnly = false) {
                 const thetaRad = state.theta * Math.PI / 180;
                 const P_perp = state.m * state.g * Math.cos(thetaRad);
-                // CORRECCIÓN: La componente perpendicular de Fh siempre suma a N, independientemente de su signo.
-                // Usamos Math.abs para asegurar que la contribución sea siempre aditiva.
                 const f_h_perp = Math.abs(state.f_horz) * Math.sin(thetaRad);
                 state.N = P_perp + f_h_perp;
                 if (state.N < 0) state.N = 0;
@@ -415,7 +406,7 @@
                 const F_net_no_friction = P_par + F_applied_par;
 
                 let f_friction = 0;
-                state.isStatic = false;
+                let isStatic = false;
 
                 if (state.hasFriction && state.N > 0) {
                     const f_s_max = state.mu_s * state.N;
@@ -425,7 +416,7 @@
                         if (Math.abs(F_net_no_friction) <= f_s_max) {
                             f_friction = -F_net_no_friction;
                             state.a = 0;
-                            state.isStatic = true;
+                            isStatic = true;
                         } else {
                             f_friction = -Math.sign(F_net_no_friction) * f_k;
                         }
@@ -433,18 +424,32 @@
                         if (state.v !== 0) {
                            f_friction = -Math.sign(state.v) * f_k;
                         } else {
-                           f_friction = -Math.sign(F_net_no_friction) * f_k;
+                            // Si v=0 pero se arrastra o la fuerza neta supera la estática
+                            if (Math.abs(F_net_no_friction) > f_s_max) {
+                                f_friction = -Math.sign(F_net_no_friction) * f_k;
+                            } else if (!isForDisplayOnly) { 
+                                // Caso de arrastre para simulación: se queda estático
+                                f_friction = -F_net_no_friction;
+                                isStatic = true;
+                            } else {
+                                // Caso de display: muestra la fuerza estática necesaria
+                                f_friction = -F_net_no_friction;
+                                isStatic = true;
+                            }
                         }
                     }
                 }
-
+                state.isStatic = isStatic;
+                state.f = f_friction;
+                
                 if (!state.isStatic) {
                    state.a = (F_net_no_friction + f_friction) / state.m;
+                } else {
+                   state.a = 0;
                 }
 
-                state.f = f_friction;
-
-                if (state.isDragging) {
+                // Si es para la simulación (no para el panel), al arrastrar la aceleración es 0.
+                if (state.isDragging && !isForDisplayOnly) {
                     state.v = 0;
                     state.a = 0;
                 }
@@ -537,18 +542,16 @@
                 let planePixelWidth, planePixelHeight;
                 
                 if (state.theta < 0.1) {
-                    // Caso para plano horizontal
                     planePixelWidth = maxPlaneWidth;
                     planePixelHeight = 0;
                 } else {
-                    // Caso para plano inclinado, calcular dimensiones para que quepa
-                    const aspectRatio = state.planeHeightMeters / state.planeBaseMeters;
+                    const aspectRatio = state.planeBaseMeters === 0 ? Infinity : state.planeHeightMeters / state.planeBaseMeters;
                     planePixelWidth = maxPlaneWidth;
                     planePixelHeight = planePixelWidth * aspectRatio;
 
-                    if (planePixelHeight > maxPlaneHeight) {
+                    if (planePixelHeight > maxPlaneHeight || state.planeBaseMeters === 0) {
                         planePixelHeight = maxPlaneHeight;
-                        planePixelWidth = planePixelHeight / aspectRatio;
+                        if (aspectRatio > 1e-6 && aspectRatio !== Infinity) planePixelWidth = planePixelHeight / aspectRatio;
                     }
                 }
                 
@@ -556,8 +559,7 @@
                 const originY = groundLevel;
                 const thetaRad = Math.atan2(state.planeHeightMeters, state.planeBaseMeters);
                 
-                // Dibuja el plano o la superficie horizontal
-                if (state.theta > 0.1) { // Plano inclinado
+                if (state.theta > 0.1) {
                     if (planePixelHeight > 0) {
                         ctx.fillStyle = '#696969';
                         ctx.beginPath();
@@ -567,14 +569,13 @@
                         ctx.closePath();
                         ctx.fill();
                     }
-
                     ctx.strokeStyle = '#36454F';
                     ctx.lineWidth = 4;
                     ctx.beginPath();
                     ctx.moveTo(originX, originY);
                     ctx.lineTo(originX + planePixelWidth, originY - planePixelHeight);
                     ctx.stroke();
-                } else { // Plano horizontal (ángulo cero)
+                } else { 
                     ctx.strokeStyle = '#36454F';
                     ctx.lineWidth = 4;
                     ctx.beginPath();
@@ -624,7 +625,6 @@
                      planePixelLength, planePhysicalLength, pixelsPerMeter
                  };
 
-                // Solo dibuja el arco del ángulo si es significativo
                 if (state.theta > 0.1 && planePixelHeight > 0) {
                     ctx.strokeStyle = "#111827";
                     ctx.lineWidth = 1.5;
@@ -647,118 +647,96 @@
                 const center = { x: 0, y: -blockH / 2 };
                 const vectorScale = 4 + Math.log10(state.m + 1);
 
-                // Dibuja los ejes del sistema de referencia del bloque (+Y perpendicular, +X paralelo)
-                const axisLength = 80;
+                // --- Sistema de Coordenadas del Plano Inclinado ---
+                // El contexto ya está rotado. El eje X positivo apunta HACIA ABAJO del plano.
+                // El eje Y positivo apunta HACIA DENTRO del plano.
                 ctx.save();
-                ctx.globalAlpha = 0.5;
-                // Eje Y positivo (perpendicular al plano, hacia afuera)
-                drawVector(ctx, center, 0, axisLength, '#cbd5e1', 'y');
-                // Eje X positivo (paralelo al plano, hacia arriba)
-                drawVector(ctx, center, 90 * Math.PI / 180, axisLength, '#cbd5e1', 'x'); 
-                ctx.restore();
+                ctx.translate(center.x, center.y);
 
-                const P = state.m * state.g;
-                const P_x_val = P * Math.sin(thetaRad);
-                const P_y_val = P * Math.cos(thetaRad);
+                const N_vec = state.N;
+                const F_par_vec = state.f_par;
+                const Px_vec = state.m * state.g * Math.sin(thetaRad);
+                const Py_vec = state.m * state.g * Math.cos(thetaRad);
+                const fr_vec = state.f;
 
-                // Dibuja el Vector Peso (P) - Vertical hacia abajo
-                // CORRECCIÓN: Para que sea vertical en la pantalla, su ángulo debe compensar la rotación del bloque.
-                // El ángulo para "abajo" en la pantalla es PI (180 grados).
-                drawVector(ctx, center, Math.PI + thetaRad, P * vectorScale, "#f59e0b", "P");
-
-                // Dibuja componentes del Peso si el plano está inclinado
-                if (state.theta > 0.1) {
-                    // Px: Componente paralela, apunta hacia ABAJO del plano (-X)
-                    drawVector(ctx, center, -90 * Math.PI / 180, P_x_val * vectorScale, "#fde047", "Px", true); 
-                    // Py: Componente perpendicular, apunta HACIA el plano (-Y)
-                    drawVector(ctx, center, 180 * Math.PI / 180, P_y_val * vectorScale, "#fde047", "Py", true);
-                    
-                    // Dibuja el paralelogramo para mostrar la suma de componentes
-                     const getTipCoords = (angle, magnitude) => ({
-                        x: magnitude * Math.sin(angle),
-                        y: -magnitude * Math.cos(angle)
-                    });
-
-                    // Usar el ángulo corregido para P en el paralelogramo
-                    const tip_P = getTipCoords(Math.PI + thetaRad, P * vectorScale);
-                    const tip_Px = getTipCoords(-90 * Math.PI / 180, P_x_val * vectorScale);
-                    const tip_Py = getTipCoords(180 * Math.PI / 180, P_y_val * vectorScale);
-                    
-                    ctx.save();
-                    ctx.translate(center.x, center.y);
-                    ctx.strokeStyle = "#f59e0b";
-                    ctx.lineWidth = 1.5;
-                    ctx.setLineDash([3, 4]);
-                    ctx.globalAlpha = 0.8;
-                    ctx.beginPath();
-                    ctx.moveTo(tip_Px.x, tip_Px.y);
-                    ctx.lineTo(tip_P.x, tip_P.y);
-                    ctx.moveTo(tip_Py.x, tip_Py.y);
-                    ctx.lineTo(tip_P.x, tip_P.y);
-                    ctx.stroke();
-                    ctx.restore();
-                }
-
-                // Dibuja Fuerza Normal (N) - Perpendicular al plano, hacia afuera (+Y)
-                if (state.N > 0) drawVector(ctx, center, 0, state.N * vectorScale, "#4ade80", "N");
-
-                // Dibuja Fuerza de Rozamiento (fr)
-                if (state.hasFriction && Math.abs(state.f) > 1e-3) {
-                    // CORRECCIÓN: La dirección del rozamiento se opone al movimiento o a la tendencia.
-                    // La variable state.f ya contiene el signo correcto para la fuerza de rozamiento:
-                    // state.f > 0 significa que la fuerza apunta hacia arriba del plano (+X).
-                    // state.f < 0 significa que la fuerza apunta hacia abajo del plano (-X).
-                    // Esta lógica es correcta y se opone al movimiento/tendencia.
-                    let frictionDirectionAngle = state.f > 0 ? 90 * Math.PI / 180 : -90 * Math.PI / 180;
-                    drawVector(ctx, center, frictionDirectionAngle, Math.abs(state.f) * vectorScale, "#f87171", "fr");
-                }
-
-                // Dibuja Fuerza Paralela (F||)
-                if (Math.abs(state.f_par) > 1e-3) {
-                    // f_par > 0 es up-plane (+X, derecha), f_par < 0 is down-plane (-X, izquierda)
-                    let fParDirectionAngle = state.f_par > 0 ? 90 * Math.PI / 180 : -90 * Math.PI / 180;
-                    drawVector(ctx, center, fParDirectionAngle, Math.abs(state.f_par) * vectorScale, "#60a5fa", "F∥");
+                // N: Perpendicular hacia afuera (-Y local). Ángulo = -90 grados.
+                if (N_vec > 0) drawVector(ctx, -90, N_vec * vectorScale, "#4ade80", "N");
+                
+                // F||: Positiva es hacia arriba (-X local), Negativa es hacia abajo (+X local)
+                if (Math.abs(F_par_vec) > 1e-3) {
+                    // CORRECCIÓN SOLICITADA: Invertir la dirección de F||
+                    const angle = F_par_vec > 0 ? 0 : 180;
+                    drawVector(ctx, angle, Math.abs(F_par_vec) * vectorScale, "#60a5fa", "F∥");
                 }
                 
-                // Dibuja Fuerza Horizontal (Fh)
-                if (Math.abs(state.f_horz) > 1e-3) {
-                    // CORRECCIÓN FINAL: Invertir la lógica. Positivo -> Derecha. Negativo -> Izquierda.
-                    const angle_Fh_in_block = state.f_horz > 0 ? (thetaRad + Math.PI / 2) : (thetaRad - Math.PI / 2);
-                    drawVector(ctx, center, angle_Fh_in_block, Math.abs(state.f_horz) * vectorScale, "#a78bfa", "Fh");
+                // Componentes del peso (solo si hay inclinación)
+                if (state.theta > 0.1) {
+                    // Px: Hacia abajo del plano (+X local). Ángulo = 0 grados.
+                    // CORRECCIÓN SOLICITADA: Invertir la dirección de Px
+                    drawVector(ctx, 180, Px_vec * vectorScale, "#fde047", "Px", true);
+                    // Py: Hacia adentro del plano (+Y local). Ángulo = 90 grados.
+                    drawVector(ctx, 90, Py_vec * vectorScale, "#fde047", "Py", true);
                 }
+
+                // Fuerza de rozamiento
+                if (state.hasFriction && Math.abs(fr_vec) > 1e-3) {
+                     // fr_vec es positivo si apunta hacia arriba (-X), negativo si apunta hacia abajo (+X)
+                     const angle = fr_vec > 0 ? 180 : 0;
+                     drawVector(ctx, angle, Math.abs(fr_vec) * vectorScale, "#f87171", "fr");
+                }
+                
+                ctx.restore();
+                
+                // --- Sistema de Coordenadas de la Pantalla (sin rotar) ---
+                ctx.save();
+                ctx.rotate(thetaRad); // Contra-rota para volver al sistema de la pantalla
+                ctx.translate(center.x, center.y);
+                
+                const P_vec = state.m * state.g;
+                const Fh_vec = state.f_horz;
+
+                // P: Vertical hacia abajo. Ángulo = 90 grados.
+                drawVector(ctx, 90, P_vec * vectorScale, "#f59e0b", "P");
+
+                // Fh: Horizontal. Positiva a la derecha, negativa a la izquierda.
+                if (Math.abs(Fh_vec) > 1e-3) {
+                    const angle = Fh_vec > 0 ? 0 : 180;
+                    drawVector(ctx, angle, Math.abs(Fh_vec) * vectorScale, "#a78bfa", "Fh");
+                }
+                
+                ctx.restore();
             }
             
-            function drawVector(ctx, origin, angle, magnitude, color, label, dashed = false) {
+            function drawVector(ctx, angleDeg, magnitude, color, label, dashed = false) {
+                 const angleRad = angleDeg * Math.PI / 180;
                  ctx.save();
-                 ctx.translate(origin.x, origin.y);
-                 ctx.rotate(angle);
+                 ctx.rotate(angleRad);
                  ctx.strokeStyle = color;
                  ctx.fillStyle = color;
                  ctx.lineWidth = 3; 
                  ctx.beginPath();
                  if(dashed) ctx.setLineDash([4, 4]);
                  ctx.moveTo(0, 0);
-                 ctx.lineTo(0, -magnitude);
+                 ctx.lineTo(magnitude, 0);
                  ctx.stroke();
                  ctx.beginPath();
-                 ctx.moveTo(0, -magnitude);
-                 ctx.lineTo(-5, -magnitude + 10); 
-                 ctx.lineTo(5, -magnitude + 10);
+                 ctx.moveTo(magnitude, 0);
+                 ctx.lineTo(magnitude - 10, -5); 
+                 ctx.lineTo(magnitude - 10, 5);
                  ctx.closePath();
                  ctx.fill();
-                 ctx.font = "bold 13px Inter";
-                 ctx.textAlign = "left";
-                 ctx.textBaseline = "middle";
-                 
-                 // CORRECCIÓN: Añadir borde al texto para mejor legibilidad
-                 ctx.strokeStyle = 'rgba(0,0,0,0.8)';
-                 ctx.lineWidth = 3;
-                 ctx.lineJoin = 'round';
-                 ctx.strokeText(label, 10, -magnitude / 2);
+                 ctx.restore();
 
-                 ctx.shadowColor = "black";
-                 ctx.shadowBlur = 4;
-                 ctx.fillText(label, 10, -magnitude / 2);
+                 ctx.save();
+                 ctx.rotate(angleRad);
+                 ctx.font = "bold 13px Inter";
+                 ctx.textAlign = "center";
+                 ctx.textBaseline = "middle";
+                 ctx.fillStyle = color;
+                 ctx.strokeStyle = 'black';
+                 ctx.lineWidth = 2;
+                 ctx.strokeText(label, magnitude / 2, -15);
+                 ctx.fillText(label, magnitude / 2, -15);
                  ctx.restore();
             }
 
@@ -1073,22 +1051,22 @@
                 dom.showGraphsCheckbox.checked = state.showGraphs;
                 dom.showRulerCheckbox.checked = state.showRuler;
                 dom.showVectorsCheckbox.checked = state.showVectors;
-                dom.showForcesCheckbox.checked = state.showForces;
+                dom.showAnalysisCheckbox.checked = state.showAnalysis;
             }
 
              function calculateGraphBounds() {
-                 const planeLength = Math.hypot(state.planeBaseMeters, state.planeHeightMeters);
-                 const maxHeight = state.planeHeightMeters;
-                 calculateForces();
-                 const acc = state.a;
-                 state.graphs.pos.yBounds = { min: 0, max: maxHeight > 0 ? maxHeight : 1 };
-                 const maxWork = Math.abs(state.f_par) * planeLength + Math.abs(state.f_horz * Math.cos(state.theta * Math.PI/180)) * planeLength;
-                 const maxTheoreticalVel = Math.sqrt((2 * (state.m * state.g * maxHeight + maxWork)) / state.m);
-                 state.graphs.vel.yBounds = { min: -maxTheoreticalVel, max: maxTheoreticalVel };
-                 state.graphs.acc.yBounds = { min: Math.min(0, acc, -9.8), max: Math.max(0, acc, 9.8) };
-                 const maxEnergy = state.m * state.g * maxHeight + maxWork;
-                 state.graphs.energy.yBounds = { min: 0, max: maxEnergy > 0 ? maxEnergy : 10 };
-             }
+                const planeLength = Math.hypot(state.planeBaseMeters, state.planeHeightMeters);
+                const maxHeight = state.planeHeightMeters;
+                calculateForces(true);
+                const acc = state.a;
+                state.graphs.pos.yBounds = { min: 0, max: maxHeight > 0 ? maxHeight : 1 };
+                const maxWork = Math.abs(state.f_par) * planeLength + Math.abs(state.f_horz * Math.cos(state.theta * Math.PI/180)) * planeLength;
+                const maxTheoreticalVel = Math.sqrt((2 * (state.m * state.g * maxHeight + maxWork)) / state.m);
+                state.graphs.vel.yBounds = { min: -maxTheoreticalVel, max: maxTheoreticalVel };
+                state.graphs.acc.yBounds = { min: Math.min(0, acc, -9.8), max: Math.max(0, acc, 9.8) };
+                const maxEnergy = state.m * state.g * maxHeight + maxWork;
+                state.graphs.energy.yBounds = { min: 0, max: maxEnergy > 0 ? maxEnergy : 10 };
+            }
 
             function resetToDefaults() {
                  if (state.isPlaying) togglePlayPause();
@@ -1302,10 +1280,10 @@
             }
 
             function updateFormulaPanel() {
-                calculateForces(); 
+                // Se pasa 'true' para obtener la aceleración teórica, incluso al arrastrar.
+                calculateForces(true); 
                 const thetaRad = state.theta * Math.PI / 180;
                 
-                // CORRECCIÓN: Usar Math.abs para la fórmula de Fh_perp para que coincida con el cálculo de N
                 const F_h_perp_val = Math.abs(state.f_horz) * Math.sin(thetaRad);
                 let y_forces_html = `<p>$\\sum F_y = N - P_y`;
                 if (Math.abs(state.f_horz) > 1e-3) y_forces_html += ` - F_{h,y}`;
@@ -1324,6 +1302,7 @@
                 let motriz_sum = 0;
                 let resist_sum = 0;
 
+                // Determina la tendencia al movimiento basado en las fuerzas sin rozamiento
                 const tendency_is_up = F_net_no_friction > 0;
 
                 if (tendency_is_up) {
@@ -1362,8 +1341,8 @@
                 let prediction = '';
                 if (state.isStatic) {
                     prediction = "REPOSO (FRICCIÓN ESTÁTICA)";
-                } else if (Math.abs(state.a) < 1e-3 && Math.abs(state.v) > 1e-3) {
-                    prediction = "VELOCIDAD CONSTANTE";
+                } else if (Math.abs(state.a) < 1e-3) {
+                    prediction = "EQUILIBRIO DINÁMICO (v=cte)";
                 } else if (state.a > 1e-3) {
                     prediction = "ACELERA HACIA ARRIBA";
                 } else if (state.a < -1e-3) {
@@ -1381,16 +1360,19 @@
             function updateControlStates() {
                 const isAngleZero = state.theta < 0.1;
 
-                // Desactivar F_horz si el ángulo es cero
                 dom.fHorzSlider.disabled = isAngleZero;
                 if (dom.fHorzSlider.disabled && state.f_horz !== 0) {
                     state.f_horz = 0;
                     dom.fHorzSlider.value = 0;
                     dom.fHorzLabel.textContent = '0';
                 }
-
-                // Desactivar Altura (h) si el ángulo es cero Y estamos en modo medidas
+                
                 dom.heightSlider.disabled = isAngleZero && state.useDimensionMode;
+                 if (dom.heightSlider.disabled && state.planeHeightMeters !== 0) {
+                    state.planeHeightMeters = 0;
+                    dom.heightSlider.value = 0;
+                    dom.heightLabel.textContent = '0.00';
+                }
             }
 
             function onParamChange() {
@@ -1463,7 +1445,11 @@
 
                 dom.dimensionModeCheckbox.addEventListener('change', e => {
                     state.useDimensionMode = e.target.checked;
-                    if (state.useDimensionMode) state.planeHeightMeters = state.planeBaseMeters * Math.tan(state.theta * Math.PI / 180);
+                    if (state.useDimensionMode) {
+                        state.planeHeightMeters = state.planeBaseMeters * Math.tan(state.theta * Math.PI / 180);
+                    } else {
+                         state.theta = Math.atan2(state.planeHeightMeters, state.planeBaseMeters) * 180 / Math.PI;
+                    }
                     updateControlsFromState(); onParamChange();
                 });
                 
@@ -1494,10 +1480,11 @@
                     state.showVectors = e.target.checked;
                     onParamChange();
                 });
-
-                dom.showForcesCheckbox.addEventListener('change', e => {
-                    state.showForces = e.target.checked;
-                    dom.formulaPanel.classList.toggle('hidden', !state.showForces);
+                
+                dom.showAnalysisCheckbox.addEventListener('change', e => {
+                    state.showAnalysis = e.target.checked;
+                    dom.formulaPanel.classList.toggle('hidden', !state.showAnalysis);
+                    onParamChange();
                 });
                 
                 window.addEventListener('resize', () => {
@@ -1515,12 +1502,4 @@
     </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
 

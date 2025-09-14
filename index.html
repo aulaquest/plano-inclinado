@@ -1374,6 +1374,8 @@
                     prediction = "ACELERA HACIA ARRIBA";
                 } else if (state.a < -1e-3) {
                     prediction = "ACELERA HACIA ABAJO";
+                    } else if (state.theta < 0.1) {  // plano prácticamente horizontal
+    prediction = "MOVIMIENTO SOBRE PLANO HORIZONTAL";
                 } else {
                     prediction = "REPOSO";
                 }

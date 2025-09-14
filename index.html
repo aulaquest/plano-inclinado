@@ -625,30 +625,47 @@
             }
             
             function drawVectors(ctx, thetaRad, blockH) {
-                const center = { x: 0, y: -blockH/2 };
-                const vectorScale = 3 + Math.log10(state.m + 1); // Vectors scale with mass
+                const center = { x: 0, y: -blockH / 2 };
+                const vectorScale = 3 + Math.log10(state.m + 1);
                 const P = state.m * state.g;
+
+                // Weight (P) - always straight down in world coordinates
                 drawVector(ctx, center, (Math.PI / 2) + thetaRad, P * vectorScale, "#f59e0b", "P");
-                
+
                 if (state.theta > 0.1) {
-                    const P_par = P * Math.sin(thetaRad);
-                    const P_perp = P * Math.cos(thetaRad);
-                    drawVector(ctx, center, 90 * Math.PI/180, P_par * vectorScale, "#fde047", "P_\\parallel", true);
-                    drawVector(ctx, center, 180 * Math.PI/180, P_perp * vectorScale, "#fde047", "P_\\perp", true);
+                    const P_x = P * Math.sin(thetaRad);
+                    const P_y = P * Math.cos(thetaRad);
+                    // Px: along the plane, downwards. In block coords, angle is 90 deg.
+                    drawVector(ctx, center, 90 * Math.PI / 180, P_x * vectorScale, "#fde047", "Px", true);
+                    // Py: perpendicular to plane, into the plane. In block coords, angle is 180 deg.
+                    drawVector(ctx, center, 180 * Math.PI / 180, P_y * vectorScale, "#fde047", "Py", true);
                 }
-                
-                if(state.N > 0) drawVector(ctx, center, 0, state.N * vectorScale, "#4ade80", "N");
-                
+
+                // Normal (N) - perpendicular to plane, outwards. In block coords, angle is 0 deg.
+                if (state.N > 0) drawVector(ctx, center, 0, state.N * vectorScale, "#4ade80", "N");
+
+                // Friction (fr) - along the plane, opposes motion/tendency.
                 if (state.hasFriction && Math.abs(state.f) > 1e-3) {
-                     // state.f is signed: positive UP, negative DOWN
-                     // Angle for UP is -90 deg, angle for DOWN is 90 deg
-                     let frictionDirectionAngle = state.f > 0 ? -90 * Math.PI/180 : 90 * Math.PI/180;
-                     drawVector(ctx, center, frictionDirectionAngle, Math.abs(state.f) * vectorScale, "#f87171", "f_r");
+                    // state.f is signed: positive UP, negative DOWN.
+                    // In block coords, UP is angle -90 deg, DOWN is 90 deg.
+                    let frictionDirectionAngle = state.f > 0 ? -90 * Math.PI / 180 : 90 * Math.PI / 180;
+                    drawVector(ctx, center, frictionDirectionAngle, Math.abs(state.f) * vectorScale, "#f87171", "fr");
                 }
 
+                // Applied Parallel Force (Fpar) - along the plane.
+                if (Math.abs(state.f_par) > 1e-3) {
+                    // state.f_par is signed: positive UP, negative DOWN.
+                    let fParDirectionAngle = state.f_par > 0 ? -90 * Math.PI / 180 : 90 * Math.PI / 180;
+                    drawVector(ctx, center, fParDirectionAngle, Math.abs(state.f_par) * vectorScale, "#60a5fa", "Fpar");
+                }
 
-                if(Math.abs(state.f_par) > 1e-3) drawVector(ctx, center, state.f_par > 0 ? -90 * Math.PI/180 : 90 * Math.PI/180, Math.abs(state.f_par) * vectorScale, "#60a5fa", "F_\\parallel");
-                if(Math.abs(state.f_horz) > 1e-3) drawVector(ctx, center, Math.PI + thetaRad, Math.abs(state.f_horz) * vectorScale, "#a78bfa", "F_h");
+                // Applied Horizontal Force (Fh) - horizontal in world coordinates.
+                if (Math.abs(state.f_horz) > 1e-3) {
+                    // In block's rotated system, a world-horizontal vector has an angle of thetaRad.
+                    // If force is to the left, add PI.
+                    const angle_Fh = state.f_horz > 0 ? thetaRad : Math.PI + thetaRad;
+                    drawVector(ctx, center, angle_Fh, Math.abs(state.f_horz) * vectorScale, "#a78bfa", "Fh");
+                }
             }
             
             function drawVector(ctx, origin, angle, magnitude, color, label, dashed = false) {
@@ -669,8 +686,10 @@
                  ctx.lineTo(4, -magnitude + 8);
                  ctx.closePath();
                  ctx.fill();
-                 ctx.font = "12px Inter";
-                 ctx.fillText(label, 8, -magnitude/2);
+                 ctx.font = "bold 12px Inter";
+                 ctx.textAlign = "left";
+                 ctx.textBaseline = "middle";
+                 ctx.fillText(label, 8, -magnitude / 2);
                  ctx.restore();
             }
 
@@ -1222,8 +1241,8 @@
                 // --- Y-Axis Analysis ---
                 const P_perp_val = state.m * state.g * Math.cos(thetaRad);
                 const F_h_perp_val = state.f_horz * Math.sin(thetaRad);
-                let y_forces_html = `<p>$\\sum F_y = N - P_{\\perp} - F_{h,\\perp} = 0$</p>`;
-                y_forces_html += `<p>$N = m g \\cos(\\theta) + F_h \\sin(\\theta) = ${P_perp_val.toFixed(2)} + ${F_h_perp_val.toFixed(2)} = ${state.N.toFixed(2)}\\ N$</p>`;
+                let y_forces_html = `<p>$\\sum F_y = N - P_y - F_{h,y} = 0$</p>`;
+                y_forces_html += `<p>$N = m g \\cos(\\theta) + F_h \\sin(\\theta) = ${state.N.toFixed(2)}\\ N$</p>`;
                 dom.yForces.innerHTML = y_forces_html;
 
                 // --- X-Axis Analysis ---
@@ -1244,12 +1263,12 @@
                         motriz_sum += F_applied_par_val;
                     }
                     if (P_par_abs > 0) {
-                        resist_html.push(`<p>$P_{\\parallel} = m g \\sin(\\theta) = ${P_par_abs.toFixed(2)}\\ N$</p>`);
+                        resist_html.push(`<p>$P_x = m g \\sin(\\theta) = ${P_par_abs.toFixed(2)}\\ N$</p>`);
                         resist_sum += P_par_abs;
                     }
                 } else { // Tendency is DOWN or ZERO
                     if (P_par_abs > 0) {
-                        motriz_html.push(`<p>$P_{\\parallel} = m g \\sin(\\theta) = ${P_par_abs.toFixed(2)}\\ N$</p>`);
+                        motriz_html.push(`<p>$P_x = m g \\sin(\\theta) = ${P_par_abs.toFixed(2)}\\ N$</p>`);
                         motriz_sum += P_par_abs;
                     }
                      if (Math.abs(F_applied_par_val) > 1e-3) {

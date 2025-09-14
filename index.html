@@ -95,15 +95,15 @@
              background-color: rgba(18, 28, 48, 0.6);
         }
          #guide-modal-bg {
-            transition: opacity 0.3s ease-in-out;
-        }
-        #guide-modal-content {
-            transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
-            max-height: 80vh;
-        }
-        #guide-modal-content::-webkit-scrollbar { width: 6px; }
-        #guide-modal-content::-webkit-scrollbar-track { background: #1e293b; }
-        #guide-modal-content::-webkit-scrollbar-thumb { background: #4f46e5; border-radius: 3px; }
+             transition: opacity 0.3s ease-in-out;
+         }
+         #guide-modal-content {
+             transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
+             max-height: 80vh;
+         }
+         #guide-modal-content::-webkit-scrollbar { width: 6px; }
+         #guide-modal-content::-webkit-scrollbar-track { background: #1e293b; }
+         #guide-modal-content::-webkit-scrollbar-thumb { background: #4f46e5; border-radius: 3px; }
 
     </style>
 </head>
@@ -130,34 +130,34 @@
                      <button id="reset-btn-mobile" class="px-4 py-1.5 bg-green-600 hover:bg-green-700 text-white font-semibold text-xs rounded-md transition">Reiniciar</button>
                      <button id="guide-btn-mobile" class="px-4 py-1.5 bg-sky-600 hover:bg-sky-700 text-white font-semibold text-xs rounded-md transition">Guía</button>
                  </div>
-            </div>
+             </div>
         </div>
         
         <div id="formula-panel" class="w-full max-w-5xl mx-auto mt-4 p-4 rounded-lg border border-slate-700 text-sm">
              <div class="text-center mb-4">
                  <h4 class="font-bold text-amber-400">Análisis de Fuerzas: <span id="prediction-text"></span></h4>
-            </div>
+             </div>
             
-            <div id="y-axis-analysis" class="mb-4 border-b border-slate-700 pb-4">
+             <div id="y-axis-analysis" class="mb-4 border-b border-slate-700 pb-4">
                  <h4 class="font-bold text-violet-400 mb-2 text-center">Análisis Eje Y (Perpendicular al Plano)</h4>
                  <div id="y-forces" class="text-gray-300 space-y-2 text-center"></div>
-            </div>
+             </div>
 
-            <div id="x-axis-analysis" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                    <h4 class="font-bold text-sky-400 mb-2">Fuerzas Motrices (a favor del mov.)</h4>
-                    <div id="motriz-forces" class="text-gray-300 space-y-2"></div>
-                </div>
-                <div>
-                    <h4 class="font-bold text-red-400 mb-2">Fuerzas Resistentes (en contra del mov.)</h4>
-                    <div id="resist-forces" class="text-gray-300 space-y-2"></div>
-                </div>
-            </div>
+             <div id="x-axis-analysis" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                 <div>
+                     <h4 class="font-bold text-sky-400 mb-2">Fuerzas Motrices (a favor del mov.)</h4>
+                     <div id="motriz-forces" class="text-gray-300 space-y-2"></div>
+                 </div>
+                 <div>
+                     <h4 class="font-bold text-red-400 mb-2">Fuerzas Resistentes (en contra del mov.)</h4>
+                     <div id="resist-forces" class="text-gray-300 space-y-2"></div>
+                 </div>
+             </div>
 
-            <div class="text-center border-t border-slate-700 pt-4 mt-4">
+             <div class="text-center border-t border-slate-700 pt-4 mt-4">
                  <h4 class="font-bold text-green-400 mb-2">Segunda Ley de Newton (Eje X)</h4>
                  <div id="newton-law" class="text-gray-300"></div>
-            </div>
+             </div>
         </div>
 
         <div id="graph-panel" class="w-full max-w-5xl mx-auto mt-4 grid grid-cols-2 gap-4 hidden">
@@ -187,18 +187,18 @@
                      </div>
                      <div id="angle-controls" class="space-y-3">
                          <div><label for="angle-slider" class="text-xs text-gray-400">Ángulo ($\theta$): <span id="angle-label" class="font-bold text-white">30</span>°</label><input type="range" id="angle-slider" min="0" max="90" step="1" value="30"></div>
-                    </div>
-                    <div id="dimension-controls" class="hidden space-y-3">
-                        <div><label for="base-slider" class="text-xs text-gray-400">Base ($b$): <span id="base-label" class="font-bold text-white">4.33</span> m</label><input type="range" id="base-slider" min="1" max="500" step="0.1" value="4.33"></div>
-                        <div><label for="height-slider" class="text-xs text-gray-400">Altura ($h$): <span id="height-label" class="font-bold text-white">2.50</span> m</label><input type="range" id="height-slider" min="0" max="500" step="0.1" value="2.50"></div>
-                    </div>
+                     </div>
+                     <div id="dimension-controls" class="hidden space-y-3">
+                         <div><label for="base-slider" class="text-xs text-gray-400">Base ($b$): <span id="base-label" class="font-bold text-white">4.33</span> m</label><input type="range" id="base-slider" min="1" max="500" step="0.1" value="4.33"></div>
+                         <div><label for="height-slider" class="text-xs text-gray-400">Altura ($h$): <span id="height-label" class="font-bold text-white">2.50</span> m</label><input type="range" id="height-slider" min="0" max="500" step="0.1" value="2.50"></div>
+                     </div>
                 </div>
             </div>
 
             <div class="control-card space-y-3">
-                 <h3 class="text-sm font-bold text-sky-400">Fuerzas Externas</h3>
-                 <div><label for="f-par-slider" class="text-xs text-gray-400">Fuerza Paralela ($F_\parallel$): <span id="f-par-label" class="font-bold text-white">0</span> N</label><input type="range" id="f-par-slider" min="-50" max="50" step="1" value="0"><p class="text-xs text-gray-500 -mt-1">Positiva hacia arriba del plano.</p></div>
-                 <div><label for="f-horz-slider" class="text-xs text-gray-400">Fuerza Horizontal ($F_h$): <span id="f-horz-label" class="font-bold text-white">0</span> N</label><input type="range" id="f-horz-slider" min="-50" max="50" step="1" value="0"><p class="text-xs text-gray-500 -mt-1">Positiva hacia la derecha.</p></div>
+                <h3 class="text-sm font-bold text-sky-400">Fuerzas Externas</h3>
+                <div><label for="f-par-slider" class="text-xs text-gray-400">Fuerza Paralela ($F_\parallel$): <span id="f-par-label" class="font-bold text-white">0</span> N</label><input type="range" id="f-par-slider" min="-50" max="50" step="1" value="0"><p class="text-xs text-gray-500 -mt-1">Positiva hacia arriba del plano.</p></div>
+                <div><label for="f-horz-slider" class="text-xs text-gray-400">Fuerza Horizontal ($F_h$): <span id="f-horz-label" class="font-bold text-white">0</span> N</label><input type="range" id="f-horz-slider" min="-50" max="50" step="1" value="0"><p class="text-xs text-gray-500 -mt-1">Positiva hacia la derecha.</p></div>
             </div>
             
             <div class="control-card space-y-3">
@@ -257,10 +257,10 @@
                     <ul class="list-disc list-inside space-y-1 pl-2">
                         <li><b class="text-indigo-400">Masa (m):</b> Ajusta la masa del bloque. Verás que su tamaño y los vectores de fuerza (como el peso) cambian visualmente.</li>
                         <li><b class="text-indigo-400">Ángulo ($\theta$) vs. Medidas:</b> Puedes definir el plano de dos formas:
-                            <ul class="list-disc list-inside space-y-1 pl-4 mt-1">
-                                <li><b>Por Ángulo:</b> Controlas directamente la inclinación.</li>
-                                <li><b>Por Medidas:</b> Defines la base y altura. Al cambiar una, la otra se escala para mantener el ángulo constante. Esto te permite crear planos de cualquier tamaño.</li>
-                            </ul>
+                             <ul class="list-disc list-inside space-y-1 pl-4 mt-1">
+                                 <li><b>Por Ángulo:</b> Controlas directamente la inclinación.</li>
+                                 <li><b>Por Medidas:</b> Defines la base y altura. Al cambiar una, la otra se escala para mantener el ángulo constante. Esto te permite crear planos de cualquier tamaño.</li>
+                             </ul>
                         </li>
                     </ul>
                 </div>
@@ -388,7 +388,9 @@
             function calculateForces() {
                 const thetaRad = state.theta * Math.PI / 180;
                 const P_perp = state.m * state.g * Math.cos(thetaRad);
-                const f_h_perp = state.f_horz * Math.sin(thetaRad);
+                // CORRECCIÓN: La componente perpendicular de Fh siempre suma a N, independientemente de su signo.
+                // Usamos Math.abs para asegurar que la contribución sea siempre aditiva.
+                const f_h_perp = Math.abs(state.f_horz) * Math.sin(thetaRad);
                 state.N = P_perp + f_h_perp;
                 if (state.N < 0) state.N = 0;
 
@@ -610,64 +612,83 @@
                 const center = { x: 0, y: -blockH / 2 };
                 const vectorScale = 4 + Math.log10(state.m + 1);
 
-                // Draw coordinate axes first
+                // Dibuja los ejes del sistema de referencia del bloque (+Y perpendicular, +X paralelo)
                 const axisLength = 80;
                 ctx.save();
                 ctx.globalAlpha = 0.5;
-                drawVector(ctx, center, -90 * Math.PI / 180, axisLength, '#cbd5e1', 'x+'); // X+ up the plane
-                drawVector(ctx, center, 0, axisLength, '#cbd5e1', 'y+'); // Y+ perp to the plane
+                // Eje Y positivo (perpendicular al plano, hacia afuera)
+                drawVector(ctx, center, 0, axisLength, '#cbd5e1', 'y');
+                // Eje X positivo (paralelo al plano, hacia arriba)
+                drawVector(ctx, center, 90 * Math.PI / 180, axisLength, '#cbd5e1', 'x'); 
                 ctx.restore();
 
                 const P = state.m * state.g;
-                drawVector(ctx, center, (Math.PI / 2) + thetaRad, P * vectorScale, "#f59e0b", "P");
+                const P_x_val = P * Math.sin(thetaRad);
+                const P_y_val = P * Math.cos(thetaRad);
 
+                // Dibuja el Vector Peso (P) - Vertical hacia abajo
+                // CORRECCIÓN: Para que sea vertical en la pantalla, su ángulo debe compensar la rotación del bloque.
+                // El ángulo para "abajo" en la pantalla es PI (180 grados).
+                drawVector(ctx, center, Math.PI + thetaRad, P * vectorScale, "#f59e0b", "P");
+
+                // Dibuja componentes del Peso si el plano está inclinado
                 if (state.theta > 0.1) {
-                    const P_x_val = P * Math.sin(thetaRad);
-                    const P_y_val = P * Math.cos(thetaRad);
-                    drawVector(ctx, center, 90 * Math.PI / 180, P_x_val * vectorScale, "#fde047", "Px", true);
+                    // Px: Componente paralela, apunta hacia ABAJO del plano (-X)
+                    drawVector(ctx, center, -90 * Math.PI / 180, P_x_val * vectorScale, "#fde047", "Px", true); 
+                    // Py: Componente perpendicular, apunta HACIA el plano (-Y)
                     drawVector(ctx, center, 180 * Math.PI / 180, P_y_val * vectorScale, "#fde047", "Py", true);
                     
-                    ctx.save();
-                    const P_vec_mag = P * vectorScale;
-                    const P_vec_angle = (Math.PI / 2) + thetaRad;
-                    const tip_P_x_world = P_vec_mag * Math.cos(P_vec_angle);
-                    const tip_P_y_world = P_vec_mag * Math.sin(P_vec_angle);
+                    // Dibuja el paralelogramo para mostrar la suma de componentes
+                     const getTipCoords = (angle, magnitude) => ({
+                        x: magnitude * Math.sin(angle),
+                        y: -magnitude * Math.cos(angle)
+                    });
 
-                    const tip_Py_mag = P_y_val * vectorScale;
-                    const tip_Py_angle = 180 * Math.PI / 180;
-                    const tip_Py_x_block = tip_Py_mag * Math.cos(tip_Py_angle);
-                    const tip_Py_y_block = -tip_Py_mag * Math.sin(tip_Py_angle);
+                    // Usar el ángulo corregido para P en el paralelogramo
+                    const tip_P = getTipCoords(Math.PI + thetaRad, P * vectorScale);
+                    const tip_Px = getTipCoords(-90 * Math.PI / 180, P_x_val * vectorScale);
+                    const tip_Py = getTipCoords(180 * Math.PI / 180, P_y_val * vectorScale);
                     
+                    ctx.save();
+                    ctx.translate(center.x, center.y);
                     ctx.strokeStyle = "#f59e0b";
                     ctx.lineWidth = 1.5;
                     ctx.setLineDash([3, 4]);
                     ctx.globalAlpha = 0.8;
                     ctx.beginPath();
-                    ctx.moveTo(tip_Py_x_block, tip_Py_y_block);
-                    ctx.lineTo(tip_P_x_world, tip_P_y_world);
-                    const tip_Px_mag = P_x_val * vectorScale;
-                    const tip_Px_angle = 90 * Math.PI / 180;
-                    const tip_Px_x_block = -tip_Px_mag * Math.sin(tip_Px_angle);
-                    const tip_Px_y_block = -tip_Px_mag * Math.cos(tip_Px_angle);
-                    ctx.lineTo(tip_Px_x_block, tip_Px_y_block);
+                    ctx.moveTo(tip_Px.x, tip_Px.y);
+                    ctx.lineTo(tip_P.x, tip_P.y);
+                    ctx.moveTo(tip_Py.x, tip_Py.y);
+                    ctx.lineTo(tip_P.x, tip_P.y);
                     ctx.stroke();
                     ctx.restore();
                 }
 
+                // Dibuja Fuerza Normal (N) - Perpendicular al plano, hacia afuera (+Y)
                 if (state.N > 0) drawVector(ctx, center, 0, state.N * vectorScale, "#4ade80", "N");
 
+                // Dibuja Fuerza de Rozamiento (fr)
                 if (state.hasFriction && Math.abs(state.f) > 1e-3) {
-                    let frictionDirectionAngle = state.f > 0 ? -90 * Math.PI / 180 : 90 * Math.PI / 180;
+                    // CORRECCIÓN: La dirección del rozamiento se opone al movimiento o a la tendencia.
+                    // La variable state.f ya contiene el signo correcto para la fuerza de rozamiento:
+                    // state.f > 0 significa que la fuerza apunta hacia arriba del plano (+X).
+                    // state.f < 0 significa que la fuerza apunta hacia abajo del plano (-X).
+                    // Esta lógica es correcta y se opone al movimiento/tendencia.
+                    let frictionDirectionAngle = state.f > 0 ? 90 * Math.PI / 180 : -90 * Math.PI / 180;
                     drawVector(ctx, center, frictionDirectionAngle, Math.abs(state.f) * vectorScale, "#f87171", "fr");
                 }
 
+                // Dibuja Fuerza Paralela (F||)
                 if (Math.abs(state.f_par) > 1e-3) {
-                    let fParDirectionAngle = state.f_par > 0 ? -90 * Math.PI / 180 : 90 * Math.PI / 180;
+                    // f_par > 0 es up-plane (+X, derecha), f_par < 0 is down-plane (-X, izquierda)
+                    let fParDirectionAngle = state.f_par > 0 ? 90 * Math.PI / 180 : -90 * Math.PI / 180;
                     drawVector(ctx, center, fParDirectionAngle, Math.abs(state.f_par) * vectorScale, "#60a5fa", "F∥");
                 }
-
+                
+                // Dibuja Fuerza Horizontal (Fh)
                 if (Math.abs(state.f_horz) > 1e-3) {
-                    const angle_Fh_in_block = state.f_horz > 0 ? thetaRad : Math.PI + thetaRad;
+                    // CORRECCIÓN FINAL: Invertir la lógica. Positivo -> Derecha. Negativo -> Izquierda.
+                    const angle_Fh_in_block = state.f_horz > 0 ? (thetaRad + Math.PI / 2) : (thetaRad - Math.PI / 2);
                     drawVector(ctx, center, angle_Fh_in_block, Math.abs(state.f_horz) * vectorScale, "#a78bfa", "Fh");
                 }
             }
@@ -693,6 +714,13 @@
                  ctx.font = "bold 13px Inter";
                  ctx.textAlign = "left";
                  ctx.textBaseline = "middle";
+                 
+                 // CORRECCIÓN: Añadir borde al texto para mejor legibilidad
+                 ctx.strokeStyle = 'rgba(0,0,0,0.8)';
+                 ctx.lineWidth = 3;
+                 ctx.lineJoin = 'round';
+                 ctx.strokeText(label, 10, -magnitude / 2);
+
                  ctx.shadowColor = "black";
                  ctx.shadowBlur = 4;
                  ctx.fillText(label, 10, -magnitude / 2);
@@ -702,9 +730,9 @@
             function drawRuler(ctx, pixelsPerMeter) {
                 const { start, end } = state.ruler;
                 const handleRadius = 8;
-            
+                
                 ctx.save();
-            
+                
                 ctx.strokeStyle = 'rgba(251, 191, 36, 0.8)';
                 ctx.lineWidth = 3;
                 ctx.beginPath();
@@ -738,7 +766,7 @@
                         ctx.stroke();
                     }
                 }
-            
+                
                 ctx.fillStyle = 'rgba(251, 191, 36, 1)';
                 ctx.beginPath();
                 ctx.arc(start.x, start.y, handleRadius, 0, 2 * Math.PI);
@@ -746,26 +774,26 @@
                 ctx.beginPath();
                 ctx.arc(end.x, end.y, handleRadius, 0, 2 * Math.PI);
                 ctx.fill();
-            
+                
                 const meterDist = pixelDist / (pixelsPerMeter || 1);
-            
+                
                 const midX = start.x + dx / 2;
                 const midY = start.y + dy / 2;
-            
+                
                 const text = `${meterDist.toFixed(2)} m`;
                 ctx.font = 'bold 14px Inter';
                 const textMetrics = ctx.measureText(text);
                 const textWidth = textMetrics.width;
                 const textHeight = 14; 
-            
+                
                 ctx.fillStyle = 'rgba(15, 23, 42, 0.7)';
                 ctx.fillRect(midX - textWidth / 2 - 5, midY - textHeight / 2 - 12, textWidth + 10, textHeight + 10);
-            
+                
                 ctx.fillStyle = '#facc15';
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
                 ctx.fillText(text, midX, midY - 5);
-            
+                
                 ctx.restore();
             }
 
@@ -795,7 +823,7 @@
                 canvas.width = canvas.clientWidth;
                 canvas.height = canvas.clientHeight;
                  canvas.addEventListener('mousemove', (e) => handleGraphMouseMove(e, id));
-                canvas.addEventListener('mouseout', () => dom.tooltip.style.display = 'none');
+                 canvas.addEventListener('mouseout', () => dom.tooltip.style.display = 'none');
                 return canvas.getContext('2d');
             }
 
@@ -1013,18 +1041,18 @@
             }
 
              function calculateGraphBounds() {
-                const planeLength = Math.hypot(state.planeBaseMeters, state.planeHeightMeters);
-                const maxHeight = state.planeHeightMeters;
-                calculateForces();
-                const acc = state.a;
-                state.graphs.pos.yBounds = { min: 0, max: maxHeight > 0 ? maxHeight : 1 };
-                const maxWork = Math.abs(state.f_par) * planeLength + Math.abs(state.f_horz * Math.cos(state.theta * Math.PI/180)) * planeLength;
-                const maxTheoreticalVel = Math.sqrt((2 * (state.m * state.g * maxHeight + maxWork)) / state.m);
-                state.graphs.vel.yBounds = { min: -maxTheoreticalVel, max: maxTheoreticalVel };
-                state.graphs.acc.yBounds = { min: Math.min(0, acc, -9.8), max: Math.max(0, acc, 9.8) };
-                const maxEnergy = state.m * state.g * maxHeight + maxWork;
-                state.graphs.energy.yBounds = { min: 0, max: maxEnergy > 0 ? maxEnergy : 10 };
-            }
+                 const planeLength = Math.hypot(state.planeBaseMeters, state.planeHeightMeters);
+                 const maxHeight = state.planeHeightMeters;
+                 calculateForces();
+                 const acc = state.a;
+                 state.graphs.pos.yBounds = { min: 0, max: maxHeight > 0 ? maxHeight : 1 };
+                 const maxWork = Math.abs(state.f_par) * planeLength + Math.abs(state.f_horz * Math.cos(state.theta * Math.PI/180)) * planeLength;
+                 const maxTheoreticalVel = Math.sqrt((2 * (state.m * state.g * maxHeight + maxWork)) / state.m);
+                 state.graphs.vel.yBounds = { min: -maxTheoreticalVel, max: maxTheoreticalVel };
+                 state.graphs.acc.yBounds = { min: Math.min(0, acc, -9.8), max: Math.max(0, acc, 9.8) };
+                 const maxEnergy = state.m * state.g * maxHeight + maxWork;
+                 state.graphs.energy.yBounds = { min: 0, max: maxEnergy > 0 ? maxEnergy : 10 };
+             }
 
             function resetToDefaults() {
                  if (state.isPlaying) togglePlayPause();
@@ -1240,12 +1268,13 @@
                 calculateForces(); 
                 const thetaRad = state.theta * Math.PI / 180;
                 
-                const F_h_perp_val = state.f_horz * Math.sin(thetaRad);
+                // CORRECCIÓN: Usar Math.abs para la fórmula de Fh_perp para que coincida con el cálculo de N
+                const F_h_perp_val = Math.abs(state.f_horz) * Math.sin(thetaRad);
                 let y_forces_html = `<p>$\\sum F_y = N - P_y`;
                 if (Math.abs(state.f_horz) > 1e-3) y_forces_html += ` - F_{h,y}`;
                 y_forces_html += ` = 0$</p>`;
                 y_forces_html += `<p>$N = m g \\cos(\\theta)`;
-                if (Math.abs(state.f_horz) > 1e-3) y_forces_html += ` + F_h \\sin(\\theta)`;
+                if (Math.abs(state.f_horz) > 1e-3) y_forces_html += ` + |F_h| \\sin(\\theta)`;
                 y_forces_html += ` = ${state.N.toFixed(2)}\\ N$</p>`;
                 dom.yForces.innerHTML = y_forces_html;
                 
@@ -1429,4 +1458,8 @@
     </script>
 </body>
 </html>
+
+
+
+
 

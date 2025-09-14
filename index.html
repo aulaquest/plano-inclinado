@@ -727,10 +727,10 @@
                 }
 
                // Dibuja Fuerza Horizontal (Fh)
-if (Math.abs(state.f_horz) > 1e-3) {
-    const angle_Fh_screen = state.f_horz > 0 ? 0 : Math.PI + thetaRad;
-    drawVector(ctx, center, angle_Fh_screen, Math.abs(state.f_horz) * vectorScale, "#a78bfa", "Fh");
-}
+                if (Math.abs(state.f_horz) > 1e-3) {
+                    const angle_Fh_in_block = state.f_horz > 0 ? (thetaRad + Math.PI/2) : (thetaRad - Math.PI/2);
+                    drawVector(ctx, center, angle_Fh_in_block, Math.abs(state.f_horz) * vectorScale, "#a78bfa", "Fh");
+                }
             }
 
             function drawVector(ctx, origin, angle, magnitude, color, label, dashed = false) {

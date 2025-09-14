@@ -728,7 +728,7 @@
                 
                 // Dibuja Fuerza Horizontal (Fh)
                 if (Math.abs(state.f_horz) > 1e-3) {
-                    const angle_Fh_in_block = state.f_horz > 0 ? 0 : Math.PI + thetaRad;
+                    const angle_Fh_in_block = state.f_horz > 0 ? 90 : Math.PI + thetaRad;
                     drawVector(ctx, center, angle_Fh_in_block, Math.abs(state.f_horz) * vectorScale, "#a78bfa", "Fh");
                 }
             }
